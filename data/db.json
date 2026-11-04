@@ -46,6 +46,42 @@
       "orderIndex": 0
     },
     {
+      "id": "prod-1793769937850",
+      "slug": "m-7850",
+      "name": "m",
+      "nameBn": "m",
+      "category": "hoodies",
+      "description": "RU Insiders Official Apparel",
+      "price": 1,
+      "regularPrice": 1,
+      "costPrice": 1,
+      "images": [
+        "J2610300604.png"
+      ],
+      "colors": [
+        {
+          "name": "Heritage Maroon",
+          "hex": "#881337"
+        },
+        {
+          "name": "Royal Blue",
+          "hex": "#1d4ed8"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "stock": 30,
+      "salesCount": 0,
+      "isCustomizable": false,
+      "featured": true,
+      "badge": "New Arrival",
+      "orderIndex": 1
+    },
+    {
       "id": "prod-ru-dropshoulder-paris",
       "slug": "paris-road-oversized-dropshoulder",
       "name": "Paris Road Signature Drop Shoulder Tee",
@@ -88,7 +124,7 @@
       "isCustomizable": true,
       "featured": true,
       "badge": "Trending",
-      "orderIndex": 1
+      "orderIndex": 2
     },
     {
       "id": "prod-ru-custom-jersey-2026",
@@ -134,7 +170,7 @@
       "isCustomizable": true,
       "featured": true,
       "badge": "Customizable",
-      "orderIndex": 2
+      "orderIndex": 3
     },
     {
       "id": "prod-ru-shabash-ganji",
@@ -174,7 +210,7 @@
       "salesCount": 145,
       "isCustomizable": true,
       "featured": false,
-      "orderIndex": 3
+      "orderIndex": 4
     },
     {
       "id": "prod-ru-varsity-jacket",
@@ -210,7 +246,7 @@
       "isCustomizable": false,
       "featured": true,
       "badge": "Limited Edition",
-      "orderIndex": 4
+      "orderIndex": 5
     },
     {
       "id": "prod-ru-totebag",
@@ -242,7 +278,7 @@
       "salesCount": 88,
       "isCustomizable": false,
       "featured": false,
-      "orderIndex": 5
+      "orderIndex": 6
     }
   ],
   "orders": [

@@ -1,31 +1,20 @@
-# Goldfish Review: Adversarial Stress Test & Verification Gate
+# Goldfish Review: Adversarial Verification for White Theme & Mobile UX
 **Methodology:** Google Elephant-Goldfish Model (EGM)
-**Role:** Zero-Context Adversarial Reviewer & Auditor
-**Scope:** RU Insiders Architecture & Codebase
+**Role:** Zero-Context Adversarial Reviewer & Auditor (Revision 2.1)
 
 ---
 
-## 1. Adversarial Audit Findings & Mitigation Matrix
+## 1. Adversarial Review of UI/UX Refactor
 
-| Audit Lens | Identified Vulnerability / Risk | Hardened Mitigation in Code |
+| Critique Lens | Identified Friction | Hardened Solution |
 | :--- | :--- | :--- |
-| **Secrets & Keys** | Hardcoded API keys for Steadfast or JWT secrets in repo. | Environment-variable-driven config with defensive runtime checks. `.env.local` strictly gitignored. |
-| **Dependencies** | Vulnerable supply chain or unpinned dependency drift breaking builds. | Strictly pinned exact versions (`2.1.1`, `15.1.7`, `19.0.0`) in `package.json`. |
-| **Auth & IDOR** | Unauthenticated mutation endpoints or any user accessing other users' print PDFs or order history. | Admin session verification on all `/api/admin/*` routes; customer order tracking secured via compound key (Order Token + Phone Number). |
-| **Injection / Unscoped Deletes** | SQL/NoSQL injection or mass deletion route without confirmation or scope. | Strong type guards; soft-delete or isolated record deletion with explicit ID verification. |
-| **Bloat & Complexity** | Monolithic components (>500 lines) with spaghetti state management. | Decoupled UI components (`ProductCard`, `CustomizerCanvas`, `PrintUploader`, `RevenueMetrics`, `SteadfastModal`). |
-| **10-Lakh Traffic Spike** | Database connection starvation or CPU choking on PDF generation during campus rush. | Client-side visual rendering; static caching for catalog; lightweight in-memory storage engine with pluggable DB adapter. |
+| **Cluttered Filter Row** | Screenshot confirmed excessive cognitive load: sort dropdown + category pills + search + toggle collided into 1 crowded line. | Replaced inline dropdowns with a clean **Filter Modal / Bottom Sheet** triggered by a single button. |
+| **Color Scheme Disconnect** | Dark theme clashed with user's clean white logo. | Full transition to **Pure White / Light Pearl canvas** with official tri-color accents (Blue, Crimson, Gold). |
+| **Mobile Thumb Usability** | Desktop-focused layouts caused horizontal scrolling and tiny tap targets on mobile. | Added persistent **Mobile Bottom Navigation Bar** and touch-friendly bottom sheet modals. |
+| **Price Filtering UX** | Manual typing or sorting dropdown didn't allow combined price range filtering. | Added preset price filters (<৳500, ৳500-1000, ৳1000-2000, ৳2000+) + custom Min/Max inputs. |
 
 ---
 
-## 2. Print Station "Print Lagbe" UX Edge-Case Review
-- **The Messenger/Telegram Forwarding Problem:** Students hate uploading through multiple screens.
-  - *Goldfish Fix:* Provide a **1-Tap Direct Web Drag & Drop** that instantly issues a short 4-digit pickup token, plus a **Direct WhatsApp / Telegram Webhook Link** pre-filled with the order token so operators immediately know who sent the document.
-- **Operator Print Desk Efficiency:**
-  - *Goldfish Fix:* Operator should not have to manually rename or search files. Add a prominent "Direct Print / 1-Click Download" button right on the live queue card, with audible bell notification when an order lands.
-
----
-
-## 3. Marketplace Readiness Verdict
-- **Status:** APPROVED FOR IMPLEMENTATION
-- **Verification Criteria:** Localhost operational on port 3000, zero lint errors, git repository initialized with origin connected.
+## 2. Verification Gate
+- **Marketplace Standard:** White theme must maintain WCAG AAA contrast ratio (text `#0F172A` on `#FFFFFF` = 16.1:1 ratio).
+- **Execution:** Zero build errors, verified responsive layout across viewport widths (360px mobile up to 1920px desktop).

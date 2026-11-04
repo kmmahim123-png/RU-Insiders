@@ -57,8 +57,8 @@ export default function ProductDetailPage({ params }: Props) {
 
   if (loading) {
     return (
-      <div className="min-h-[50vh] flex items-center justify-center gap-2 text-slate-400">
-        <Loader2 className="h-6 w-6 animate-spin text-amber-400" />
+      <div className="min-h-[50vh] flex items-center justify-center gap-2 text-slate-500">
+        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
         <span>Loading product details...</span>
       </div>
     );
@@ -99,7 +99,7 @@ export default function ProductDetailPage({ params }: Props) {
       {/* Back Link */}
       <Link
         href="/shop"
-        className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white transition-colors"
+        className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
         <span>Back to Store Catalog</span>
@@ -109,14 +109,14 @@ export default function ProductDetailPage({ params }: Props) {
         
         {/* Left: Product Images Gallery (7 Cols) */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="relative aspect-[4/5] rounded-3xl overflow-hidden glass-card border border-slate-800 bg-slate-900/60 shadow-2xl">
+          <div className="relative aspect-[4/5] rounded-3xl overflow-hidden glass-card border border-slate-200 bg-white shadow-md">
             <img
               src={activeImage}
               alt={product.name}
               className="w-full h-full object-cover object-center"
             />
             {product.badge && (
-              <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-rose-600 text-white text-xs font-bold uppercase tracking-wider">
+              <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-blue-600 text-white text-xs font-bold uppercase tracking-wider shadow-sm">
                 {product.badge}
               </span>
             )}
@@ -130,7 +130,7 @@ export default function ProductDetailPage({ params }: Props) {
                   key={idx}
                   onClick={() => setActiveImage(img)}
                   className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${
-                    activeImage === img ? 'border-amber-400 scale-105' : 'border-slate-800 opacity-60 hover:opacity-100'
+                    activeImage === img ? 'border-blue-600 scale-105 shadow-sm' : 'border-slate-200 opacity-70 hover:opacity-100'
                   }`}
                 >
                   <img src={img} alt="Thumb" className="w-full h-full object-cover" />
@@ -144,35 +144,35 @@ export default function ProductDetailPage({ params }: Props) {
         <div className="lg:col-span-5 space-y-6">
           
           <div className="space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-amber-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
               {product.category.replace('-', ' ')}
             </span>
-            <h1 className="text-2xl sm:text-3xl font-black text-white">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
               {product.name}
             </h1>
             {product.nameBn && (
-              <p className="text-sm text-slate-300 font-bengali">{product.nameBn}</p>
+              <p className="text-sm text-slate-600 font-bengali">{product.nameBn}</p>
             )}
           </div>
 
           {/* Price & Stock Display */}
-          <div className="glass-panel p-4 rounded-2xl border border-slate-800 flex items-center justify-between">
+          <div className="glass-panel p-4 rounded-2xl border border-slate-200 bg-white flex items-center justify-between shadow-sm">
             <div>
-              <div className="text-2xl font-black text-white flex items-baseline gap-2">
+              <div className="text-2xl font-black text-slate-900 flex items-baseline gap-2">
                 <span>{formatBDT(product.price)}</span>
                 {product.regularPrice && (
-                  <span className="text-sm text-slate-500 line-through">
+                  <span className="text-sm text-slate-400 line-through">
                     {formatBDT(product.regularPrice)}
                   </span>
                 )}
               </div>
-              <span className="text-[11px] text-emerald-400 flex items-center gap-1 mt-0.5">
-                <Check className="h-3.5 w-3.5" /> In Stock ({product.stock} units available)
+              <span className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1 mt-0.5">
+                <Check className="h-3.5 w-3.5 text-emerald-600" /> In Stock ({product.stock} units available)
               </span>
             </div>
 
             {product.regularPrice && (
-              <span className="px-3 py-1 rounded-full bg-rose-950 text-rose-300 border border-rose-800 text-xs font-bold font-mono">
+              <span className="px-3 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold font-mono">
                 SAVE {formatBDT(product.regularPrice - product.price)}
               </span>
             )}
@@ -180,16 +180,16 @@ export default function ProductDetailPage({ params }: Props) {
 
           {/* Description */}
           <div className="space-y-1">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Overview</h4>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-bengali">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">Overview</h4>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-bengali">
               {product.description}
             </p>
           </div>
 
           {/* Color Selector */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-300">
-              Color: <strong className="text-amber-400">{selectedColor}</strong>
+            <label className="text-xs font-semibold text-slate-700">
+              Color: <strong className="text-slate-900">{selectedColor}</strong>
             </label>
             <div className="flex flex-wrap gap-2.5">
               {product.colors.map((c) => (
@@ -198,12 +198,12 @@ export default function ProductDetailPage({ params }: Props) {
                   onClick={() => setSelectedColor(c.name)}
                   className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all ${
                     selectedColor === c.name
-                      ? 'bg-slate-800 border-amber-400 text-white'
-                      : 'bg-slate-950 border-slate-800 text-slate-400'
+                      ? 'bg-blue-50 border-blue-600 text-slate-900 shadow-sm'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
                   <span
-                    className="w-3.5 h-3.5 rounded-full border border-white/20"
+                    className="w-3.5 h-3.5 rounded-full border border-slate-300"
                     style={{ backgroundColor: c.hex }}
                   />
                   <span>{c.name}</span>
@@ -215,10 +215,10 @@ export default function ProductDetailPage({ params }: Props) {
           {/* Size Selector */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-300">
-                Size: <strong className="text-amber-400">{selectedSize}</strong>
+              <label className="text-xs font-semibold text-slate-700">
+                Size: <strong className="text-slate-900">{selectedSize}</strong>
               </label>
-              <span className="text-[11px] text-slate-400 flex items-center gap-1">
+              <span className="text-[11px] text-slate-500 flex items-center gap-1">
                 <Ruler className="h-3 w-3" /> Asian Regular Fit
               </span>
             </div>
@@ -229,8 +229,8 @@ export default function ProductDetailPage({ params }: Props) {
                   onClick={() => setSelectedSize(sz)}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                     selectedSize === sz
-                      ? 'bg-amber-500 text-slate-950 shadow-md'
-                      : 'bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
                   }`}
                 >
                   {sz}
@@ -241,18 +241,18 @@ export default function ProductDetailPage({ params }: Props) {
 
           {/* Quantity Selector */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-300">Quantity</label>
-            <div className="flex items-center w-32 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs">
+            <label className="text-xs font-semibold text-slate-700">Quantity</label>
+            <div className="flex items-center w-32 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs">
               <button
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="px-3 py-2 text-slate-400 hover:text-white"
+                className="px-3 py-2 text-slate-600 hover:text-slate-900 font-bold"
               >
                 -
               </button>
-              <span className="flex-1 text-center font-bold text-white">{quantity}</span>
+              <span className="flex-1 text-center font-bold text-slate-900">{quantity}</span>
               <button
                 onClick={() => setQuantity(quantity + 1)}
-                className="px-3 py-2 text-slate-400 hover:text-white"
+                className="px-3 py-2 text-slate-600 hover:text-slate-900 font-bold"
               >
                 +
               </button>
@@ -263,7 +263,7 @@ export default function ProductDetailPage({ params }: Props) {
           <div className="space-y-3 pt-2">
             <button
               onClick={handleAddToCart}
-              className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-rose-600 to-amber-600 hover:from-amber-400 hover:to-rose-500 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-glow transition-all active:scale-[0.98]"
+              className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98]"
             >
               {addedSuccess ? (
                 <>
@@ -281,22 +281,22 @@ export default function ProductDetailPage({ params }: Props) {
             {product.isCustomizable && (
               <Link
                 href={`/customize?garment=${product.category === 'jerseys' ? 'jersey' : product.category === 'hoodies' ? 'hoodie' : 'dropshoulder'}&product=${product.id}`}
-                className="w-full py-3 px-6 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-amber-500/40 text-amber-300 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all"
+                className="w-full py-3.5 px-6 rounded-2xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm"
               >
-                <Sparkles className="h-4 w-4 text-amber-400" />
+                <Sparkles className="h-4 w-4 text-blue-600" />
                 <span>Customize with Name & Number</span>
               </Link>
             )}
           </div>
 
           {/* Trust Guarantees */}
-          <div className="pt-4 border-t border-slate-800 space-y-2 text-xs text-slate-400">
+          <div className="pt-4 border-t border-slate-200 space-y-2 text-xs text-slate-600">
             <div className="flex items-center gap-2">
-              <Truck className="h-4 w-4 text-emerald-400" />
+              <Truck className="h-4 w-4 text-blue-600" />
               <span>Campus Spot Pickup at Paris Road or Steadfast Home Delivery</span>
             </div>
             <div className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-amber-400" />
+              <ShieldCheck className="h-4 w-4 text-emerald-600" />
               <span>100% Quality Checked & Pre-Shrunk Fabric</span>
             </div>
           </div>
