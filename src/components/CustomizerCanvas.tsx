@@ -193,15 +193,15 @@ export default function CustomizerCanvas({ initialGarment = 'jersey', onAddToCar
                 <g>
                   {/* Chest Logo Placement */}
                   {state.chestLogo === 'ru-monogram' && (
-                    <g transform="translate(160, 130) scale(0.85)">
-                      <circle cx="45" cy="45" r="38" fill="#f59e0b" opacity="0.95" />
-                      <circle cx="45" cy="45" r="32" fill="#881337" />
-                      <text x="45" y="44" textAnchor="middle" fill="#ffffff" fontSize="16" fontWeight="bold" fontFamily="serif">
-                        RU
-                      </text>
-                      <text x="45" y="58" textAnchor="middle" fill="#f59e0b" fontSize="8" fontWeight="bold">
-                        EST. 1953
-                      </text>
+                    <g transform="translate(160, 120)">
+                      <image
+                        href="/logo.png"
+                        x="0"
+                        y="0"
+                        width="80"
+                        height="80"
+                        preserveAspectRatio="xMidYMid meet"
+                      />
                     </g>
                   )}
 

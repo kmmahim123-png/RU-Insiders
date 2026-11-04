@@ -24,6 +24,7 @@ export interface Product {
   isCustomizable: boolean;
   featured?: boolean;
   badge?: string;
+  orderIndex?: number;
 }
 
 export interface CustomizerState {

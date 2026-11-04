@@ -1,16 +1,38 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ProductCard from '@/components/ProductCard';
+import { Product, ProductCategory } from '@/lib/types';
 import { INITIAL_PRODUCTS } from '@/lib/store';
-import { ProductCategory } from '@/lib/types';
-import { Search, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { Search, Sparkles, Loader2 } from 'lucide-react';
 
 export default function ShopPage() {
+  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc'>('featured');
   const [onlyCustomizable, setOnlyCustomizable] = useState(false);
+
+  // Fetch live from database API
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const res = await fetch('/api/products');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.products) {
+            setProducts(data.products);
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProducts();
+  }, []);
 
   const categories: { id: ProductCategory; label: string; bn: string }[] = [
     { id: 'all', label: 'All Items', bn: 'সব পোশাক' },
@@ -22,7 +44,7 @@ export default function ShopPage() {
   ];
 
   const filteredProducts = useMemo(() => {
-    return INITIAL_PRODUCTS.filter((product) => {
+    return products.filter((product) => {
       const matchCategory = selectedCategory === 'all' || product.category === selectedCategory;
       const matchSearch =
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -34,9 +56,9 @@ export default function ShopPage() {
     }).sort((a, b) => {
       if (sortBy === 'price-asc') return a.price - b.price;
       if (sortBy === 'price-desc') return b.price - a.price;
-      return b.salesCount - a.salesCount;
+      return (a.orderIndex ?? 0) - (b.orderIndex ?? 0);
     });
-  }, [selectedCategory, searchQuery, sortBy, onlyCustomizable]);
+  }, [products, selectedCategory, searchQuery, sortBy, onlyCustomizable]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
@@ -95,7 +117,7 @@ export default function ShopPage() {
             onChange={(e) => setSortBy(e.target.value as any)}
             className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs focus:outline-none focus:border-amber-400"
           >
-            <option value="featured">Best Sellers</option>
+            <option value="featured">Admin Order (সাজানো ক্রম)</option>
             <option value="price-asc">Price: Low to High</option>
             <option value="price-desc">Price: High to Low</option>
           </select>
@@ -118,7 +140,12 @@ export default function ShopPage() {
       </div>
 
       {/* Product Grid */}
-      {filteredProducts.length === 0 ? (
+      {loading ? (
+        <div className="glass-panel p-16 text-center rounded-3xl border border-slate-800 flex items-center justify-center gap-2 text-slate-400">
+          <Loader2 className="h-5 w-5 animate-spin text-amber-400" />
+          <span>Loading products...</span>
+        </div>
+      ) : filteredProducts.length === 0 ? (
         <div className="glass-panel p-16 text-center rounded-3xl border border-slate-800 text-slate-500 text-sm">
           No products matched your search or category filter. Try clearing filters.
         </div>

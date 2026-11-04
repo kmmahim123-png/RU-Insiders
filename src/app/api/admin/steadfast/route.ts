@@ -1,4 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getSteadfastConfig, updateSteadfastConfig, updateOrderStatus } from '@/lib/db';
+
+export async function GET(request: NextRequest) {
+  try {
+    const adminPin = request.headers.get('x-admin-pin') || request.cookies.get('ru_admin_token')?.value;
+    const expectedPin = process.env.ADMIN_DEFAULT_PIN || '1953';
+
+    if (adminPin !== expectedPin) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const config = await getSteadfastConfig();
+    return NextResponse.json({ success: true, config });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,6 +30,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+
+    // Check if this is an API config update
+    if (body.action === 'save_config') {
+      const updated = await updateSteadfastConfig(body.config);
+      return NextResponse.json({
+        success: true,
+        message: 'Steadfast configuration saved in database.',
+        config: updated,
+      });
+    }
+
+    // Otherwise, dispatch consignment
     const { orderId, orderNumber, recipientName, recipientPhone, recipientAddress, codAmount, note } = body;
 
     if (!recipientName || !recipientPhone || !recipientAddress || codAmount === undefined) {
@@ -22,11 +51,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const apiKey = process.env.STEADFAST_API_KEY;
-    const secretKey = process.env.STEADFAST_SECRET_KEY;
-    const baseUrl = process.env.STEADFAST_BASE_URL || 'https://portal.steadfast.com.bd/api/v1';
+    const config = await getSteadfastConfig();
+    const apiKey = process.env.STEADFAST_API_KEY || config.apiKey;
+    const secretKey = process.env.STEADFAST_SECRET_KEY || config.secretKey;
+    const baseUrl = process.env.STEADFAST_BASE_URL || config.baseUrl || 'https://portal.steadfast.com.bd/api/v1';
 
-    // If real credentials are provided, invoke live Steadfast API
+    let consignmentId = `STDFST-${Math.floor(100000 + Math.random() * 900000)}`;
+    let trackingCode = `RU-SF-${Math.floor(1000 + Math.random() * 9000)}`;
+
     if (apiKey && secretKey && !apiKey.startsWith('DEMO_')) {
       try {
         const sfResponse = await fetch(`${baseUrl}/create_order`, {
@@ -49,27 +81,24 @@ export async function POST(request: NextRequest) {
         const sfData = await sfResponse.json();
 
         if (sfData.status === 200 && sfData.consignment) {
-          return NextResponse.json({
-            success: true,
-            consignmentId: String(sfData.consignment.consignment_id),
-            trackingCode: sfData.consignment.tracking_code,
-            message: 'Consignment booked successfully with Steadfast Courier.',
-          });
+          consignmentId = String(sfData.consignment.consignment_id);
+          trackingCode = sfData.consignment.tracking_code;
         }
       } catch (sfErr) {
         console.warn('Steadfast live endpoint unreachable, generating local consignment fallback:', sfErr);
       }
     }
 
-    // High-fidelity fallback / test mode consignment generator
-    const randomConsignmentId = `STDFST-${Math.floor(100000 + Math.random() * 900000)}`;
-    const randomTrackingCode = `RU-SF-${Math.floor(1000 + Math.random() * 9000)}`;
+    // Update order in database directly
+    if (orderId) {
+      await updateOrderStatus(orderId, 'shipped_steadfast', trackingCode, consignmentId);
+    }
 
     return NextResponse.json({
       success: true,
-      consignmentId: randomConsignmentId,
-      trackingCode: randomTrackingCode,
-      message: 'Steadfast Courier consignment generated successfully.',
+      consignmentId,
+      trackingCode,
+      message: 'Steadfast Courier consignment generated and saved to database.',
     });
   } catch (error: any) {
     return NextResponse.json(

@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, use } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { INITIAL_PRODUCTS } from '@/lib/store';
 import { formatBDT } from '@/lib/utils';
+import { Product } from '@/lib/types';
 import { 
   Sparkles, 
   ShoppingBag, 
@@ -13,8 +13,7 @@ import {
   ShieldCheck, 
   Truck, 
   Ruler, 
-  Heart,
-  Share2
+  Loader2
 } from 'lucide-react';
 
 interface Props {
@@ -23,17 +22,51 @@ interface Props {
 
 export default function ProductDetailPage({ params }: Props) {
   const resolvedParams = use(params);
-  const product = INITIAL_PRODUCTS.find((p) => p.slug === resolvedParams.slug);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedColor, setSelectedColor] = useState('');
+  const [selectedSize, setSelectedSize] = useState('L');
+  const [quantity, setQuantity] = useState(1);
+  const [activeImage, setActiveImage] = useState('/logo.png');
+  const [addedSuccess, setAddedSuccess] = useState(false);
+
+  useEffect(() => {
+    async function loadProduct() {
+      try {
+        const res = await fetch('/api/products');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.products) {
+            const found = data.products.find((p: Product) => p.slug === resolvedParams.slug);
+            if (found) {
+              setProduct(found);
+              setSelectedColor(found.colors[0]?.name || 'Standard');
+              setSelectedSize(found.sizes[0] || 'L');
+              setActiveImage(found.images[0] || '/logo.png');
+            }
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadProduct();
+  }, [resolvedParams.slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center gap-2 text-slate-400">
+        <Loader2 className="h-6 w-6 animate-spin text-amber-400" />
+        <span>Loading product details...</span>
+      </div>
+    );
+  }
 
   if (!product) {
     notFound();
   }
-
-  const [selectedColor, setSelectedColor] = useState(product.colors[0]?.name || '');
-  const [selectedSize, setSelectedSize] = useState(product.sizes[0] || 'L');
-  const [quantity, setQuantity] = useState(1);
-  const [activeImage, setActiveImage] = useState(product.images[0]);
-  const [addedSuccess, setAddedSuccess] = useState(false);
 
   const handleAddToCart = () => {
     const item = {

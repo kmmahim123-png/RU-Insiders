@@ -1,0 +1,382 @@
+{
+  "products": [
+    {
+      "id": "prod-ru-hoodie-maroon",
+      "slug": "ru-heritage-winter-hoodie-maroon",
+      "name": "RU Heritage Heavyweight Winter Hoodie",
+      "nameBn": "রাবি হেরিটেজ উইন্টার হুডি (মেরুন)",
+      "category": "hoodies",
+      "description": "Premium 340+ GSM fleece hoodie featuring the embossed Rajshahi University emblem, kangaroo pocket, and thermal brushed interior. Built for cold Paris Road morning walks.",
+      "price": 1150,
+      "regularPrice": 1400,
+      "costPrice": 680,
+      "images": [
+        "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1578587018452-892bacefd3f2?auto=format&fit=crop&w=800&q=80"
+      ],
+      "colors": [
+        {
+          "name": "Heritage Maroon",
+          "hex": "#881337"
+        },
+        {
+          "name": "Midnight Black",
+          "hex": "#09090b"
+        },
+        {
+          "name": "Campus Navy",
+          "hex": "#1e3a8a"
+        },
+        {
+          "name": "Forest Green",
+          "hex": "#064e3b"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "stock": 45,
+      "salesCount": 182,
+      "isCustomizable": true,
+      "featured": true,
+      "badge": "Best Seller",
+      "orderIndex": 0
+    },
+    {
+      "id": "prod-ru-dropshoulder-paris",
+      "slug": "paris-road-oversized-dropshoulder",
+      "name": "Paris Road Signature Drop Shoulder Tee",
+      "nameBn": "প্যারিস রোড ওভারসাইজড ড্রপ শোল্ডার",
+      "category": "drop-shoulder",
+      "description": "220 GSM 100% combed compact cotton with relaxed drop-shoulder cut. Featuring minimalist RU Paris Road typographic screen print on back and subtle chest crest.",
+      "price": 580,
+      "regularPrice": 750,
+      "costPrice": 310,
+      "images": [
+        "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80"
+      ],
+      "colors": [
+        {
+          "name": "Washed Ash",
+          "hex": "#64748b"
+        },
+        {
+          "name": "Off White",
+          "hex": "#f8fafc"
+        },
+        {
+          "name": "Deep Black",
+          "hex": "#18181b"
+        },
+        {
+          "name": "Vintage Olive",
+          "hex": "#3f6212"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "Oversized"
+      ],
+      "stock": 60,
+      "salesCount": 240,
+      "isCustomizable": true,
+      "featured": true,
+      "badge": "Trending",
+      "orderIndex": 1
+    },
+    {
+      "id": "prod-ru-custom-jersey-2026",
+      "slug": "ru-inter-dept-custom-sports-jersey",
+      "name": "RU Inter-Dept Custom Sports Jersey",
+      "nameBn": "রাবি কাস্টমাইজড স্পোর্টস জার্সি (নাম ও নম্বর সহ)",
+      "category": "jerseys",
+      "description": "Dry-fit micro-mesh breathable sports jersey. Fully customizable with your Department Name, Personal Name, Batch Year, and Favorite Number.",
+      "price": 650,
+      "regularPrice": 850,
+      "costPrice": 340,
+      "images": [
+        "https://images.unsplash.com/photo-1580087433295-ab2600c1030e?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=800&q=80"
+      ],
+      "colors": [
+        {
+          "name": "RU Crimson & Gold",
+          "hex": "#9f1239"
+        },
+        {
+          "name": "Electric Cyan & Navy",
+          "hex": "#0284c7"
+        },
+        {
+          "name": "Emerald & Gold",
+          "hex": "#059669"
+        },
+        {
+          "name": "Stealth Blackout",
+          "hex": "#111827"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "stock": 120,
+      "salesCount": 310,
+      "isCustomizable": true,
+      "featured": true,
+      "badge": "Customizable",
+      "orderIndex": 2
+    },
+    {
+      "id": "prod-ru-shabash-ganji",
+      "slug": "shabash-bangladesh-heritage-tshirt",
+      "name": "Shabash Bangladesh Classic Cotton Tee (গেঞ্জি)",
+      "nameBn": "সাবাশ বাংলাদেশ ঐতিহ্যবাহী কটন গেঞ্জি",
+      "category": "t-shirts",
+      "description": "180 GSM ring-spun breathable soft cotton tee with the iconic Shabash Bangladesh sculpture vector illustration. Durable water-base screen print.",
+      "price": 390,
+      "regularPrice": 500,
+      "costPrice": 190,
+      "images": [
+        "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80"
+      ],
+      "colors": [
+        {
+          "name": "Pure White",
+          "hex": "#ffffff"
+        },
+        {
+          "name": "Charcoal Grey",
+          "hex": "#334155"
+        },
+        {
+          "name": "Maroon Red",
+          "hex": "#991b1b"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "stock": 85,
+      "salesCount": 145,
+      "isCustomizable": true,
+      "featured": false,
+      "orderIndex": 3
+    },
+    {
+      "id": "prod-ru-varsity-jacket",
+      "slug": "ru-insiders-limited-varsity-jacket",
+      "name": "RU Insiders Edition Leatherette Varsity Jacket",
+      "nameBn": "রাবি ইনসাইডার্স লিমিটেড ভার্সিটি জ্যাকেট",
+      "category": "hoodies",
+      "description": "Collector edition wool body with faux leather sleeves, heavy chenille university crest patch on chest, custom embroidered batch numerals on sleeve.",
+      "price": 2200,
+      "regularPrice": 2800,
+      "costPrice": 1350,
+      "images": [
+        "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=800&q=80"
+      ],
+      "colors": [
+        {
+          "name": "Crimson & Cream",
+          "hex": "#881337"
+        },
+        {
+          "name": "Navy & White",
+          "hex": "#1e3a8a"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "stock": 15,
+      "salesCount": 42,
+      "isCustomizable": false,
+      "featured": true,
+      "badge": "Limited Edition",
+      "orderIndex": 4
+    },
+    {
+      "id": "prod-ru-totebag",
+      "slug": "ru-canvas-heavy-tote-bag",
+      "name": "Rajshahi University Campus Canvas Tote Bag",
+      "nameBn": "রাবি ক্যাম্পাস ক্যানভাস টোট ব্যাগ",
+      "category": "accessories",
+      "description": "Heavy duty 14oz raw ecru canvas tote bag. Easily accommodates 15-inch laptops, library books, and exam sheets with reinforced box stitching.",
+      "price": 280,
+      "regularPrice": 350,
+      "costPrice": 120,
+      "images": [
+        "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80"
+      ],
+      "colors": [
+        {
+          "name": "Natural Ecru",
+          "hex": "#fef3c7"
+        },
+        {
+          "name": "Black Canvas",
+          "hex": "#1f2937"
+        }
+      ],
+      "sizes": [
+        "One Size (16\" x 14\")"
+      ],
+      "stock": 50,
+      "salesCount": 88,
+      "isCustomizable": false,
+      "featured": false,
+      "orderIndex": 5
+    }
+  ],
+  "orders": [
+    {
+      "id": "ord-801",
+      "orderNumber": "RU-ORD-1092",
+      "customerName": "Md. Al Amin",
+      "customerPhone": "01712998877",
+      "customerAddress": "Shaheed Habibur Rahman Hall, Room 314, Rajshahi University",
+      "deliveryMethod": "ru_campus_pickup",
+      "paymentMethod": "cash_on_delivery",
+      "items": [
+        {
+          "id": "item-1",
+          "productId": "prod-ru-hoodie-maroon",
+          "name": "RU Heritage Heavyweight Winter Hoodie",
+          "price": 1150,
+          "image": "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80",
+          "size": "XL",
+          "color": "Heritage Maroon",
+          "quantity": 1
+        }
+      ],
+      "subtotal": 1150,
+      "deliveryFee": 0,
+      "total": 1150,
+      "estimatedCost": 680,
+      "netProfit": 470,
+      "status": "ready_for_pickup",
+      "createdAt": "2026-11-04T00:19:07.539Z"
+    },
+    {
+      "id": "ord-802",
+      "orderNumber": "RU-ORD-1093",
+      "customerName": "Kazi Mahin",
+      "customerPhone": "01718000000",
+      "customerAddress": "Kazla, Motihar Thana, Rajshahi",
+      "deliveryMethod": "steadfast_courier",
+      "paymentMethod": "bkash",
+      "items": [
+        {
+          "id": "item-2",
+          "productId": "prod-ru-custom-jersey-2026",
+          "name": "RU Inter-Dept Custom Sports Jersey",
+          "price": 650,
+          "image": "https://images.unsplash.com/photo-1580087433295-ab2600c1030e?auto=format&fit=crop&w=800&q=80",
+          "size": "L",
+          "color": "RU Crimson & Gold",
+          "quantity": 2,
+          "customization": {
+            "playerName": "MAHIN",
+            "playerNumber": "10",
+            "chestLogo": "ru-monogram",
+            "garmentType": "jersey"
+          }
+        }
+      ],
+      "subtotal": 1300,
+      "deliveryFee": 70,
+      "total": 1370,
+      "estimatedCost": 680,
+      "netProfit": 620,
+      "status": "shipped_steadfast",
+      "steadfastConsignmentId": "STDFST-892401",
+      "steadfastTrackingCode": "RU-SF-9921",
+      "createdAt": "2026-11-03T05:19:07.539Z"
+    }
+  ],
+  "printJobs": [
+    {
+      "id": "prnt-001",
+      "token": "RU-PRNT-4821",
+      "customerName": "Shakil Ahmed",
+      "customerPhone": "01711223344",
+      "customerNotes": "CSE 4th Year - AI Assignment (Front page color, rest B&W)",
+      "fileName": "CSE_4102_Lab_Report_Shakil.pdf",
+      "fileSizeMb": 3.4,
+      "pageCount": 18,
+      "printType": "bw",
+      "paperType": "standard_80gsm",
+      "doubleSided": true,
+      "copies": 1,
+      "pricePerPage": 2.5,
+      "totalAmount": 45,
+      "costAmount": 18,
+      "status": "ready_for_pickup",
+      "paymentStatus": "paid_cash",
+      "createdAt": "2026-11-04T03:19:07.535Z"
+    },
+    {
+      "id": "prnt-002",
+      "token": "RU-PRNT-7934",
+      "customerName": "Farhana Yasmin",
+      "customerPhone": "01855667788",
+      "customerNotes": "Department of Law - Term Paper. Double sided on 80gsm paper.",
+      "fileName": "Constitutional_Law_Term_Paper.pdf",
+      "fileSizeMb": 5.8,
+      "pageCount": 32,
+      "printType": "bw",
+      "paperType": "standard_80gsm",
+      "doubleSided": true,
+      "copies": 2,
+      "pricePerPage": 2.5,
+      "totalAmount": 160,
+      "costAmount": 64,
+      "status": "printing",
+      "paymentStatus": "paid_bkash",
+      "createdAt": "2026-11-04T04:19:07.539Z"
+    },
+    {
+      "id": "prnt-003",
+      "token": "RU-PRNT-9201",
+      "customerName": "Tanvir Hasan",
+      "customerPhone": "01911445566",
+      "customerNotes": "Jersey back print vector graphic (Color Print on Art Paper)",
+      "fileName": "Physics_Fest_Jersey_Vector_Back.pdf",
+      "fileSizeMb": 12.1,
+      "pageCount": 2,
+      "printType": "color",
+      "paperType": "art_paper_matte",
+      "doubleSided": false,
+      "copies": 5,
+      "pricePerPage": 15,
+      "totalAmount": 150,
+      "costAmount": 50,
+      "status": "queued",
+      "paymentStatus": "unpaid",
+      "createdAt": "2026-11-04T04:49:07.539Z"
+    }
+  ],
+  "steadfastConfig": {
+    "apiKey": "DEMO_STEADFAST_KEY_RU_INSIDERS_2026",
+    "secretKey": "DEMO_STEADFAST_SECRET_SECURE_HASH",
+    "baseUrl": "https://portal.steadfast.com.bd/api/v1",
+    "isEnabled": true
+  }
+}

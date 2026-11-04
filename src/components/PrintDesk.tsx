@@ -15,7 +15,8 @@ import {
   Volume2, 
   VolumeX,
   Search,
-  ExternalLink
+  ExternalLink,
+  Trash2
 } from 'lucide-react';
 
 interface PrintDeskProps {
@@ -50,16 +51,55 @@ export default function PrintDesk({ initialJobs, onJobUpdate }: PrintDeskProps) 
     }
   };
 
-  const updateJobStatus = (id: string, newStatus: PrintJob['status']) => {
+  const updateJobStatus = async (id: string, newStatus: PrintJob['status']) => {
     const updated = jobs.map((job) => (job.id === id ? { ...job, status: newStatus } : job));
     setJobs(updated);
     if (onJobUpdate) onJobUpdate(updated);
+
+    try {
+      const pin = typeof window !== 'undefined' ? sessionStorage.getItem('ru_admin_pin') || '1953' : '1953';
+      await fetch('/api/print-station', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-admin-pin': pin },
+        body: JSON.stringify({ id, status: newStatus }),
+      });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const markPaymentStatus = (id: string, paymentStatus: PrintJob['paymentStatus']) => {
+  const markPaymentStatus = async (id: string, paymentStatus: PrintJob['paymentStatus']) => {
     const updated = jobs.map((job) => (job.id === id ? { ...job, paymentStatus } : job));
     setJobs(updated);
     if (onJobUpdate) onJobUpdate(updated);
+
+    try {
+      const pin = typeof window !== 'undefined' ? sessionStorage.getItem('ru_admin_pin') || '1953' : '1953';
+      await fetch('/api/print-station', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-admin-pin': pin },
+        body: JSON.stringify({ id, paymentStatus }),
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const deleteJob = async (id: string, token: string) => {
+    if (!confirm(`Delete print job ${token}?`)) return;
+    const updated = jobs.filter((job) => job.id !== id);
+    setJobs(updated);
+    if (onJobUpdate) onJobUpdate(updated);
+
+    try {
+      const pin = typeof window !== 'undefined' ? sessionStorage.getItem('ru_admin_pin') || '1953' : '1953';
+      await fetch(`/api/print-station?id=${id}`, {
+        method: 'DELETE',
+        headers: { 'x-admin-pin': pin },
+      });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const filteredJobs = jobs.filter((job) => {
@@ -329,6 +369,14 @@ export default function PrintDesk({ initialJobs, onJobUpdate }: PrintDeskProps) 
                       Picked Up & Paid
                     </button>
                   )}
+
+                  <button
+                    onClick={() => deleteJob(job.id, job.token)}
+                    className="p-2 rounded-xl bg-rose-950/40 hover:bg-rose-900 border border-rose-800/60 text-rose-300 transition-colors"
+                    title="Delete Print Job"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
 
                 </div>
 

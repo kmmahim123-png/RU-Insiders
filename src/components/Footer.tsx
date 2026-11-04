@@ -11,12 +11,12 @@ export default function Footer() {
           {/* Brand Col */}
           <div className="space-y-4 md:col-span-1">
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-rose-700 to-amber-700 shadow-crimsonGlow border border-rose-500/30">
-                <span className="font-bold font-serif text-lg text-white">RU</span>
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-slate-900 border-2 border-amber-400 p-0.5 overflow-hidden shadow-glow">
+                <img src="/logo.png" alt="RU Insiders Logo" className="w-full h-full rounded-full object-cover" />
               </div>
               <div>
                 <span className="text-base font-bold text-white tracking-tight">RU Insiders</span>
-                <p className="text-xs text-rose-400 font-bengali">রাজশাহী বিশ্ববিদ্যালয় ক্যাম্পাস মার্চেন্ডাইজ</p>
+                <p className="text-xs text-amber-400 font-bengali">রাজশাহী বিশ্ববিদ্যালয় ক্যাম্পাস মার্চেন্ডাইজ</p>
               </div>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed font-bengali">

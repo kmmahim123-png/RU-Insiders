@@ -103,21 +103,25 @@ export default function Navbar() {
           
           {/* Logo & Brand Identity */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-rose-700 via-rose-900 to-amber-700 shadow-crimsonGlow border border-rose-500/30 group-hover:scale-105 transition-transform duration-300">
-              <span className="font-bold font-serif text-lg sm:text-xl text-white tracking-wider">RU</span>
-              <div className="absolute -bottom-1 -right-1 bg-amber-500 text-slate-950 font-black text-[9px] px-1 rounded-full uppercase">
-                26
+            <div className="relative flex items-center justify-center w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-slate-900 shadow-glow border-2 border-amber-400/80 p-0.5 group-hover:scale-105 transition-transform duration-300">
+              <img
+                src="/logo.png"
+                alt="RU Insiders Official Logo"
+                className="w-full h-full rounded-full object-cover"
+              />
+              <div className="absolute -bottom-1 -right-1 bg-rose-600 text-white font-black text-[9px] px-1 rounded-full uppercase border border-slate-950">
+                RU
               </div>
             </div>
             <div className="flex flex-col">
-              <span className="text-base sm:text-lg font-bold tracking-tight text-white group-hover:text-amber-400 transition-colors flex items-center gap-1.5">
+              <span className="text-base sm:text-lg font-black tracking-tight text-white group-hover:text-amber-400 transition-colors flex items-center gap-1.5">
                 RU Insiders
-                <span className="text-[10px] bg-rose-950 text-rose-300 border border-rose-800/60 px-1.5 py-0.5 rounded-full font-medium hidden sm:inline-block">
-                  রাবি
+                <span className="text-[10px] bg-blue-900/60 text-blue-300 border border-blue-700/60 px-1.5 py-0.5 rounded-full font-bold hidden sm:inline-block">
+                  অফিশিয়াল
                 </span>
               </span>
               <span className="text-[11px] text-slate-400 font-bengali">
-                রাজশাহী বিশ্ববিদ্যালয় মার্চেন্ডাইজ ও প্রিন্ট
+                রাজশাহী বিশ্ববিদ্যালয় স্টোর ও প্রিন্ট স্টেশন
               </span>
             </div>
           </Link>
