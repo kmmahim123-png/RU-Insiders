@@ -11,7 +11,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'No file provided' }, { status: 400 });
     }
 
-    // Enforce reasonable size limit (15MB)
     if (file.size > 15 * 1024 * 1024) {
       return NextResponse.json({ success: false, message: 'File size exceeds 15MB limit' }, { status: 400 });
     }
@@ -20,17 +19,20 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
 
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
+    const dataUploadsDir = path.join(process.cwd(), 'data', 'uploads');
+
+    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+    if (!fs.existsSync(dataUploadsDir)) fs.mkdirSync(dataUploadsDir, { recursive: true });
 
     const originalName = file.name || 'image.png';
-    const ext = path.extname(originalName) || '.png';
-    const safeBase = originalName.replace(/[^a-zA-Z0-9_-]/g, '_').replace(ext, '');
-    const uniqueName = `${Date.now()}-${safeBase.substring(0, 20)}${ext}`;
-    const targetPath = path.join(uploadsDir, uniqueName);
+    const ext = (path.extname(originalName) || '.png').toLowerCase();
+    const baseName = path.basename(originalName, ext);
+    const safeBase = baseName.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30) || 'image';
+    const uniqueName = `${Date.now()}-${safeBase}${ext}`;
 
-    fs.writeFileSync(targetPath, buffer);
+    // Write to both public/uploads and data/uploads
+    fs.writeFileSync(path.join(uploadsDir, uniqueName), buffer);
+    fs.writeFileSync(path.join(dataUploadsDir, uniqueName), buffer);
 
     const publicUrl = `/uploads/${uniqueName}`;
 

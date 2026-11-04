@@ -1,6 +1,78 @@
 {
   "products": [
     {
+      "id": "prod-1793774362085",
+      "slug": "ss-2085",
+      "name": "ss",
+      "nameBn": "",
+      "category": "hoodies",
+      "description": "RU Insiders Official Apparel",
+      "price": 1150,
+      "regularPrice": 1438,
+      "costPrice": 650,
+      "images": [
+        "/uploads/1793774352397-134337096780936258_j.jpg"
+      ],
+      "colors": [
+        {
+          "name": "Heritage Maroon",
+          "hex": "#881337"
+        },
+        {
+          "name": "Royal Blue",
+          "hex": "#1d4ed8"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "stock": 30,
+      "salesCount": 0,
+      "isCustomizable": false,
+      "featured": true,
+      "badge": "New Arrival",
+      "orderIndex": 0
+    },
+    {
+      "id": "prod-1793774338433",
+      "slug": "am-8432",
+      "name": "am",
+      "nameBn": "",
+      "category": "hoodies",
+      "description": "RU Insiders Official Apparel",
+      "price": 1150,
+      "regularPrice": 1438,
+      "costPrice": 650,
+      "images": [
+        "/uploads/1793774324791-134361855682621347_j.jpg"
+      ],
+      "colors": [
+        {
+          "name": "Heritage Maroon",
+          "hex": "#881337"
+        },
+        {
+          "name": "Royal Blue",
+          "hex": "#1d4ed8"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "stock": 30,
+      "salesCount": 0,
+      "isCustomizable": false,
+      "featured": true,
+      "badge": "New Arrival",
+      "orderIndex": 1
+    },
+    {
       "id": "prod-ru-hoodie-maroon",
       "slug": "ru-heritage-winter-hoodie-maroon",
       "name": "RU Heritage Heavyweight Winter Hoodie",
@@ -43,7 +115,7 @@
       "isCustomizable": true,
       "featured": true,
       "badge": "Best Seller",
-      "orderIndex": 0
+      "orderIndex": 2
     },
     {
       "id": "prod-1793769937850",
@@ -79,52 +151,7 @@
       "isCustomizable": false,
       "featured": true,
       "badge": "New Arrival",
-      "orderIndex": 1
-    },
-    {
-      "id": "prod-ru-dropshoulder-paris",
-      "slug": "paris-road-oversized-dropshoulder",
-      "name": "Paris Road Signature Drop Shoulder Tee",
-      "nameBn": "প্যারিস রোড ওভারসাইজড ড্রপ শোল্ডার",
-      "category": "drop-shoulder",
-      "description": "220 GSM 100% combed compact cotton with relaxed drop-shoulder cut. Featuring minimalist RU Paris Road typographic screen print on back and subtle chest crest.",
-      "price": 580,
-      "regularPrice": 750,
-      "costPrice": 310,
-      "images": [
-        "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80"
-      ],
-      "colors": [
-        {
-          "name": "Washed Ash",
-          "hex": "#64748b"
-        },
-        {
-          "name": "Off White",
-          "hex": "#f8fafc"
-        },
-        {
-          "name": "Deep Black",
-          "hex": "#18181b"
-        },
-        {
-          "name": "Vintage Olive",
-          "hex": "#3f6212"
-        }
-      ],
-      "sizes": [
-        "M",
-        "L",
-        "XL",
-        "Oversized"
-      ],
-      "stock": 60,
-      "salesCount": 240,
-      "isCustomizable": true,
-      "featured": true,
-      "badge": "Trending",
-      "orderIndex": 2
+      "orderIndex": 3
     },
     {
       "id": "prod-ru-custom-jersey-2026",
@@ -170,7 +197,7 @@
       "isCustomizable": true,
       "featured": true,
       "badge": "Customizable",
-      "orderIndex": 3
+      "orderIndex": 4
     },
     {
       "id": "prod-ru-shabash-ganji",
@@ -210,7 +237,7 @@
       "salesCount": 145,
       "isCustomizable": true,
       "featured": false,
-      "orderIndex": 4
+      "orderIndex": 5
     },
     {
       "id": "prod-ru-varsity-jacket",
@@ -246,7 +273,7 @@
       "isCustomizable": false,
       "featured": true,
       "badge": "Limited Edition",
-      "orderIndex": 5
+      "orderIndex": 6
     },
     {
       "id": "prod-ru-totebag",
@@ -278,7 +305,7 @@
       "salesCount": 88,
       "isCustomizable": false,
       "featured": false,
-      "orderIndex": 6
+      "orderIndex": 7
     }
   ],
   "orders": [
