@@ -19,6 +19,7 @@ interface FilterModalProps {
   filters: FilterState;
   onApplyFilters: (newFilters: FilterState) => void;
   totalMatches: number;
+  categoriesList?: { id: ProductCategory; label: string; bn?: string }[];
 }
 
 export default function FilterModal({
@@ -27,12 +28,13 @@ export default function FilterModal({
   filters,
   onApplyFilters,
   totalMatches,
+  categoriesList,
 }: FilterModalProps) {
   const [localFilters, setLocalFilters] = useState<FilterState>(filters);
 
   if (!isOpen) return null;
 
-  const categories: { id: ProductCategory; label: string; bn: string }[] = [
+  const defaultCategories: { id: ProductCategory; label: string; bn?: string }[] = [
     { id: 'all', label: 'All Items', bn: 'সব পণ্য' },
     { id: 'hoodies', label: 'Winter Hoodies', bn: 'শীতের হুডি' },
     { id: 'drop-shoulder', label: 'Drop Shoulder', bn: 'ড্রপ শোল্ডার' },
@@ -40,6 +42,8 @@ export default function FilterModal({
     { id: 't-shirts', label: 'T-Shirts (গেঞ্জি)', bn: 'কটন গেঞ্জি' },
     { id: 'accessories', label: 'Accessories', bn: 'এক্সেসরিজ' },
   ];
+
+  const categories = categoriesList && categoriesList.length > 0 ? categoriesList : defaultCategories;
 
   const pricePresets = [
     { label: 'All Prices', min: 0, max: 10000 },

@@ -16,13 +16,13 @@ function CustomizerContent() {
       <div className="space-y-2">
         <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold shadow-sm">
           <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-          <span>Interactive 2D Apparel Studio</span>
+          <span>Interactive Apparel Mockup & Custom Studio</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
           RU Insiders Customizer Studio
         </h1>
         <p className="text-sm text-slate-600 font-bengali">
-          নিজের পছন্দমতো জার্সিতে নাম ও নম্বর বসান, রাবির অফিশিয়াল মনোগ্রাম প্লেসমেন্ট করুন এবং লাইভ টুডি মকআপ দেখুন।
+          হুডি বা গেঞ্জি বেছে নিন, নিজের পছন্দের PNG ডিজাইন বা ছবি আপলোড করুন, ডিপার্টমেন্টের নাম ও নম্বর বসিয়ে সরাসরি অর্ডার করুন।
         </p>
       </div>
 

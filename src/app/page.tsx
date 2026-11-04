@@ -79,6 +79,28 @@ export default function HomePage() {
       });
   }, [products, filters, searchQuery]);
 
+  // Dynamically extract categories
+  const availableCategories = useMemo(() => {
+    const defaults = [
+      { id: 'all', label: 'All Items', bn: 'সব পণ্য' },
+      { id: 'hoodies', label: 'Winter Hoodies', bn: 'শীতের হুডি' },
+      { id: 'drop-shoulder', label: 'Drop Shoulder', bn: 'ড্রপ শোল্ডার' },
+      { id: 'jerseys', label: 'Custom Jerseys', bn: 'কাস্টম জার্সি' },
+      { id: 't-shirts', label: 'T-Shirts (গেঞ্জি)', bn: 'কটন গেঞ্জি' },
+      { id: 'accessories', label: 'Accessories', bn: 'এক্সেসরিজ' },
+    ];
+    const customCats = products
+      .map((p) => p.category)
+      .filter((c) => !defaults.some((d) => d.id === c))
+      .filter((c, idx, arr) => arr.indexOf(c) === idx)
+      .map((c) => ({
+        id: c,
+        label: c.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+        bn: c,
+      }));
+    return [...defaults, ...customCats];
+  }, [products]);
+
   const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (filters.category !== 'all') count++;
@@ -351,6 +373,7 @@ export default function HomePage() {
         filters={filters}
         onApplyFilters={setFilters}
         totalMatches={filteredProducts.length}
+        categoriesList={availableCategories}
       />
 
     </div>

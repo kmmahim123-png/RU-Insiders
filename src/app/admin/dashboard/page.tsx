@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   TrendingUp, 
@@ -12,17 +12,21 @@ import {
   LogOut, 
   ShieldCheck, 
   Check, 
-  AlertCircle,
-  FileText,
-  Phone,
-  Send,
-  Sparkles,
-  ArrowUp,
-  ArrowDown,
-  Trash2,
-  RefreshCw,
-  Loader2,
-  Image as ImageIcon
+  AlertCircle, 
+  FileText, 
+  Phone, 
+  Send, 
+  Sparkles, 
+  ArrowUp, 
+  ArrowDown, 
+  Trash2, 
+  RefreshCw, 
+  Loader2, 
+  Image as ImageIcon,
+  UploadCloud,
+  Camera,
+  ExternalLink,
+  FolderPlus
 } from 'lucide-react';
 import RevenueCharts from '@/components/RevenueCharts';
 import PrintDesk from '@/components/PrintDesk';
@@ -58,6 +62,68 @@ export default function AdminDashboardPage() {
   const [newProductDesc, setNewProductDesc] = useState('');
   const [newProductCustomizable, setNewProductCustomizable] = useState(false);
   const [submittingProduct, setSubmittingProduct] = useState(false);
+
+  // Dynamic Categories State
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([
+    { id: 'hoodies', name: 'Winter Hoodie (শীতের হুডি)' },
+    { id: 'drop-shoulder', name: 'Drop Shoulder (ড্রপ শোল্ডার)' },
+    { id: 'jerseys', name: 'Custom Sports Jersey (কাস্টম জার্সি)' },
+    { id: 't-shirts', name: 'Classic Ganji / T-Shirt (গেঞ্জি)' },
+    { id: 'accessories', name: 'Campus Accessories (ব্যাগ ও এক্সেসরিজ)' },
+  ]);
+  const [isAddingNewCategory, setIsAddingNewCategory] = useState(false);
+  const [customCategoryInput, setCustomCategoryInput] = useState('');
+
+  // Mobile / Laptop Product Image Upload State
+  const [uploadingProductImage, setUploadingProductImage] = useState(false);
+  const productImageInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAddNewCategory = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customCategoryInput.trim()) return;
+    const cleanName = customCategoryInput.trim();
+    const slug = cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const newCat = { id: slug, name: cleanName };
+    if (!categories.some((c) => c.id === slug)) {
+      setCategories((prev) => [...prev, newCat]);
+    }
+    setNewProductCategory(slug);
+    setCustomCategoryInput('');
+    setIsAddingNewCategory(false);
+    showNotification(`New category "${cleanName}" added!`);
+  };
+
+  const handleProductImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0]) return;
+    const file = e.target.files[0];
+
+    // Local preview immediately
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) setNewProductImage(event.target.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    try {
+      setUploadingProductImage(true);
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.url) {
+        setNewProductImage(data.url);
+        showNotification('ছবি সফলভাবে আপলোড হয়েছে!');
+      }
+    } catch (err) {
+      console.error(err);
+      showNotification('ছবি আপলোডে সমস্যা হয়েছে', 'error');
+    } finally {
+      setUploadingProductImage(false);
+    }
+  };
 
   const getAdminPin = useCallback(() => {
     return typeof window !== 'undefined' ? sessionStorage.getItem('ru_admin_pin') || '1953' : '1953';
@@ -402,17 +468,50 @@ export default function AdminDashboardPage() {
               </div>
 
               <div>
-                <label className="block text-slate-700 mb-1 font-semibold">Category (ক্যাটাগরি)</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-slate-700 font-semibold">Category (ক্যাটাগরি)</label>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingNewCategory(!isAddingNewCategory)}
+                    className="text-[11px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1"
+                  >
+                    <FolderPlus className="h-3.5 w-3.5" />
+                    <span>{isAddingNewCategory ? 'Cancel' : '+ নতুন ক্যাটাগরি'}</span>
+                  </button>
+                </div>
+
+                {isAddingNewCategory && (
+                  <div className="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200 mb-2 space-y-2">
+                    <span className="text-[11px] font-bold text-slate-800">নতুন ক্যাটাগরির নাম দিন:</span>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="যেমন: Polo Shirt (পোলো শার্ট) বা Cap"
+                        value={customCategoryInput}
+                        onChange={(e) => setCustomCategoryInput(e.target.value)}
+                        className="flex-1 px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-blue-600"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddNewCategory}
+                        className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm"
+                      >
+                        যুক্ত করুন
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <select
                   value={newProductCategory}
-                  onChange={(e) => setNewProductCategory(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white"
+                  onChange={(e) => setNewProductCategory(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white font-medium"
                 >
-                  <option value="hoodies">Winter Hoodie (শীতের হুডি)</option>
-                  <option value="drop-shoulder">Drop Shoulder (ড্রপ শোল্ডার)</option>
-                  <option value="jerseys">Custom Sports Jersey (কাস্টম জার্সি)</option>
-                  <option value="t-shirts">Classic Ganji / T-Shirt (গেঞ্জি)</option>
-                  <option value="accessories">Campus Accessories (ব্যাগ ও এক্সেসরিজ)</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -466,19 +565,62 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-slate-700 mb-1 font-semibold">Image URL or Path</label>
+              {/* Direct Image Upload from Mobile & Laptop */}
+              <div className="space-y-2">
+                <label className="block text-slate-700 font-semibold">Product Image (পণ্যর ছবি)</label>
+                
                 <input
-                  type="text"
-                  required
-                  value={newProductImage}
-                  onChange={(e) => setNewProductImage(e.target.value)}
-                  placeholder="/logo.png or image URL"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-mono text-[11px] focus:outline-none focus:border-blue-600 focus:bg-white"
+                  type="file"
+                  ref={productImageInputRef}
+                  accept="image/*"
+                  onChange={handleProductImageUpload}
+                  className="hidden"
                 />
-                <span className="text-[10px] text-slate-500">
-                  Tip: Use <strong>/logo.png</strong> for official logo or any image link.
-                </span>
+
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => productImageInputRef.current?.click()}
+                    disabled={uploadingProductImage}
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm"
+                  >
+                    {uploadingProductImage ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                        <span>আপলোড হচ্ছে...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="h-4 w-4 text-blue-600" />
+                        <span>📸 মোবাইল / পিসি থেকে ছবি আপলোড করুন</span>
+                      </>
+                    )}
+                  </button>
+
+                  {newProductImage && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200">
+                      <img
+                        src={newProductImage}
+                        alt="Preview"
+                        className="w-8 h-8 rounded-lg object-cover border border-slate-300 bg-white"
+                      />
+                      <span className="text-[11px] text-slate-600 truncate max-w-[120px] font-mono">
+                        {newProductImage}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-1">
+                  <input
+                    type="text"
+                    required
+                    value={newProductImage}
+                    onChange={(e) => setNewProductImage(e.target.value)}
+                    placeholder="বা ছবির লিংক দিন (e.g. /logo.png)"
+                    className="w-full px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-mono text-[11px] focus:outline-none focus:border-blue-600 focus:bg-white"
+                  />
+                </div>
               </div>
 
               <div>
@@ -670,7 +812,27 @@ export default function AdminDashboardPage() {
                             <div className="text-[10px] text-slate-500">Size: {it.size} • Qty: {it.quantity}</div>
                             {it.customization?.playerName && (
                               <div className="text-[10px] text-blue-700 font-mono font-semibold">
-                                Custom: {it.customization.playerName} #{it.customization.playerNumber}
+                                Player: {it.customization.playerName} #{it.customization.playerNumber}
+                              </div>
+                            )}
+                            {it.customization?.customText && (
+                              <div className="text-[10px] text-emerald-700 font-semibold">
+                                Text: "{it.customization.customText}" ({it.customization.textColor || 'White'})
+                              </div>
+                            )}
+                            {it.customization?.uploadedImage && (
+                              <div className="mt-1 flex items-center gap-1.5">
+                                <span className="text-[10px] text-indigo-700 font-bold">Custom Artwork:</span>
+                                <a
+                                  href={it.customization.uploadedImage}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] font-bold hover:bg-indigo-100"
+                                >
+                                  <ImageIcon className="h-3 w-3" />
+                                  <span>View Artwork PNG</span>
+                                  <ExternalLink className="h-2.5 w-2.5" />
+                                </a>
                               </div>
                             )}
                           </div>

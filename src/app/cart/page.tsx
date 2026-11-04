@@ -228,6 +228,16 @@ export default function CartPage() {
                           Custom: {item.customization.playerName} #{item.customization.playerNumber}
                         </div>
                       )}
+                      {item.customization?.customText && (
+                        <div className="text-[10px] text-emerald-700 font-semibold mt-0.5">
+                          Text: "{item.customization.customText}"
+                        </div>
+                      )}
+                      {item.customization?.uploadedImage && (
+                        <div className="text-[10px] text-indigo-700 font-semibold mt-0.5 flex items-center gap-1">
+                          <span>✓ Custom Artwork/Logo Attached</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 

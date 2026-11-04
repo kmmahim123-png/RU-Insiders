@@ -1,10 +1,11 @@
-export type ProductCategory = 
-  | 'all'
-  | 'hoodies' 
-  | 'drop-shoulder' 
-  | 'jerseys' 
-  | 't-shirts' 
-  | 'accessories';
+export type ProductCategory = string;
+
+export interface CategoryItem {
+  id: string;
+  name: string;
+  nameBn?: string;
+  slug: string;
+}
 
 export interface Product {
   id: string;
@@ -36,6 +37,12 @@ export interface CustomizerState {
   playerNumber: string;
   chestLogo: 'ru-monogram' | 'shabash-bangladesh' | 'ru-paris-road' | 'none';
   customText: string;
+  textColor: string;
+  textSize: number;
+  textPosition: 'chest' | 'center' | 'back' | 'lower';
+  uploadedImage?: string;
+  uploadedImageScale?: number;
+  uploadedImagePosition?: { x: number; y: number };
   fontStyle: 'sports' | 'serif' | 'clean';
 }
 
@@ -53,6 +60,10 @@ export interface CartItem {
     playerNumber?: string;
     chestLogo?: string;
     garmentType?: string;
+    customText?: string;
+    textColor?: string;
+    uploadedImage?: string;
+    view?: 'front' | 'back';
   };
 }
 
