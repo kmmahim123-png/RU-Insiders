@@ -1,9 +1,17 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Facebook, Printer, Sparkles, MapPin, Phone, Mail, ShieldCheck, Heart } from 'lucide-react';
 import AnimatedLogo from '@/components/AnimatedLogo';
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
   return (
     <footer className="w-full bg-white border-t border-slate-200 text-slate-600 text-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">

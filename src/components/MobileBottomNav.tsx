@@ -9,6 +9,10 @@ export default function MobileBottomNav() {
   const pathname = usePathname();
   const [cartCount, setCartCount] = useState(0);
 
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   useEffect(() => {
     const updateCount = () => {
       try {

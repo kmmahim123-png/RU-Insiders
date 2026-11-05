@@ -21,6 +21,11 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
 
+  // If on admin routes, hide consumer navbar to avoid duplicate header bars
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   useEffect(() => {
     const updateCartCount = () => {
       try {

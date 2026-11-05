@@ -24,20 +24,36 @@ import {
   Loader2, 
   Image as ImageIcon,
   UploadCloud,
-  Camera,
-  ExternalLink,
+  Camera, 
+  ExternalLink, 
   FolderPlus,
   Video,
   Play,
-  X
+  X,
+  Edit3,
+  Palette,
+  Bike,
+  PackageCheck,
+  Ban,
+  RotateCcw
 } from 'lucide-react';
 import RevenueCharts from '@/components/RevenueCharts';
 import PrintDesk from '@/components/PrintDesk';
 import SteadfastModal from '@/components/SteadfastModal';
-import AnimatedLogo from '@/components/AnimatedLogo';
 import { Product, Order, PrintJob, SteadfastConfig, ProductCategory, RevenueSummary } from '@/lib/types';
 import { formatBDT, formatDate } from '@/lib/utils';
 import { INITIAL_STEADFAST_CONFIG, calculateRevenueSummary } from '@/lib/store';
+
+const PRESET_COLORS = [
+  { name: 'Heritage Maroon', hex: '#881337' },
+  { name: 'Midnight Black', hex: '#0f172a' },
+  { name: 'Royal Blue', hex: '#1d4ed8' },
+  { name: 'Pure White', hex: '#ffffff' },
+  { name: 'Vintage Olive', hex: '#3f6212' },
+  { name: 'Washed Ash', hex: '#64748b' },
+  { name: 'Crimson Red', hex: '#dc2626' },
+  { name: 'Campus Navy', hex: '#1e3a8a' },
+];
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -57,6 +73,9 @@ export default function AdminDashboardPage() {
   // Steadfast Modal State
   const [selectedOrderForCourier, setSelectedOrderForCourier] = useState<Order | null>(null);
 
+  // Order Processing Stages Filter
+  const [orderStageFilter, setOrderStageFilter] = useState<'pending' | 'ready_for_pickup' | 'rider' | 'delivered' | 'cancelled' | 'all'>('pending');
+
   // New Product Form State
   const [newProductName, setNewProductName] = useState('');
   const [newProductNameBn, setNewProductNameBn] = useState('');
@@ -68,6 +87,12 @@ export default function AdminDashboardPage() {
   const [newProductVideo, setNewProductVideo] = useState('');
   const [newProductDesc, setNewProductDesc] = useState('');
   const [newProductCustomizable, setNewProductCustomizable] = useState(false);
+  const [newProductColors, setNewProductColors] = useState<{ name: string; hex: string }[]>([
+    { name: 'Heritage Maroon', hex: '#881337' },
+    { name: 'Midnight Black', hex: '#0f172a' },
+  ]);
+  const [customColorName, setCustomColorName] = useState('');
+  const [customColorHex, setCustomColorHex] = useState('#1d4ed8');
   const [submittingProduct, setSubmittingProduct] = useState(false);
 
   // Dynamic Categories State
@@ -81,7 +106,7 @@ export default function AdminDashboardPage() {
   const [isAddingNewCategory, setIsAddingNewCategory] = useState(false);
   const [customCategoryInput, setCustomCategoryInput] = useState('');
 
-  // 4 Images & Video Upload State
+  // 4 Images & Video Upload State (Add Product)
   const [uploadingSlot, setUploadingSlot] = useState<number | null>(null);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const slotInputRef0 = useRef<HTMLInputElement>(null);
@@ -89,6 +114,20 @@ export default function AdminDashboardPage() {
   const slotInputRef2 = useRef<HTMLInputElement>(null);
   const slotInputRef3 = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+
+  // Product Edit State
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editImages, setEditImages] = useState<string[]>(['', '', '', '']);
+  const [editVideo, setEditVideo] = useState('');
+  const [editColors, setEditColors] = useState<{ name: string; hex: string }[]>([]);
+  const [updatingProduct, setUpdatingProduct] = useState(false);
+  const [editUploadingSlot, setEditUploadingSlot] = useState<number | null>(null);
+  const [editUploadingVideo, setEditUploadingVideo] = useState(false);
+  const editSlotInputRef0 = useRef<HTMLInputElement>(null);
+  const editSlotInputRef1 = useRef<HTMLInputElement>(null);
+  const editSlotInputRef2 = useRef<HTMLInputElement>(null);
+  const editSlotInputRef3 = useRef<HTMLInputElement>(null);
+  const editVideoInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddNewCategory = (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,7 +148,6 @@ export default function AdminDashboardPage() {
     if (!e.target.files || !e.target.files[0]) return;
     const file = e.target.files[0];
 
-    // Local instant preview
     const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result) {
@@ -174,10 +212,142 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // Edit Handlers
+  const startEditingProduct = (p: Product) => {
+    setEditingProduct({ ...p });
+    const imgSlots = ['', '', '', ''];
+    if (p.images) {
+      p.images.forEach((img, idx) => {
+        if (idx < 4) imgSlots[idx] = img;
+      });
+    }
+    setEditImages(imgSlots);
+    setEditVideo(p.video || '');
+    setEditColors(p.colors && p.colors.length > 0 ? [...p.colors] : [...PRESET_COLORS.slice(0, 2)]);
+  };
+
+  const handleEditSlotImageUpload = async (slotIdx: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0]) return;
+    const file = e.target.files[0];
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setEditImages((prev) => {
+          const updated = [...prev];
+          updated[slotIdx] = event.target!.result as string;
+          return updated;
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+
+    try {
+      setEditUploadingSlot(slotIdx);
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.url) {
+        setEditImages((prev) => {
+          const updated = [...prev];
+          updated[slotIdx] = data.url;
+          return updated;
+        });
+        showNotification(`এডিট ছবি #${slotIdx + 1} সফলভাবে আপলোড হয়েছে!`);
+      }
+    } catch (err) {
+      console.error(err);
+      showNotification('ছবি আপলোডে সমস্যা হয়েছে', 'error');
+    } finally {
+      setEditUploadingSlot(null);
+    }
+  };
+
+  const handleEditVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0]) return;
+    const file = e.target.files[0];
+
+    try {
+      setEditUploadingVideo(true);
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.url) {
+        setEditVideo(data.url);
+        showNotification('এডিট ভিডিও সফলভাবে আপলোড হয়েছে!');
+      }
+    } catch (err) {
+      console.error(err);
+      showNotification('ভিডিও আপলোডে সমস্যা হয়েছে', 'error');
+    } finally {
+      setEditUploadingVideo(false);
+    }
+  };
+
+  const handleSaveProductEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+
+    setUpdatingProduct(true);
+    const pin = getAdminPin();
+
+    const finalImages = editImages.map((s) => s.trim()).filter(Boolean);
+    if (finalImages.length === 0) {
+      finalImages.push('/mockups/hoodie-front.jpg');
+    }
+
+    try {
+      const res = await fetch('/api/products', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': pin,
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          action: 'update',
+          id: editingProduct.id,
+          updates: {
+            name: editingProduct.name.trim(),
+            nameBn: editingProduct.nameBn?.trim() || '',
+            category: editingProduct.category,
+            price: Number(editingProduct.price),
+            costPrice: Number(editingProduct.costPrice),
+            stock: Number(editingProduct.stock),
+            isCustomizable: Boolean(editingProduct.isCustomizable),
+            images: finalImages,
+            video: editVideo.trim() || undefined,
+            colors: editColors.length > 0 ? editColors : [{ name: 'Standard', hex: '#881337' }],
+            description: editingProduct.description.trim(),
+          },
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to update product');
+      }
+
+      showNotification(`"${editingProduct.name}" সফলভাবে ডাটাবেজে আপডেট হয়েছে!`);
+      setEditingProduct(null);
+      loadDatabaseState();
+    } catch (err: any) {
+      showNotification(err.message || 'Error updating product', 'error');
+    } finally {
+      setUpdatingProduct(false);
+    }
+  };
+
   const getAdminPin = useCallback(() => {
-    return typeof window !== 'undefined' 
-      ? sessionStorage.getItem('ru_admin_token') || sessionStorage.getItem('ru_admin_pin') || '1953' 
-      : '1953';
+    return typeof window !== 'undefined' ? sessionStorage.getItem('ru_admin_pin') || '1953' : '1953';
   }, []);
 
   // Fetch full live database state
@@ -278,6 +448,7 @@ export default function AdminDashboardPage() {
           stock: newProductStock,
           images: finalImages,
           video: newProductVideo.trim() || undefined,
+          colors: newProductColors.length > 0 ? newProductColors : PRESET_COLORS.slice(0, 2),
           isCustomizable: newProductCustomizable,
         }),
       });
@@ -328,7 +499,7 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // Reorder Product Position (Move Up / Down)
+  // Reorder Product Position
   const handleMoveProduct = async (id: string, direction: 'up' | 'down') => {
     const pin = getAdminPin();
     try {
@@ -354,8 +525,12 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // Update Order Status
-  const handleUpdateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
+  // Update Order Status (Progression flow)
+  const handleUpdateOrderStatus = async (
+    orderId: string, 
+    newStatus: Order['status'], 
+    cancelledFrom?: string
+  ) => {
     const pin = getAdminPin();
     try {
       const res = await fetch('/api/orders', {
@@ -365,16 +540,39 @@ export default function AdminDashboardPage() {
           'x-admin-pin': pin,
         },
         credentials: 'include',
-        body: JSON.stringify({ id: orderId, status: newStatus }),
+        body: JSON.stringify({ id: orderId, status: newStatus, cancelledFrom }),
       });
 
       if (res.ok) {
-        showNotification('অর্ডার স্ট্যাটাস আপডেট হয়েছে!');
+        const statusLabels: Record<string, string> = {
+          ready_for_pickup: 'পণ্য প্রস্তুত ➔ Ready for Pickup-এ পাঠানো হয়েছে!',
+          rider: 'রাইডারের হাতে তুলে দেওয়া হয়েছে (Rider Handover)!',
+          delivered: 'ডেলিভারি সম্পন্ন (Delivered) হিসেবে চিহ্নিত হয়েছে!',
+          pending: 'অর্ডার পেন্ডিং তালিকায় স্থানান্তর করা হয়েছে!',
+          cancelled: 'অর্ডার বাতিল করা হয়েছে!',
+        };
+        showNotification(statusLabels[newStatus] || 'অর্ডার স্ট্যাটাস আপডেট হয়েছে!');
         loadDatabaseState();
       }
     } catch (err) {
       console.error(err);
     }
+  };
+
+  // Cancel Order with State Tracking
+  const handleCancelOrder = async (orderId: string, currentStatus: string) => {
+    const stageName = 
+      currentStatus === 'pending' ? 'Pending (পেন্ডিং অবস্থা)' :
+      currentStatus === 'ready_for_pickup' ? 'Ready for Pickup (পিকআপ প্রস্তুতি)' :
+      currentStatus === 'rider' ? 'Rider (রাইডারের কাছে থাকা অবস্থায়)' :
+      currentStatus === 'shipped_steadfast' ? 'Steadfast (কুরিয়ারে শিপ থাকা অবস্থায়)' :
+      'অর্ডার প্রসেসিং';
+
+    if (!confirm(`Are you sure you want to cancel this order? It will be marked as Cancelled from "${stageName}".`)) {
+      return;
+    }
+
+    await handleUpdateOrderStatus(orderId, 'cancelled', stageName);
   };
 
   // Delete Order
@@ -403,13 +601,22 @@ export default function AdminDashboardPage() {
 
   const revenueSummary: RevenueSummary = calculateRevenueSummary(orders, printJobs, products);
 
+  // Filter orders by active stage
+  const filteredOrders = orders.filter((o) => {
+    if (orderStageFilter === 'all') return true;
+    if (orderStageFilter === 'rider') return o.status === 'rider' || o.status === 'shipped_steadfast';
+    return o.status === orderStageFilter;
+  });
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
-      {/* Top Header */}
+      {/* Dedicated Clean Admin Header (No consumer navbar redundancy) */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div className="flex items-center gap-3">
-          <AnimatedLogo size={52} speed="normal" withBorder={true} />
+          <div className="w-12 h-12 rounded-full border-2 border-blue-600 p-0.5 bg-white shadow-sm overflow-hidden shrink-0">
+            <img src="/logo.png" alt="Logo" className="w-full h-full rounded-full object-cover" />
+          </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
               RU Insiders Central Control Suite
@@ -418,7 +625,7 @@ export default function AdminDashboardPage() {
               </span>
             </h1>
             <p className="text-xs text-slate-500 font-bengali">
-              প্রোডাক্ট সাজানো, অর্ডার ট্র্যাকিং, প্রিন্ট ডেস্ক ও স্টেডফাস্ট কুরিয়ার নিয়ন্ত্রণ
+              পণ্য আপলোড ও এডিট, ৫-ধাপের অর্ডার ম্যানেজমেন্ট, প্রিন্ট ডেস্ক ও স্টেডফাস্ট কুরিয়ার
             </p>
           </div>
         </div>
@@ -457,87 +664,11 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Executive Quick Stats Bar */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {/* Metric 1 */}
-        <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">মোট বিক্রয় (Revenue)</span>
-            <div className="text-lg sm:text-2xl font-black text-slate-900 font-mono">
-              {formatBDT(orders.reduce((sum, o) => sum + (o.status !== 'cancelled' ? o.total : 0), 0))}
-            </div>
-            <span className="text-[10px] text-emerald-600 font-bold block">
-              নেট লাভ: {formatBDT(orders.reduce((sum, o) => sum + (o.status !== 'cancelled' ? o.netProfit : 0), 0))}
-            </span>
-          </div>
-          <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-            <TrendingUp className="h-5 w-5" />
-          </div>
-        </div>
-
-        {/* Metric 2 */}
-        <div 
-          onClick={() => setActiveTab('orders')}
-          className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 hover:border-blue-400 shadow-sm flex items-center justify-between cursor-pointer transition-all"
-        >
-          <div className="space-y-1">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">নতুন অর্ডার (Pending)</span>
-            <div className="text-lg sm:text-2xl font-black text-blue-700 font-mono">
-              {orders.filter(o => o.status === 'pending').length}
-            </div>
-            <span className="text-[10px] text-slate-500 font-medium block">
-              মোট অর্ডার: {orders.length} টি
-            </span>
-          </div>
-          <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-            <ShoppingBag className="h-5 w-5" />
-          </div>
-        </div>
-
-        {/* Metric 3 */}
-        <div 
-          onClick={() => setActiveTab('print-desk')}
-          className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 hover:border-blue-400 shadow-sm flex items-center justify-between cursor-pointer transition-all"
-        >
-          <div className="space-y-1">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">প্রিন্ট রিকোয়েস্ট (Queue)</span>
-            <div className="text-lg sm:text-2xl font-black text-indigo-700 font-mono">
-              {printJobs.filter(j => j.status === 'queued').length}
-            </div>
-            <span className="text-[10px] text-slate-500 font-medium block">
-              মোট প্রিন্ট জব: {printJobs.length} টি
-            </span>
-          </div>
-          <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-            <Printer className="h-5 w-5" />
-          </div>
-        </div>
-
-        {/* Metric 4 */}
-        <div 
-          onClick={() => setActiveTab('products')}
-          className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 hover:border-blue-400 shadow-sm flex items-center justify-between cursor-pointer transition-all"
-        >
-          <div className="space-y-1">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">লাইভ প্রোডাক্টস</span>
-            <div className="text-lg sm:text-2xl font-black text-slate-900 font-mono">
-              {products.length}
-            </div>
-            <span className="text-[10px] text-blue-600 font-medium block">
-              স্টক ও সিকোয়েন্স রেডি
-            </span>
-          </div>
-          <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-            <ShieldCheck className="h-5 w-5" />
-          </div>
-        </div>
-      </div>
-
       {/* Main Tab Navigation */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200">
         {[
-          { id: 'products', label: 'Product Manager (পণ্য ও ক্রম)', icon: PlusCircle, count: products.length },
-          { id: 'orders', label: 'Merchandise Orders', icon: ShoppingBag, count: orders.length },
+          { id: 'products', label: 'Product Manager (পণ্য ও এডিট)', icon: PlusCircle, count: products.length },
+          { id: 'orders', label: 'Merchandise Orders (৫ ধাপের অর্ডার)', icon: ShoppingBag, count: orders.length },
           { id: 'print-desk', label: 'Print Lagbe Desk', icon: Printer, count: printJobs.filter(j => j.status === 'queued').length },
           { id: 'analytics', label: 'Revenue & Profit', icon: TrendingUp, count: null },
           { id: 'steadfast', label: 'Steadfast Courier API', icon: Truck, count: null },
@@ -703,6 +834,63 @@ export default function AdminDashboardPage() {
                   >
                     {newProductCustomizable ? 'YES (Customizable)' : 'NO'}
                   </button>
+                </div>
+              </div>
+
+              {/* Product Colors Manager */}
+              <div className="space-y-2 pt-1 border-t border-slate-100">
+                <label className="block text-slate-700 font-semibold text-xs flex items-center gap-1.5">
+                  <Palette className="h-3.5 w-3.5 text-blue-600" />
+                  <span>Available Colors (পণ্যের রং)</span>
+                </label>
+
+                {/* Selected Colors Chips */}
+                <div className="flex flex-wrap gap-1.5">
+                  {newProductColors.map((c, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2.5 py-1 rounded-xl bg-white border border-slate-200 text-[11px] font-bold text-slate-800 flex items-center gap-1.5 shadow-xs"
+                    >
+                      <span className="w-3 h-3 rounded-full border border-slate-300" style={{ backgroundColor: c.hex }} />
+                      <span>{c.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => setNewProductColors(newProductColors.filter((_, i) => i !== idx))}
+                        className="text-slate-400 hover:text-rose-600 ml-0.5"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+
+                {/* Preset Color Selection Buttons */}
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  <span className="text-[10px] text-slate-400 font-bold self-center">প্রিসেট:</span>
+                  {PRESET_COLORS.map((preset) => {
+                    const isSelected = newProductColors.some((c) => c.name === preset.name);
+                    return (
+                      <button
+                        key={preset.name}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setNewProductColors(newProductColors.filter((c) => c.name !== preset.name));
+                          } else {
+                            setNewProductColors([...newProductColors, preset]);
+                          }
+                        }}
+                        className={`px-2 py-1 rounded-lg text-[10px] font-semibold flex items-center gap-1 border transition-all ${
+                          isSelected 
+                            ? 'bg-blue-50 border-blue-600 text-blue-900 ring-1 ring-blue-600' 
+                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full border border-slate-300" style={{ backgroundColor: preset.hex }} />
+                        <span>{preset.name}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -939,7 +1127,7 @@ export default function AdminDashboardPage() {
             </button>
           </form>
 
-          {/* Product Position Reordering & Deletion Table (7 Cols) */}
+          {/* Product Placement & Order Table (7 Cols) */}
           <div className="lg:col-span-7 glass-panel p-6 rounded-3xl border border-slate-200 bg-white shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -947,7 +1135,7 @@ export default function AdminDashboardPage() {
                   <span>Product Placement & Order ({products.length})</span>
                 </h3>
                 <p className="text-xs text-slate-500 font-bengali">
-                  উপরে-নিচে নামিয়ে হোমপেজের কোন পণ্য কোথায় থাকবে তা ঠিক করুন অথবা যেকোনো পণ্য ডিলিট করুন।
+                  উপরে-নিচে নামিয়ে অবস্থান ঠিক করুন, এডিট বাটনে ক্লিক করে পণ্য আপডেট করুন অথবা ডিলিট করুন।
                 </p>
               </div>
               <span className="text-xs font-mono font-bold text-blue-700 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-200">
@@ -996,8 +1184,18 @@ export default function AdminDashboardPage() {
                     </div>
                   </div>
 
-                  {/* Right: Reorder Buttons & Delete Action */}
+                  {/* Right: Actions (Move, Edit, Delete) */}
                   <div className="flex items-center gap-1.5 self-end sm:self-center shrink-0">
+                    {/* Edit Product */}
+                    <button
+                      onClick={() => startEditingProduct(p)}
+                      className="px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 transition-colors shadow-sm flex items-center gap-1 text-xs font-bold"
+                      title="Edit Product Details, Colors & Photos"
+                    >
+                      <Edit3 className="h-3.5 w-3.5" />
+                      <span>এডিট</span>
+                    </button>
+
                     {/* Move Up */}
                     <button
                       disabled={idx === 0}
@@ -1035,46 +1233,91 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* TAB 2: MERCHANDISE ORDERS PROCESSING */}
+      {/* TAB 2: MERCHANDISE ORDERS (5-STAGE PROGRESSION PIPELINE) */}
       {activeTab === 'orders' && (
         <div className="space-y-6">
-          <div className="glass-panel p-5 rounded-2xl border border-slate-200 bg-white flex items-center justify-between shadow-sm">
+          <div className="glass-panel p-5 rounded-2xl border border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
             <div>
               <h2 className="text-lg font-bold text-slate-900">Live Customer Orders ({orders.length})</h2>
               <p className="text-xs text-slate-500 font-bengali">
-                কাস্টমার চেকআউট থেকে সরাসরি আসা অর্ডার তালিকা ও স্টেডফাস্ট কুরিয়ার ডিসপ্যাচ
+                পেন্ডিং ➔ পিকআপ প্রস্তুত ➔ রাইডার হ্যান্ডওভার ➔ ডেলিভারি সম্পন্ন ধাপসমূহ নিয়ন্ত্রণ করুন
               </p>
             </div>
             <button
               onClick={loadDatabaseState}
-              className="text-xs text-blue-600 hover:underline flex items-center gap-1 font-semibold"
+              className="text-xs text-blue-600 hover:underline flex items-center gap-1 font-semibold self-start sm:self-auto"
             >
               <RefreshCw className="h-3 w-3" /> Refresh
             </button>
           </div>
 
-          {orders.length === 0 ? (
-            <div className="glass-panel p-16 text-center rounded-3xl border border-slate-200 bg-white text-slate-500 text-sm shadow-sm">
-              এখনও কোনো অর্ডার আসেনি। স্টোরে কোনো অর্ডার প্লেস করলে তা এখানে তাৎক্ষণিক প্রদর্শিত হবে।
+          {/* 5-Stage Order Pipeline Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2">
+            {[
+              { id: 'pending', label: '১. Pending (পেন্ডিং)', count: orders.filter(o => o.status === 'pending').length, color: 'text-amber-700 bg-amber-50 border-amber-200' },
+              { id: 'ready_for_pickup', label: '২. Ready for Pickup (পিকআপ প্রস্তুত)', count: orders.filter(o => o.status === 'ready_for_pickup').length, color: 'text-blue-700 bg-blue-50 border-blue-200' },
+              { id: 'rider', label: '৩. Rider (রাইডারের কাছে)', count: orders.filter(o => o.status === 'rider' || o.status === 'shipped_steadfast').length, color: 'text-purple-700 bg-purple-50 border-purple-200' },
+              { id: 'delivered', label: '৪. Delivered (ডেলিভার্ড)', count: orders.filter(o => o.status === 'delivered').length, color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+              { id: 'cancelled', label: '৫. Cancelled (বাতিলকৃত)', count: orders.filter(o => o.status === 'cancelled').length, color: 'text-rose-700 bg-rose-50 border-rose-200' },
+              { id: 'all', label: 'সব অর্ডার (All)', count: orders.length, color: 'text-slate-700 bg-slate-50 border-slate-200' },
+            ].map((stage) => {
+              const isSelected = orderStageFilter === stage.id;
+              return (
+                <button
+                  key={stage.id}
+                  onClick={() => setOrderStageFilter(stage.id as any)}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-2 border transition-all ${
+                    isSelected 
+                      ? 'bg-slate-900 text-white border-slate-900 shadow-sm ring-1 ring-slate-900' 
+                      : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                  }`}
+                >
+                  <span>{stage.label}</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                    isSelected ? 'bg-white/20 text-white' : stage.color
+                  }`}>
+                    {stage.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {filteredOrders.length === 0 ? (
+            <div className="glass-panel p-16 text-center rounded-3xl border border-slate-200 bg-white text-slate-500 text-sm shadow-sm space-y-2">
+              <PackageCheck className="h-10 w-10 text-slate-400 mx-auto" />
+              <p>এই পর্যায়ে কোনো অর্ডার নেই।</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {orders.map((order) => (
+              {filteredOrders.map((order) => (
                 <div
                   key={order.id}
                   className="glass-card p-5 rounded-2xl border border-slate-200 bg-white shadow-sm space-y-4"
                 >
+                  {/* Top Bar: Order ID, Status, Cancellation Notice */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-mono font-bold text-blue-700">{order.orderNumber}</span>
+                      
                       <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase ${
                         order.status === 'delivered' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                        order.status === 'rider' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
                         order.status === 'shipped_steadfast' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                        order.status === 'ready_for_pickup' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                        order.status === 'cancelled' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
                         'bg-amber-50 text-amber-800 border border-amber-200'
                       }`}>
-                        {order.status.replace(/_/g, ' ')}
+                        {order.status === 'rider' ? 'Rider / On The Way' : order.status.replace(/_/g, ' ')}
                       </span>
+
+                      {order.status === 'cancelled' && order.cancelledFrom && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold border border-rose-300">
+                          বাতিল পর্যায়: {order.cancelledFrom}
+                        </span>
+                      )}
                     </div>
+
                     <div className="flex items-center gap-3">
                       <span className="text-xs text-slate-500 font-mono">{formatDate(order.createdAt)}</span>
                       <button
@@ -1087,6 +1330,7 @@ export default function AdminDashboardPage() {
                     </div>
                   </div>
 
+                  {/* Order Details Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                     <div className="space-y-2">
                       <h4 className="font-bold text-slate-800">Customer Details:</h4>
@@ -1107,30 +1351,10 @@ export default function AdminDashboardPage() {
                         <div key={idx} className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                           <div>
                             <div className="font-bold text-slate-900">{it.name}</div>
-                            <div className="text-[10px] text-slate-500">Size: {it.size} • Qty: {it.quantity}</div>
+                            <div className="text-[10px] text-slate-500">Size: {it.size} • Color: {it.color} • Qty: {it.quantity}</div>
                             {it.customization?.playerName && (
                               <div className="text-[10px] text-blue-700 font-mono font-semibold">
                                 Player: {it.customization.playerName} #{it.customization.playerNumber}
-                              </div>
-                            )}
-                            {it.customization?.customText && (
-                              <div className="text-[10px] text-emerald-700 font-semibold">
-                                Text: "{it.customization.customText}" ({it.customization.textColor || 'White'})
-                              </div>
-                            )}
-                            {it.customization?.uploadedImage && (
-                              <div className="mt-1 flex items-center gap-1.5">
-                                <span className="text-[10px] text-indigo-700 font-bold">Custom Artwork:</span>
-                                <a
-                                  href={it.customization.uploadedImage}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] font-bold hover:bg-indigo-100"
-                                >
-                                  <ImageIcon className="h-3 w-3" />
-                                  <span>View Artwork PNG</span>
-                                  <ExternalLink className="h-2.5 w-2.5" />
-                                </a>
                               </div>
                             )}
                           </div>
@@ -1145,49 +1369,104 @@ export default function AdminDashboardPage() {
                     </div>
                   </div>
 
-                  {/* Actions */}
+                  {/* Step-by-Step Stage Progression Actions */}
                   <div className="pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
-                    {order.steadfastTrackingCode ? (
-                      <div className="text-xs text-blue-700 flex items-center gap-2">
-                        <Truck className="h-4 w-4" />
-                        <span>Steadfast Tracking: <strong className="font-mono text-slate-900">{order.steadfastTrackingCode}</strong></span>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setSelectedOrderForCourier(order)}
-                        className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
-                      >
-                        <Truck className="h-3.5 w-3.5" />
-                        <span>Dispatch via Steadfast Courier</span>
-                      </button>
-                    )}
+                    <div className="flex flex-wrap items-center gap-2">
+                      
+                      {/* 1. Pending Stage Action: Move to Ready for Pickup */}
+                      {order.status === 'pending' && (
+                        <button
+                          onClick={() => handleUpdateOrderStatus(order.id, 'ready_for_pickup')}
+                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
+                        >
+                          <PackageCheck className="h-4 w-4" />
+                          <span>📦 পণ্য প্রস্তুত ➔ Ready for Pickup-এ পাঠান</span>
+                        </button>
+                      )}
 
-                    <div className="flex items-center gap-2">
-                      <select
-                        value={order.status}
-                        onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value as any)}
-                        className="px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-blue-600 shadow-sm"
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="processing">Processing</option>
-                        <option value="ready_for_pickup">Ready for Pickup</option>
-                        <option value="shipped_steadfast">Shipped (Steadfast)</option>
-                        <option value="delivered">Delivered</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
+                      {/* 2. Ready for Pickup Stage Action: Move to Rider */}
+                      {order.status === 'ready_for_pickup' && (
+                        <button
+                          onClick={() => handleUpdateOrderStatus(order.id, 'rider')}
+                          className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
+                        >
+                          <Bike className="h-4 w-4" />
+                          <span>🚴‍♂️ রাইডারকে বুঝিয়ে দিন ➔ Handover to Rider</span>
+                        </button>
+                      )}
 
-                      <a
-                        href={`https://wa.me/88${order.customerPhone.replace(/^0/, '')}?text=${encodeURIComponent(
-                          `আসসালামু আলাইকুম ${order.customerName}, আপনার RU Insiders অর্ডার #${order.orderNumber} এর স্ট্যাটাস: ${order.status.replace(/_/g, ' ')}। ধন্যবাদ!`
-                        )}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-emerald-700 transition-colors"
-                        title="WhatsApp Customer"
-                      >
-                        <Send className="h-4 w-4" />
-                      </a>
+                      {/* 3. Rider Stage Action: Move to Delivered */}
+                      {(order.status === 'rider' || order.status === 'shipped_steadfast') && (
+                        <button
+                          onClick={() => handleUpdateOrderStatus(order.id, 'delivered')}
+                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
+                        >
+                          <Check className="h-4 w-4" />
+                          <span>✅ ডেলিভারি সম্পন্ন ➔ Mark as Delivered</span>
+                        </button>
+                      )}
+
+                      {/* 4. Delivered Stage Badge */}
+                      {order.status === 'delivered' && (
+                        <span className="px-3.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center gap-1.5">
+                          <Check className="h-4 w-4 text-emerald-600" />
+                          <span>সফলভাবে ডেলিভারি সম্পন্ন</span>
+                        </span>
+                      )}
+
+                      {/* 5. Cancel Action Available at Any Step */}
+                      {order.status !== 'cancelled' && order.status !== 'delivered' && (
+                        <button
+                          onClick={() => handleCancelOrder(order.id, order.status)}
+                          className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs flex items-center gap-1 transition-colors"
+                        >
+                          <Ban className="h-3.5 w-3.5" />
+                          <span>অর্ডার বাতিল (Cancel)</span>
+                        </button>
+                      )}
+
+                      {/* 6. Restore Option for Cancelled Orders */}
+                      {order.status === 'cancelled' && (
+                        <button
+                          onClick={() => handleUpdateOrderStatus(order.id, 'pending')}
+                          className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center gap-1.5 transition-colors"
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" />
+                          <span>পুনরায় চালু করুন (Restore to Pending)</span>
+                        </button>
+                      )}
+
+                      {/* Steadfast Dispatch Option */}
+                      {order.status !== 'cancelled' && order.status !== 'delivered' && (
+                        order.steadfastTrackingCode ? (
+                          <div className="text-xs text-blue-700 flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-200">
+                            <Truck className="h-3.5 w-3.5" />
+                            <span>Steadfast: <strong className="font-mono text-slate-900">{order.steadfastTrackingCode}</strong></span>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setSelectedOrderForCourier(order)}
+                            className="px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold text-xs flex items-center gap-1.5 transition-all"
+                          >
+                            <Truck className="h-3.5 w-3.5" />
+                            <span>Steadfast কুরিয়ার বুকিং</span>
+                          </button>
+                        )
+                      )}
                     </div>
+
+                    {/* WhatsApp Customer Action */}
+                    <a
+                      href={`https://wa.me/88${order.customerPhone.replace(/^0/, '')}?text=${encodeURIComponent(
+                        `আসসালামু আলাইকুম ${order.customerName}, আপনার RU Insiders অর্ডার #${order.orderNumber} এর স্ট্যাটাস: ${order.status.replace(/_/g, ' ')}। ধন্যবাদ!`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-emerald-700 transition-colors"
+                      title="WhatsApp Customer"
+                    >
+                      <Send className="h-4 w-4" />
+                    </a>
                   </div>
 
                 </div>
@@ -1197,56 +1476,39 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* TAB 3: PRINT DESK OPERATOR CONSOLE */}
+      {/* TAB 3: PRINT DESK */}
       {activeTab === 'print-desk' && (
-        <PrintDesk initialJobs={printJobs} onJobUpdate={setPrintJobs} />
+        <PrintDesk
+          initialJobs={printJobs}
+          onJobUpdate={() => loadDatabaseState()}
+        />
       )}
 
-      {/* TAB 4: REVENUE & PROFIT ANALYTICS */}
+      {/* TAB 4: REVENUE & PROFIT */}
       {activeTab === 'analytics' && (
         <RevenueCharts summary={revenueSummary} />
       )}
 
       {/* TAB 5: STEADFAST COURIER API CONFIG */}
       {activeTab === 'steadfast' && (
-        <div className="max-w-2xl mx-auto glass-panel p-8 rounded-3xl border border-slate-200 bg-white shadow-sm space-y-6">
-          <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
-            <div className="p-3 rounded-2xl bg-blue-50 text-blue-600">
-              <Truck className="h-6 w-6" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">Steadfast Courier API Settings</h2>
-              <p className="text-xs text-slate-500 font-bengali">
-                স্টেডফাস্ট মার্চেন্ট পোর্টাল থেকে পাওয়া API Key ও Secret Key সেভ করুন
-              </p>
-            </div>
+        <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white max-w-2xl mx-auto space-y-6 shadow-sm">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <Truck className="h-6 w-6 text-blue-600" />
+              <span>Steadfast Courier API Integration</span>
+            </h2>
+            <p className="text-xs text-slate-500 font-bengali mt-1">
+              সরাসরি স্টেডফাস্ট কুরিয়ারের সাথে কানেক্ট করে এক ক্লিকে পার্সেল বুকিং ও অটো-ট্র্যাকিং চালান।
+            </p>
           </div>
 
           <div className="space-y-4 text-xs">
-            {/* Status Indicator */}
-            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-              <span className="font-semibold text-slate-700">Gateway Status:</span>
-              <span className={`text-[11px] font-bold px-3 py-1 rounded-full font-mono flex items-center gap-1.5 ${
-                steadfastConfig.apiKey && !steadfastConfig.apiKey.startsWith('DEMO_')
-                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                  : 'bg-amber-50 text-amber-800 border border-amber-200'
-              }`}>
-                <span className={`w-2 h-2 rounded-full ${
-                  steadfastConfig.apiKey && !steadfastConfig.apiKey.startsWith('DEMO_') ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
-                }`} />
-                {steadfastConfig.apiKey && !steadfastConfig.apiKey.startsWith('DEMO_')
-                  ? 'LIVE CREDENTIALS READY'
-                  : 'DEMO / SIMULATION MODE'}
-              </span>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-200 text-slate-700 space-y-1">
+            <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-1.5">
               <p className="font-bold text-blue-900">📌 কীভাবে API Key পাবেন ও কানেক্ট করবেন?</p>
               <p className="text-[11px] font-bengali leading-relaxed text-slate-600">
                 1. <a href="https://portal.steadfast.com.bd" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-bold">portal.steadfast.com.bd</a> এ লগইন করুন। <br />
                 2. বাম পাশের মেনু থেকে <strong>Settings &gt; API Key</strong> অপশনে যান। <br />
-                3. সেখানে প্রাপ্ত <strong>Api Key</strong> এবং <strong>Secret Key</strong> কপি করে নিচের বক্সে বসিয়ে সেভ করুন। <br />
-                4. Steadfast এর অফিশিয়াল API Endpoint হলো: <code className="bg-white px-1.5 py-0.5 rounded border border-blue-200 font-mono text-blue-700 font-bold">https://portal.packzy.com/api/v1</code>
+                3. সেখানে প্রাপ্ত <strong>Api Key</strong> এবং <strong>Secret Key</strong> কপি করে নিচের বক্সে বসিয়ে সেভ করুন।
               </p>
             </div>
 
@@ -1311,7 +1573,6 @@ export default function AdminDashboardPage() {
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              {/* Test Connection Button */}
               <button
                 type="button"
                 disabled={testingSteadfast}
@@ -1361,7 +1622,6 @@ export default function AdminDashboardPage() {
                 )}
               </button>
 
-              {/* Save Settings Button */}
               <button
                 type="button"
                 onClick={async () => {
@@ -1406,6 +1666,288 @@ export default function AdminDashboardPage() {
           onClose={() => setSelectedOrderForCourier(null)}
           onSuccess={handleCourierSuccess}
         />
+      )}
+
+      {/* EDIT PRODUCT MODAL */}
+      {editingProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 space-y-5 shadow-2xl border border-slate-200">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Edit3 className="h-5 w-5 text-blue-600" />
+                  <span>পণ্য এডিট করুন: {editingProduct.name}</span>
+                </h3>
+                <p className="text-xs text-slate-500 font-bengali">
+                  নাম, দাম, কালার, ছবি ও ভিডিও পরিবর্তন করে ডাটাবেজে সেভ করুন।
+                </p>
+              </div>
+              <button
+                onClick={() => setEditingProduct(null)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProductEdit} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-slate-700 mb-1 font-semibold">Product Title (ইংরেজি নাম)</label>
+                <input
+                  type="text"
+                  required
+                  value={editingProduct.name}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:outline-none focus:border-blue-600 focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 mb-1 font-semibold">Bangla Title (বাংলা নাম)</label>
+                <input
+                  type="text"
+                  value={editingProduct.nameBn || ''}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, nameBn: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bengali focus:outline-none focus:border-blue-600 focus:bg-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-slate-700 mb-1 font-semibold">Category</label>
+                  <select
+                    value={editingProduct.category}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:outline-none focus:border-blue-600 focus:bg-white"
+                  >
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-slate-700 mb-1 font-semibold">Price (বিক্রয় মূল্য ৳)</label>
+                  <input
+                    type="number"
+                    required
+                    value={editingProduct.price}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, price: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-blue-700 font-bold focus:outline-none focus:border-blue-600 focus:bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 mb-1 font-semibold">Stock (স্টক)</label>
+                  <input
+                    type="number"
+                    required
+                    value={editingProduct.stock}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, stock: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:outline-none focus:border-blue-600 focus:bg-white"
+                  />
+                </div>
+              </div>
+
+              {/* Edit Colors */}
+              <div className="space-y-2 pt-2 border-t border-slate-200">
+                <label className="block text-slate-700 font-semibold text-xs flex items-center gap-1.5">
+                  <Palette className="h-3.5 w-3.5 text-blue-600" />
+                  <span>Available Colors (রং পরিবর্তন করুন)</span>
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {editColors.map((c, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-bold text-slate-800 flex items-center gap-1.5"
+                    >
+                      <span className="w-3 h-3 rounded-full border border-slate-300" style={{ backgroundColor: c.hex }} />
+                      <span>{c.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => setEditColors(editColors.filter((_, i) => i !== idx))}
+                        className="text-slate-400 hover:text-rose-600"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {PRESET_COLORS.map((preset) => {
+                    const isSelected = editColors.some((c) => c.name === preset.name);
+                    return (
+                      <button
+                        key={preset.name}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) setEditColors(editColors.filter((c) => c.name !== preset.name));
+                          else setEditColors([...editColors, preset]);
+                        }}
+                        className={`px-2 py-1 rounded-lg text-[10px] font-semibold flex items-center gap-1 border transition-all ${
+                          isSelected ? 'bg-blue-50 border-blue-600 text-blue-900 ring-1 ring-blue-600' : 'bg-slate-50 border-slate-200 text-slate-600'
+                        }`}
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full border border-slate-300" style={{ backgroundColor: preset.hex }} />
+                        <span>{preset.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Edit 4 Photo Slots */}
+              <div className="space-y-3 pt-2 border-t border-slate-200">
+                <label className="text-slate-900 font-bold text-xs flex items-center gap-1.5">
+                  <ImageIcon className="h-4 w-4 text-blue-600" />
+                  <span>Product Photos (৪টি ছবি এডিট করুন)</span>
+                </label>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {[0, 1, 2, 3].map((slotIdx) => {
+                    const currentImg = editImages[slotIdx];
+                    const isUploading = editUploadingSlot === slotIdx;
+                    const ref = [editSlotInputRef0, editSlotInputRef1, editSlotInputRef2, editSlotInputRef3][slotIdx];
+
+                    return (
+                      <div key={slotIdx} className="p-2 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                        <input
+                          type="file"
+                          ref={ref}
+                          accept="image/*"
+                          onChange={(e) => handleEditSlotImageUpload(slotIdx, e)}
+                          className="hidden"
+                        />
+                        <div className="flex justify-between items-center text-[10px] font-bold">
+                          <span>#{slotIdx + 1} {slotIdx === 0 ? 'Main' : ''}</span>
+                        </div>
+
+                        <div className="relative aspect-square rounded-xl overflow-hidden bg-white border border-slate-200 flex items-center justify-center">
+                          {currentImg ? (
+                            <>
+                              <img
+                                src={currentImg}
+                                alt={`Slot ${slotIdx + 1}`}
+                                onError={(e) => { e.currentTarget.src = '/mockups/hoodie-front.jpg'; }}
+                                className="w-full h-full object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditImages((prev) => {
+                                    const updated = [...prev];
+                                    updated[slotIdx] = '';
+                                    return updated;
+                                  });
+                                }}
+                                className="absolute top-1 right-1 p-1 rounded-full bg-black/70 text-white hover:bg-rose-600"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </>
+                          ) : (
+                            <div
+                              onClick={() => ref.current?.click()}
+                              className="w-full h-full flex flex-col items-center justify-center cursor-pointer text-slate-400 hover:text-blue-600"
+                            >
+                              <Camera className="h-5 w-5" />
+                              <span className="text-[9px] font-bold">+ ছবি দিন</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => ref.current?.click()}
+                          disabled={isUploading}
+                          className="w-full py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[10px] flex items-center justify-center gap-1"
+                        >
+                          {isUploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <UploadCloud className="h-3 w-3" />}
+                          <span>{currentImg ? 'পরিবর্তন' : 'আপলোড'}</span>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Edit Video */}
+              <div className="p-3 rounded-2xl bg-indigo-50/60 border border-indigo-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                    <Video className="h-3.5 w-3.5 text-indigo-600" />
+                    <span>Product Video</span>
+                  </span>
+                  {editVideo && (
+                    <button
+                      type="button"
+                      onClick={() => setEditVideo('')}
+                      className="text-[10px] text-rose-600 hover:text-rose-800 font-bold"
+                    >
+                      রিমুভ ভিডিও
+                    </button>
+                  )}
+                </div>
+
+                <input
+                  type="file"
+                  ref={editVideoInputRef}
+                  accept="video/*"
+                  onChange={handleEditVideoUpload}
+                  className="hidden"
+                />
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => editVideoInputRef.current?.click()}
+                    disabled={editUploadingVideo}
+                    className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] flex items-center gap-1"
+                  >
+                    {editUploadingVideo ? <Loader2 className="h-3 w-3 animate-spin" /> : <Video className="h-3 w-3" />}
+                    <span>ভিডিও আপলোড</span>
+                  </button>
+                  <input
+                    type="text"
+                    placeholder="বা ভিডিও লিংক দিন"
+                    value={editVideo}
+                    onChange={(e) => setEditVideo(e.target.value)}
+                    className="flex-1 px-3 py-1.5 rounded-xl bg-white border border-indigo-200 font-mono text-[11px]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 mb-1 font-semibold">Description</label>
+                <textarea
+                  rows={2}
+                  value={editingProduct.description}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-blue-600 focus:bg-white"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setEditingProduct(null)}
+                  className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs"
+                >
+                  বাতিল (Cancel)
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={updatingProduct}
+                  className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md"
+                >
+                  {updatingProduct ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  <span>আপডেট ও সেভ করুন (Save Changes)</span>
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </div>
       )}
 
     </div>

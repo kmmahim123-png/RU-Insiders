@@ -82,7 +82,9 @@ export interface Order {
   total: number;
   estimatedCost: number; // Total cost price of products
   netProfit: number;
-  status: 'pending' | 'processing' | 'shipped_steadfast' | 'ready_for_pickup' | 'delivered' | 'cancelled';
+  status: 'pending' | 'processing' | 'ready_for_pickup' | 'rider' | 'shipped_steadfast' | 'delivered' | 'cancelled';
+  cancelledFrom?: string;
+  riderName?: string;
   steadfastConsignmentId?: string;
   steadfastTrackingCode?: string;
   createdAt: string;

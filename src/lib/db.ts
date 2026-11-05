@@ -222,7 +222,9 @@ export async function updateOrderStatus(
   orderId: string,
   status: Order['status'],
   steadfastTrackingCode?: string,
-  steadfastConsignmentId?: string
+  steadfastConsignmentId?: string,
+  cancelledFrom?: string,
+  riderName?: string
 ): Promise<Order | null> {
   return runAtomic(async () => {
     const db = await readDb();
@@ -232,6 +234,8 @@ export async function updateOrderStatus(
     db.orders[index].status = status;
     if (steadfastTrackingCode) db.orders[index].steadfastTrackingCode = steadfastTrackingCode;
     if (steadfastConsignmentId) db.orders[index].steadfastConsignmentId = steadfastConsignmentId;
+    if (cancelledFrom) db.orders[index].cancelledFrom = cancelledFrom;
+    if (riderName) db.orders[index].riderName = riderName;
 
     await writeDb(db);
     return db.orders[index];

@@ -194,7 +194,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, status, steadfastTrackingCode, steadfastConsignmentId } = body;
+    const { id, status, steadfastTrackingCode, steadfastConsignmentId, cancelledFrom, riderName } = body;
 
     if (!id || !status) {
       return NextResponse.json(
@@ -203,7 +203,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const updated = await updateOrderStatus(id, status, steadfastTrackingCode, steadfastConsignmentId);
+    const updated = await updateOrderStatus(id, status, steadfastTrackingCode, steadfastConsignmentId, cancelledFrom, riderName);
     if (!updated) {
       return NextResponse.json({ success: false, message: 'Order not found.' }, { status: 404 });
     }
