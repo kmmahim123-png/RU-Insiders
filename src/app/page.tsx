@@ -15,16 +15,31 @@ import {
 } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import FilterModal, { FilterState } from '@/components/FilterModal';
-import AnimatedLogo from '@/components/AnimatedLogo';
 import { Product } from '@/lib/types';
 import { INITIAL_PRODUCTS } from '@/lib/store';
 import { formatBDT } from '@/lib/utils';
+
+const campusSlides = [
+  { src: '/campus/paris-road.jpg', name: 'প্যারিস রোড' },
+  { src: '/campus/paris-road-rain.jpg', name: 'বৃষ্টিতে মতিহার' },
+  { src: '/campus/ru-gate.jpg', name: 'প্রধান ফটক' },
+  { src: '/campus/ru-admin.jpg', name: 'প্রশাসন ভবন' },
+];
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  // Dynamic campus slideshow timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % campusSlides.length);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, []);
 
   const [filters, setFilters] = useState<FilterState>({
     category: 'all',
@@ -107,32 +122,54 @@ export default function HomePage() {
   return (
     <div className="space-y-8 sm:space-y-12 pb-20 overflow-hidden bg-white">
 
-      {/* 1. Minimalist Campus Hero */}
-      <section className="relative overflow-hidden border-b border-slate-200/80 bg-slate-50">
-        <div
-          className="absolute inset-0 bg-cover bg-center filter brightness-[0.94] opacity-25"
-          style={{ backgroundImage: `url('/ru-campus.jpg')` }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 to-white/80" />
+      {/* 1. Minimalist Campus Hero with Dynamic Slideshow */}
+      <section className="relative overflow-hidden border-b border-slate-200/80 bg-slate-50 min-h-[220px] sm:min-h-[260px] flex items-center">
+        {/* Dynamic Campus Photos Slideshow (halka halka thakbe and akta akta kore change hobe) */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {campusSlides.map((slide, index) => (
+            <div
+              key={slide.src}
+              className={`absolute inset-0 bg-cover bg-center transition-all duration-1000 ease-in-out filter brightness-[0.96] ${
+                index === activeSlide ? 'opacity-25 scale-105' : 'opacity-0 scale-100'
+              }`}
+              style={{ backgroundImage: `url('${slide.src}')` }}
+            />
+          ))}
+          {/* Gentle gradient overlay so text remains 100% crisp & readable */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/75" />
+          <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-white/40" />
+        </div>
 
-        <div className="relative max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+        <div className="relative w-full max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
 
-            <div className="max-w-2xl flex items-start sm:items-center gap-4">
-              <div className="shrink-0 p-1 rounded-full bg-white shadow-md border-2 border-amber-400">
-                <AnimatedLogo size={68} speed="fast" withBorder={false} />
+            <div className="max-w-2xl space-y-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50/90 backdrop-blur-sm border border-blue-200 text-blue-800 text-xs font-bold tracking-wide shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>RU Insiders • মতিহারের সবুজ চত্বর</span>
+                <span className="text-slate-300">|</span>
+                <span className="text-blue-600 font-semibold text-[11px]">📍 {campusSlides[activeSlide].name}</span>
               </div>
-              <div className="space-y-1.5">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-xs font-bold tracking-wide">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span>RU Insiders • মতিহারের সবুজ চত্বর</span>
-                </div>
-                <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-                  অফিশিয়াল ক্যাম্পাস মার্চেন্ডাইজ ও প্রিন্ট স্টেশন
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-600 font-bengali font-medium leading-relaxed">
-                  রাজশাহী বিশ্ববিদ্যালয়ের থিমে তৈরি প্রিমিয়াম উইন্টার হুডি, ওভারসাইজড ড্রপ শোল্ডার, কাস্টম ডিপার্টমেন্ট জার্সি ও ইনস্ট্যান্ট PDF প্রিন্ট সার্ভিস।
-                </p>
+              <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+                অফিশিয়াল ক্যাম্পাস মার্চেন্ডাইজ ও প্রিন্ট স্টেশন
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-600 font-bengali font-medium leading-relaxed max-w-xl">
+                রাজশাহী বিশ্ববিদ্যালয়ের থিমে তৈরি প্রিমিয়াম উইন্টার হুডি, ওভারসাইজড ড্রপ শোল্ডার, কাস্টম ডিপার্টমেন্ট জার্সি ও ইনস্ট্যান্ট PDF প্রিন্ট সার্ভিস।
+              </p>
+
+              {/* Campus Photo Indicators */}
+              <div className="flex items-center gap-1.5 pt-1">
+                {campusSlides.map((slide, idx) => (
+                  <button
+                    key={slide.src}
+                    type="button"
+                    onClick={() => setActiveSlide(idx)}
+                    title={slide.name}
+                    className={`h-1.5 rounded-full transition-all ${
+                      idx === activeSlide ? 'w-6 bg-blue-600' : 'w-2 bg-slate-300 hover:bg-slate-400'
+                    }`}
+                  />
+                ))}
               </div>
             </div>
 
@@ -168,9 +205,17 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 2. Storefront Search, Category Pills & Product Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
+      {/* 2. Storefront Search, Category Pills & Product Grid with Paris Road Backdrop Effect */}
+      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
+        
+        {/* Ambient Paris Road Background Effect behind the products */}
+        <div 
+          className="absolute inset-0 -mx-4 sm:-mx-6 lg:-mx-8 rounded-3xl bg-cover bg-center pointer-events-none opacity-[0.07] filter saturate-150 contrast-125"
+          style={{ backgroundImage: `url('/campus/paris-road.jpg')` }}
+        />
+        <div className="absolute inset-0 -mx-4 sm:-mx-6 lg:-mx-8 rounded-3xl bg-gradient-to-b from-white/95 via-white/80 to-white/95 pointer-events-none" />
 
+        <div className="relative z-10 space-y-5">
         {/* Search & Filter Bar */}
         <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="relative w-full sm:flex-1">
@@ -258,6 +303,7 @@ export default function HomePage() {
             ))}
           </div>
         )}
+        </div>
       </section>
 
       {/* 3. Print Lagbe Callout */}

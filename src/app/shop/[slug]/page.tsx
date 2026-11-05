@@ -257,18 +257,24 @@ export default function ProductDetailPage({ params }: Props) {
           {/* Pricing & Stock Card */}
           <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-between">
             <div>
-              <div className="text-2xl font-black text-slate-900 flex items-baseline gap-2">
-                <span>{formatBDT(product.price)}</span>
-                {product.regularPrice && (
-                  <span className="text-sm text-slate-400 line-through">
+              {product.regularPrice && product.regularPrice > product.price ? (
+                <div className="flex flex-col">
+                  {/* Prothom a lal rong a ager dam kata */}
+                  <span className="text-sm text-rose-600 font-bold line-through">
                     {formatBDT(product.regularPrice)}
                   </span>
-                )}
-              </div>
-              {product.regularPrice && (
-                <span className="text-xs text-emerald-600 font-semibold">
-                  Save {formatBDT(product.regularPrice - product.price)}
-                </span>
+                  {/* Nicha asol price sobuj rong a */}
+                  <div className="text-2xl sm:text-3xl font-black text-emerald-600 flex items-baseline gap-2">
+                    <span>{formatBDT(product.price)}</span>
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
+                      Save {formatBDT(product.regularPrice - product.price)}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-2xl sm:text-3xl font-black text-emerald-600">
+                  {formatBDT(product.price)}
+                </div>
               )}
             </div>
 

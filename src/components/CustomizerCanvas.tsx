@@ -218,22 +218,119 @@ export default function CustomizerCanvas({ initialGarment = 'hoodie', onAddToCar
             </span>
           </div>
 
-          {/* REALISTIC PHOTOGRAPHIC APPAREL MOCKUP CONTAINER */}
+          {/* 2D APPAREL MOCKUP CONTAINER - ONLY GARMENT CHANGES COLOR */}
           <div className="relative w-[300px] h-[370px] sm:w-[420px] sm:h-[510px] flex items-center justify-center select-none">
             
-            {/* Colorized Base Garment Mockup Layer */}
-            <div 
-              className="absolute inset-0 rounded-2xl overflow-hidden transition-colors duration-300"
-              style={{ backgroundColor: state.color === '#ffffff' ? '#f8fafc' : state.color }}
-            >
-              <img
-                src={currentMockup}
-                alt={`${state.garmentType} mockup`}
-                className="w-full h-full object-contain pointer-events-none mix-blend-multiply opacity-95 transition-all duration-300"
-                style={{
-                  filter: state.color === '#ffffff' ? 'brightness(1.02) contrast(1.02)' : 'contrast(1.15) brightness(1.05)',
-                }}
-              />
+            {/* SVG Vector Garment Simulation Layer (Canvas remains clean white; color applies strictly to garment path) */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <svg
+                viewBox="0 0 400 460"
+                className="w-full h-full drop-shadow-[0_15px_30px_rgba(0,0,0,0.15)] transition-colors duration-300"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                {/* Garment Silhouette Path */}
+                {state.garmentType === 'hoodie' ? (
+                  <g>
+                    {/* Hood shape */}
+                    <path
+                      d="M 140 70 C 130 15, 270 15, 260 70 C 240 60, 160 60, 140 70 Z"
+                      fill={state.color}
+                      filter="brightness(0.85)"
+                      stroke="rgba(0,0,0,0.15)"
+                      strokeWidth="1.5"
+                    />
+                    {/* Hoodie Silhouette */}
+                    <path
+                      d="M 120 70 L 40 135 L 75 195 L 115 170 L 115 410 L 285 410 L 285 170 L 325 195 L 360 135 L 280 70 C 250 85, 150 85, 120 70 Z"
+                      fill={state.color}
+                      stroke="rgba(0,0,0,0.18)"
+                      strokeWidth="2"
+                    />
+                    {/* Kangaroo Pocket */}
+                    {state.view === 'front' && (
+                      <path
+                        d="M 145 280 L 175 250 L 225 250 L 255 280 L 255 370 L 145 370 Z"
+                        fill={state.color}
+                        filter="brightness(0.92)"
+                        stroke="rgba(0,0,0,0.12)"
+                        strokeWidth="2"
+                      />
+                    )}
+                    {/* Drawstrings */}
+                    {state.view === 'front' && (
+                      <g stroke="#ffffff" strokeWidth="3" strokeLinecap="round" opacity="0.95">
+                        <path d="M 185 85 Q 180 120 182 145" />
+                        <path d="M 215 85 Q 220 120 218 145" />
+                      </g>
+                    )}
+                  </g>
+                ) : state.garmentType === 'dropshoulder' ? (
+                  <g>
+                    {/* Drop shoulder silhouette */}
+                    <path
+                      d="M 125 55 L 15 140 L 55 200 L 105 170 L 105 425 L 295 425 L 295 170 L 345 200 L 385 140 L 275 55 C 245 80, 155 80, 125 55 Z"
+                      fill={state.color}
+                      stroke="rgba(0,0,0,0.18)"
+                      strokeWidth="2"
+                    />
+                    {/* Drop shoulder seam lines */}
+                    <path d="M 75 105 L 60 180" stroke="rgba(0,0,0,0.12)" strokeWidth="1.5" strokeDasharray="3,3" />
+                    <path d="M 325 105 L 340 180" stroke="rgba(0,0,0,0.12)" strokeWidth="1.5" strokeDasharray="3,3" />
+                    {/* Crew Collar */}
+                    <path
+                      d="M 145 58 C 170 82, 230 82, 255 58 C 235 72, 165 72, 145 58 Z"
+                      fill="#ffffff"
+                      opacity="0.3"
+                      stroke="rgba(0,0,0,0.12)"
+                      strokeWidth="1.5"
+                    />
+                  </g>
+                ) : state.garmentType === 'jersey' ? (
+                  <g>
+                    {/* Jersey Silhouette */}
+                    <path
+                      d="M 120 50 L 30 125 L 70 185 L 110 160 L 110 420 L 290 420 L 290 160 L 330 185 L 370 125 L 280 50 C 250 75, 150 75, 120 50 Z"
+                      fill={state.color}
+                      stroke="rgba(0,0,0,0.18)"
+                      strokeWidth="2"
+                    />
+                    {/* Contrast Collar */}
+                    <path
+                      d="M 145 53 C 170 78, 230 78, 255 53 C 235 68, 165 68, 145 53 Z"
+                      fill="#ffffff"
+                      opacity="0.95"
+                      stroke="rgba(0,0,0,0.12)"
+                      strokeWidth="1.5"
+                    />
+                    {/* Jersey Gold Stripes */}
+                    <g fill="#facc15" opacity="0.95">
+                      <path d="M 112 165 L 112 420 L 122 420 L 122 170 Z" />
+                      <path d="M 288 165 L 288 420 L 278 420 L 278 170 Z" />
+                    </g>
+                  </g>
+                ) : (
+                  <g>
+                    {/* Classic Ganji / T-Shirt Silhouette */}
+                    <path
+                      d="M 120 50 L 35 120 L 75 180 L 112 160 L 112 420 L 288 420 L 288 160 L 325 180 L 365 120 L 280 50 C 250 72, 150 72, 120 50 Z"
+                      fill={state.color}
+                      stroke="rgba(0,0,0,0.18)"
+                      strokeWidth="2"
+                    />
+                    {/* Ribbed Collar */}
+                    <path
+                      d="M 145 53 C 170 75, 230 75, 255 53 C 235 65, 165 65, 145 53 Z"
+                      fill="#ffffff"
+                      opacity="0.25"
+                      stroke="rgba(0,0,0,0.12)"
+                      strokeWidth="1.5"
+                    />
+                    {/* Sleeve Seams */}
+                    <path d="M 75 180 L 112 160" stroke="rgba(0,0,0,0.1)" strokeWidth="1.5" />
+                    <path d="M 325 180 L 288 160" stroke="rgba(0,0,0,0.1)" strokeWidth="1.5" />
+                  </g>
+                )}
+              </svg>
             </div>
 
             {/* FRONT VIEW DESIGN LAYER */}

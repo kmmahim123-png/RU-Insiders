@@ -121,16 +121,24 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* Pricing and Action Links */}
         <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <Link href={`/shop/${product.slug}`}>
-            <div className="text-sm sm:text-base font-black text-slate-900 flex items-baseline gap-1.5">
-              <span>{formatBDT(product.price)}</span>
-              {product.regularPrice && (
-                <span className="text-[11px] text-slate-400 line-through">
+          <Link href={`/shop/${product.slug}`} className="flex flex-col">
+            {product.regularPrice && product.regularPrice > product.price ? (
+              <div className="flex flex-col">
+                {/* 1. Prothom a akdom lal rong a dam kata thakbe */}
+                <div className="text-[11px] sm:text-xs text-rose-600 font-bold line-through tracking-tight leading-none mb-0.5">
                   {formatBDT(product.regularPrice)}
-                </span>
-              )}
-            </div>
-            <div className="text-[10px] text-emerald-600 font-medium flex items-center gap-0.5">
+                </div>
+                {/* 2. Nicha asol price sobuj rong a thakbe */}
+                <div className="text-sm sm:text-base font-black text-emerald-600 leading-tight">
+                  {formatBDT(product.price)}
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm sm:text-base font-black text-emerald-600 leading-tight">
+                {formatBDT(product.price)}
+              </div>
+            )}
+            <div className="text-[10px] text-emerald-700 font-medium flex items-center gap-0.5 mt-0.5">
               <Check className="h-3 w-3" />
               <span>ইন স্টক ({product.stock})</span>
             </div>
