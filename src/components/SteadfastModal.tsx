@@ -52,10 +52,15 @@ export default function SteadfastModal({ order, config, isOpen, onClose, onSucce
         }),
       });
 
-      const data = await response.json();
+      let data: any = null;
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error('সার্ভার থেকে অপ্রত্যাশিত রেসপন্স এসেছে। Steadfast API Base URL হিসেবে https://portal.packzy.com/api/v1 সেট করা আছে কি না ড্যাশবোর্ডে চেক করুন।');
+      }
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || 'Failed to dispatch via Steadfast Courier');
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.message || 'Failed to dispatch via Steadfast Courier');
       }
 
       onSuccess(data.consignmentId, data.trackingCode);

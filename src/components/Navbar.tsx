@@ -14,6 +14,7 @@ import {
   ShieldCheck, 
   Truck
 } from 'lucide-react';
+import AnimatedLogo from '@/components/AnimatedLogo';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -101,15 +102,8 @@ export default function Navbar() {
           
           {/* Logo & Brand Identity */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative flex items-center justify-center w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-white shadow-md border-2 border-amber-400 p-0.5 group-hover:scale-105 transition-transform duration-300 overflow-hidden shrink-0">
-              <img
-                src="/logo.png"
-                alt="RU Insiders Official Logo"
-                className="w-full h-full rounded-full object-cover"
-              />
-              <div className="absolute -bottom-1 -right-1 bg-rose-600 text-white font-black text-[9px] px-1 rounded-full uppercase border border-white">
-                RU
-              </div>
+            <div className="group-hover:scale-105 transition-transform duration-300 shrink-0">
+              <AnimatedLogo size={52} speed="normal" withBorder={true} />
             </div>
             <div className="flex flex-col">
               <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-1.5">

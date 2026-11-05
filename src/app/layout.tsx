@@ -4,6 +4,7 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import MobileBottomNav from '@/components/MobileBottomNav';
+import EntranceSplash from '@/components/EntranceSplash';
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -44,6 +45,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${plusJakarta.variable} ${hindSiliguri.variable}`}>
       <body className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans selection:bg-blue-600 selection:text-white pb-16 md:pb-0">
+        <EntranceSplash />
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />

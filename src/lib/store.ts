@@ -292,7 +292,7 @@ export const INITIAL_ORDERS: Order[] = [
 export const INITIAL_STEADFAST_CONFIG: SteadfastConfig = {
   apiKey: 'DEMO_STEADFAST_KEY_RU_INSIDERS_2026',
   secretKey: 'DEMO_STEADFAST_SECRET_SECURE_HASH',
-  baseUrl: 'https://portal.steadfast.com.bd/api/v1',
+  baseUrl: 'https://portal.packzy.com/api/v1',
   isEnabled: true
 };
 

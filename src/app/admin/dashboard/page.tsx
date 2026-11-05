@@ -34,6 +34,7 @@ import {
 import RevenueCharts from '@/components/RevenueCharts';
 import PrintDesk from '@/components/PrintDesk';
 import SteadfastModal from '@/components/SteadfastModal';
+import AnimatedLogo from '@/components/AnimatedLogo';
 import { Product, Order, PrintJob, SteadfastConfig, ProductCategory, RevenueSummary } from '@/lib/types';
 import { formatBDT, formatDate } from '@/lib/utils';
 import { INITIAL_STEADFAST_CONFIG, calculateRevenueSummary } from '@/lib/store';
@@ -50,6 +51,8 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [actionMessage, setActionMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [testingSteadfast, setTestingSteadfast] = useState(false);
+  const [steadfastTestResult, setSteadfastTestResult] = useState<{ success: boolean; message: string; balance?: string } | null>(null);
 
   // Steadfast Modal State
   const [selectedOrderForCourier, setSelectedOrderForCourier] = useState<Order | null>(null);
@@ -406,9 +409,7 @@ export default function AdminDashboardPage() {
       {/* Top Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full border-2 border-blue-600 p-0.5 bg-white shadow-sm overflow-hidden shrink-0">
-            <img src="/logo.png" alt="Logo" className="w-full h-full rounded-full object-cover" />
-          </div>
+          <AnimatedLogo size={52} speed="normal" withBorder={true} />
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
               RU Insiders Central Control Suite
@@ -1240,11 +1241,12 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-200 text-slate-700 space-y-1">
-              <p className="font-bold text-blue-900">📌 কীভাবে API Key পাবেন?</p>
+              <p className="font-bold text-blue-900">📌 কীভাবে API Key পাবেন ও কানেক্ট করবেন?</p>
               <p className="text-[11px] font-bengali leading-relaxed text-slate-600">
                 1. <a href="https://portal.steadfast.com.bd" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-bold">portal.steadfast.com.bd</a> এ লগইন করুন। <br />
                 2. বাম পাশের মেনু থেকে <strong>Settings &gt; API Key</strong> অপশনে যান। <br />
-                3. সেখানে প্রাপ্ত <strong>Api Key</strong> এবং <strong>Secret Key</strong> কপি করে নিচের বক্সে বসিয়ে সেভ করুন।
+                3. সেখানে প্রাপ্ত <strong>Api Key</strong> এবং <strong>Secret Key</strong> কপি করে নিচের বক্সে বসিয়ে সেভ করুন। <br />
+                4. Steadfast এর অফিশিয়াল API Endpoint হলো: <code className="bg-white px-1.5 py-0.5 rounded border border-blue-200 font-mono text-blue-700 font-bold">https://portal.packzy.com/api/v1</code>
               </p>
             </div>
 
@@ -1271,7 +1273,16 @@ export default function AdminDashboardPage() {
             </div>
 
             <div>
-              <label className="block text-slate-700 mb-1 font-semibold">API Endpoint URL</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-slate-700 font-semibold">API Endpoint URL</label>
+                <button
+                  type="button"
+                  onClick={() => setSteadfastConfig({ ...steadfastConfig, baseUrl: 'https://portal.packzy.com/api/v1' })}
+                  className="text-[10px] text-blue-600 hover:underline font-bold"
+                >
+                  Packzy Default সেট করুন
+                </button>
+              </div>
               <input
                 type="url"
                 value={steadfastConfig.baseUrl}
@@ -1280,34 +1291,108 @@ export default function AdminDashboardPage() {
               />
             </div>
 
-            <button
-              onClick={async () => {
-                const pin = getAdminPin();
-                try {
-                  const res = await fetch('/api/admin/steadfast', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'x-admin-pin': pin,
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({ action: 'save_config', config: steadfastConfig }),
-                  });
-                  const data = await res.json();
-                  if (res.ok && data.success) {
-                    showNotification('স্টেডফাস্ট সেটিংস সফলভাবে ডাটাবেজে সেভ হয়েছে!');
-                  } else {
-                    showNotification(data.message || 'সেটিংস সেভ করতে সমস্যা হয়েছে', 'error');
+            {/* Test Connection Result Box */}
+            {steadfastTestResult && (
+              <div className={`p-3.5 rounded-2xl border text-xs flex items-start gap-2.5 ${
+                steadfastTestResult.success
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                  : 'bg-rose-50 border-rose-200 text-rose-800'
+              }`}>
+                {steadfastTestResult.success ? (
+                  <Check className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-rose-600 mt-0.5 shrink-0" />
+                )}
+                <div>
+                  <p className="font-bold">{steadfastTestResult.success ? 'সংযোগ সফল!' : 'কানেকশন টেস্ট ব্যর্থ'}</p>
+                  <p className="font-bengali text-[11px] leading-relaxed">{steadfastTestResult.message}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              {/* Test Connection Button */}
+              <button
+                type="button"
+                disabled={testingSteadfast}
+                onClick={async () => {
+                  setTestingSteadfast(true);
+                  setSteadfastTestResult(null);
+                  const pin = getAdminPin();
+                  try {
+                    const res = await fetch('/api/admin/steadfast', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-pin': pin,
+                      },
+                      credentials: 'include',
+                      body: JSON.stringify({
+                        action: 'test_connection',
+                        apiKey: steadfastConfig.apiKey,
+                        secretKey: steadfastConfig.secretKey,
+                        baseUrl: steadfastConfig.baseUrl,
+                      }),
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                      setSteadfastTestResult({ success: true, message: data.message, balance: data.balance });
+                    } else {
+                      setSteadfastTestResult({ success: false, message: data.message || 'কানেকশন ব্যর্থ হয়েছে' });
+                    }
+                  } catch (err: any) {
+                    setSteadfastTestResult({ success: false, message: err.message || 'Network error' });
+                  } finally {
+                    setTestingSteadfast(false);
                   }
-                } catch (err: any) {
-                  showNotification(err.message || 'Error saving Steadfast settings', 'error');
-                }
-              }}
-              className="w-full py-3.5 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-[0.99] flex items-center justify-center gap-2"
-            >
-              <Truck className="h-4 w-4" />
-              <span>Save Steadfast Settings (সেটিংস সংরক্ষণ করুন)</span>
-            </button>
+                }}
+                className="py-3 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs uppercase tracking-wider transition-all border border-slate-300 flex items-center justify-center gap-2"
+              >
+                {testingSteadfast ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                    <span>যাচাই করা হচ্ছে...</span>
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 text-blue-600" />
+                    <span>কানেকশন টেস্ট করুন</span>
+                  </>
+                )}
+              </button>
+
+              {/* Save Settings Button */}
+              <button
+                type="button"
+                onClick={async () => {
+                  const pin = getAdminPin();
+                  try {
+                    const res = await fetch('/api/admin/steadfast', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-pin': pin,
+                      },
+                      credentials: 'include',
+                      body: JSON.stringify({ action: 'save_config', config: steadfastConfig }),
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                      showNotification('স্টেডফাস্ট সেটিংস সফলভাবে ডাটাবেজে সেভ হয়েছে!');
+                      if (data.config) setSteadfastConfig(data.config);
+                    } else {
+                      showNotification(data.message || 'সেটিংস সেভ করতে সমস্যা হয়েছে', 'error');
+                    }
+                  } catch (err: any) {
+                    showNotification(err.message || 'Error saving Steadfast settings', 'error');
+                  }
+                }}
+                className="py-3 px-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                <Truck className="h-4 w-4" />
+                <span>সেটিংস সেভ করুন</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

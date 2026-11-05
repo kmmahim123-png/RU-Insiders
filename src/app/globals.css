@@ -74,3 +74,32 @@
     color: black !important;
   }
 }
+
+/* Animated RU Logo Hands Rotation */
+@keyframes spinHands {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-hands {
+  animation: spinHands 14s linear infinite;
+  transform-origin: 49.32% 48.93%;
+  will-change: transform;
+}
+
+.animate-spin-hands-fast {
+  animation: spinHands 4.5s linear infinite;
+  transform-origin: 49.32% 48.93%;
+  will-change: transform;
+}
+
+.animate-spin-hands-slow {
+  animation: spinHands 24s linear infinite;
+  transform-origin: 49.32% 48.93%;
+  will-change: transform;
+}
+

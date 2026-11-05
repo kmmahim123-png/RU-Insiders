@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Facebook, Printer, Sparkles, MapPin, Phone, Mail, ShieldCheck, Heart } from 'lucide-react';
+import AnimatedLogo from '@/components/AnimatedLogo';
 
 export default function Footer() {
   return (
@@ -11,9 +12,7 @@ export default function Footer() {
           {/* Brand Col */}
           <div className="space-y-3.5 md:col-span-1">
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white border-2 border-amber-400 p-0.5 overflow-hidden shadow-sm shrink-0">
-                <img src="/logo.png" alt="RU Insiders Logo" className="w-full h-full rounded-full object-cover" />
-              </div>
+              <AnimatedLogo size={48} speed="slow" withBorder={true} />
               <div>
                 <span className="text-base font-black text-slate-900 tracking-tight">RU Insiders</span>
                 <p className="text-xs text-blue-600 font-bengali font-semibold">রাজশাহী বিশ্ববিদ্যালয় মার্চেন্ডাইজ</p>

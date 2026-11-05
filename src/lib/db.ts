@@ -296,13 +296,24 @@ export async function deletePrintJob(id: string): Promise<boolean> {
 // ---------------- STEADFAST CONFIG ----------------
 export async function getSteadfastConfig(): Promise<SteadfastConfig> {
   const db = await readDb();
+  if (!db.steadfastConfig.baseUrl || db.steadfastConfig.baseUrl.includes('steadfast.com.bd')) {
+    db.steadfastConfig.baseUrl = 'https://portal.packzy.com/api/v1';
+  }
   return db.steadfastConfig;
 }
 
 export async function updateSteadfastConfig(config: Partial<SteadfastConfig>): Promise<SteadfastConfig> {
   return runAtomic(async () => {
     const db = await readDb();
-    db.steadfastConfig = { ...db.steadfastConfig, ...config };
+    let sanitizedBaseUrl = config.baseUrl || db.steadfastConfig.baseUrl || 'https://portal.packzy.com/api/v1';
+    if (sanitizedBaseUrl.includes('steadfast.com.bd')) {
+      sanitizedBaseUrl = 'https://portal.packzy.com/api/v1';
+    }
+    db.steadfastConfig = { 
+      ...db.steadfastConfig, 
+      ...config,
+      baseUrl: sanitizedBaseUrl.trim().replace(/\/+$/, '')
+    };
     await writeDb(db);
     return db.steadfastConfig;
   });

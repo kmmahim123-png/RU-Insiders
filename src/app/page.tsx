@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import FilterModal, { FilterState } from '@/components/FilterModal';
+import AnimatedLogo from '@/components/AnimatedLogo';
 import { Product } from '@/lib/types';
 import { INITIAL_PRODUCTS } from '@/lib/store';
 import { formatBDT } from '@/lib/utils';
@@ -126,18 +127,23 @@ export default function HomePage() {
         <div className="relative max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             
-            {/* Elegant Campus Headline (No duplicate logo circle) */}
-            <div className="max-w-2xl space-y-2">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-600/10 border border-blue-600/20 text-blue-800 text-xs font-bold tracking-wide shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>RU Insiders • মতিহারের সবুজ চত্বর</span>
+            {/* Elegant Campus Headline with Animated Rotating Hands Logo */}
+            <div className="max-w-2xl flex items-start sm:items-center gap-4">
+              <div className="shrink-0 p-1 rounded-full bg-white/95 backdrop-blur-md shadow-lg border-2 border-amber-400">
+                <AnimatedLogo size={68} speed="fast" withBorder={false} />
               </div>
-              <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-                অফিশিয়াল ক্যাম্পাস মার্চেন্ডাইজ ও প্রিন্ট স্টেশন
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-700 font-bengali font-medium leading-relaxed">
-                রাজশাহী বিশ্ববিদ্যালয়ের থিমে তৈরি প্রিমিয়াম উইন্টার হুডি, ওভারসাইজড ড্রপ শোল্ডার, কাস্টম ডিপার্টমেন্ট জার্সি ও ইনস্ট্যান্ট PDF প্রিন্ট সার্ভিস।
-              </p>
+              <div className="space-y-1.5">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-600/10 border border-blue-600/20 text-blue-800 text-xs font-bold tracking-wide shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>RU Insiders • মতিহারের সবুজ চত্বর</span>
+                </div>
+                <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+                  অফিশিয়াল ক্যাম্পাস মার্চেন্ডাইজ ও প্রিন্ট স্টেশন
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-700 font-bengali font-medium leading-relaxed">
+                  রাজশাহী বিশ্ববিদ্যালয়ের থিমে তৈরি প্রিমিয়াম উইন্টার হুডি, ওভারসাইজড ড্রপ শোল্ডার, কাস্টম ডিপার্টমেন্ট জার্সি ও ইনস্ট্যান্ট PDF প্রিন্ট সার্ভিস।
+                </p>
+              </div>
             </div>
 
             {/* Clean Action Buttons */}
