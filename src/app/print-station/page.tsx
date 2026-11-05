@@ -64,12 +64,21 @@ export default function PrintStationPage() {
     setLoading(true);
 
     try {
+      // Read uploaded file as Data URL so the document is permanently preserved
+      const fileDataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('ডকুমেন্ট ফাইলটি রিড করতে ব্যর্থ হয়েছে'));
+        reader.readAsDataURL(file);
+      });
+
       const payload = {
         customerName,
         customerPhone,
         customerNotes,
         fileName: file.name,
         fileSizeMb: Number((file.size / (1024 * 1024)).toFixed(2)),
+        fileDataUrl,
         pageCount,
         printType,
         paperType,

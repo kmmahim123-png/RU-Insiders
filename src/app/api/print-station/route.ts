@@ -6,6 +6,7 @@ import { getPrintJobs, addPrintJob, updatePrintJobStatus, deletePrintJob } from 
 import { PrintJob } from '@/lib/types';
 import { generateToken } from '@/lib/utils';
 import { verifyAdminAuth } from '@/lib/auth';
+import { getSupabaseClient } from '@/lib/supabase';
 
 /**
  * Helper to offload large base64 file data URLs to disk storage instead of bloating db.json
@@ -117,12 +118,40 @@ export async function POST(request: NextRequest) {
     const totalAmount = Math.ceil(pages * copies * ratePerPage);
     const costAmount = Math.ceil(totalAmount * 0.4);
 
-    // Save document to file storage instead of keeping bloated base64 in db.json
-    let fileStorageUrl = '';
-    if (body.fileDataUrl && body.fileDataUrl.startsWith('data:')) {
-      fileStorageUrl = await persistBase64Document(body.fileDataUrl, body.fileName);
-    } else if (typeof body.fileDataUrl === 'string' && body.fileDataUrl.startsWith('/uploads/')) {
-      fileStorageUrl = body.fileDataUrl;
+    // Save document to cloud or fallback storage
+    let fileStorageUrl = body.fileDataUrl || '';
+
+    // If Supabase is configured, upload the buffer directly to 'ru-prints' bucket
+    const supabase = getSupabaseClient();
+    if (supabase && body.fileDataUrl && body.fileDataUrl.startsWith('data:')) {
+      try {
+        const matches = body.fileDataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+        if (matches && matches.length === 3) {
+          const mimeType = matches[1];
+          const buffer = Buffer.from(matches[2], 'base64');
+          const ext = path.extname(body.fileName).toLowerCase() || '.pdf';
+          const safeBase = path.basename(body.fileName, ext).replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30);
+          const storageKey = `prints/${Date.now()}-${safeBase}${ext}`;
+
+          const { error: uploadErr } = await supabase.storage
+            .from('ru-prints')
+            .upload(storageKey, buffer, { contentType: mimeType, upsert: true });
+
+          if (!uploadErr) {
+            const { data: publicUrlData } = supabase.storage.from('ru-prints').getPublicUrl(storageKey);
+            fileStorageUrl = publicUrlData.publicUrl;
+          }
+        }
+      } catch (sErr) {
+        console.warn('Supabase storage upload error, falling back to base64:', sErr);
+      }
+    } else if (body.fileDataUrl && body.fileDataUrl.startsWith('data:')) {
+      // Also save to local filesystem if available
+      const localPath = await persistBase64Document(body.fileDataUrl, body.fileName);
+      const isServerlessEnv = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+      if (!isServerlessEnv && localPath) {
+        fileStorageUrl = localPath;
+      }
     }
 
     const newJob: PrintJob = {

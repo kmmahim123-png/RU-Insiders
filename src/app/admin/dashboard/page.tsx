@@ -35,7 +35,11 @@ import {
   Bike,
   PackageCheck,
   Ban,
-  RotateCcw
+  RotateCcw,
+  Database,
+  Copy,
+  Download,
+  CheckCheck
 } from 'lucide-react';
 import RevenueCharts from '@/components/RevenueCharts';
 import PrintDesk from '@/components/PrintDesk';
@@ -43,6 +47,8 @@ import SteadfastModal from '@/components/SteadfastModal';
 import { Product, Order, PrintJob, SteadfastConfig, ProductCategory, RevenueSummary } from '@/lib/types';
 import { formatBDT, formatDate } from '@/lib/utils';
 import { INITIAL_STEADFAST_CONFIG, calculateRevenueSummary } from '@/lib/store';
+import { getBrowserSupabaseClient } from '@/lib/supabase';
+import { SUPABASE_SCHEMA_SQL } from '@/lib/supabase-schema-text';
 
 const PRESET_COLORS = [
   { name: 'Heritage Maroon', hex: '#881337' },
@@ -129,6 +135,17 @@ export default function AdminDashboardPage() {
   const editSlotInputRef3 = useRef<HTMLInputElement>(null);
   const editVideoInputRef = useRef<HTMLInputElement>(null);
 
+  // Supabase Cloud Status & Backup State
+  const [supabaseStatus, setSupabaseStatus] = useState<{
+    configured: boolean;
+    connected?: boolean;
+    error?: string;
+    counts?: { products: number; orders: number; printJobs: number };
+  } | null>(null);
+  const [showSupabaseModal, setShowSupabaseModal] = useState(false);
+  const [syncingSupabase, setSyncingSupabase] = useState(false);
+  const [copiedSql, setCopiedSql] = useState(false);
+
   const handleAddNewCategory = (e: React.FormEvent) => {
     e.preventDefault();
     if (!customCategoryInput.trim()) return;
@@ -162,6 +179,28 @@ export default function AdminDashboardPage() {
 
     try {
       setUploadingSlot(slotIdx);
+
+      // 1. Direct Supabase Storage upload if available
+      const supabase = getBrowserSupabaseClient();
+      if (supabase) {
+        const safeName = `images/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        const { data: sData, error: sErr } = await supabase.storage
+          .from('ru-uploads')
+          .upload(safeName, file, { cacheControl: '3600', upsert: true });
+
+        if (!sErr && sData) {
+          const { data: pubData } = supabase.storage.from('ru-uploads').getPublicUrl(safeName);
+          setNewProductImages((prev) => {
+            const updated = [...prev];
+            updated[slotIdx] = pubData.publicUrl;
+            return updated;
+          });
+          showNotification(`ছবি #${slotIdx + 1} ক্লাউডে সফলভাবে আপলোড হয়েছে!`);
+          return;
+        }
+      }
+
+      // 2. Fallback to /api/upload
       const formData = new FormData();
       formData.append('file', file);
       const res = await fetch('/api/upload', {
@@ -188,9 +227,42 @@ export default function AdminDashboardPage() {
   const handleProductVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
     const file = e.target.files[0];
+    const sizeMb = file.size / (1024 * 1024);
+
+    if (sizeMb > 60) {
+      showNotification('ভিডিও সাইজ ৬০MB এর বেশি হতে পারবে না।', 'error');
+      return;
+    }
 
     try {
       setUploadingVideo(true);
+
+      // 1. Direct Supabase Storage upload
+      const supabase = getBrowserSupabaseClient();
+      if (supabase) {
+        const safeName = `videos/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        const { data: sData, error: sErr } = await supabase.storage
+          .from('ru-uploads')
+          .upload(safeName, file, { cacheControl: '3600', upsert: true });
+
+        if (!sErr && sData) {
+          const { data: pubData } = supabase.storage.from('ru-uploads').getPublicUrl(safeName);
+          setNewProductVideo(pubData.publicUrl);
+          showNotification('প্রোডাক্ট ভিডিও সরাসরি ক্লাউডে সফলভাবে আপলোড হয়েছে!');
+          return;
+        }
+      }
+
+      // 2. Serverless 4.5MB limitation warning
+      if (sizeMb > 4.5) {
+        showNotification(
+          `ভিডিও সাইজ (${sizeMb.toFixed(1)}MB) Vercel লিমিটের (৪.৫MB) বেশি। ক্লাউড আপলোডের জন্য Supabase যুক্ত করুন অথবা নিচে ভিডিও URL লিঙ্ক দিন।`,
+          'error'
+        );
+        return;
+      }
+
+      // 3. Fallback to /api/upload
       const formData = new FormData();
       formData.append('file', file);
       const res = await fetch('/api/upload', {
@@ -244,6 +316,26 @@ export default function AdminDashboardPage() {
 
     try {
       setEditUploadingSlot(slotIdx);
+
+      const supabase = getBrowserSupabaseClient();
+      if (supabase) {
+        const safeName = `images/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        const { data: sData, error: sErr } = await supabase.storage
+          .from('ru-uploads')
+          .upload(safeName, file, { cacheControl: '3600', upsert: true });
+
+        if (!sErr && sData) {
+          const { data: pubData } = supabase.storage.from('ru-uploads').getPublicUrl(safeName);
+          setEditImages((prev) => {
+            const updated = [...prev];
+            updated[slotIdx] = pubData.publicUrl;
+            return updated;
+          });
+          showNotification(`এডিট ছবি #${slotIdx + 1} ক্লাউডে আপলোড হয়েছে!`);
+          return;
+        }
+      }
+
       const formData = new FormData();
       formData.append('file', file);
       const res = await fetch('/api/upload', {
@@ -270,9 +362,39 @@ export default function AdminDashboardPage() {
   const handleEditVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
     const file = e.target.files[0];
+    const sizeMb = file.size / (1024 * 1024);
+
+    if (sizeMb > 60) {
+      showNotification('ভিডিও সাইজ সর্বোচ্চ ৬০MB অনুমোদিত।', 'error');
+      return;
+    }
 
     try {
       setEditUploadingVideo(true);
+
+      const supabase = getBrowserSupabaseClient();
+      if (supabase) {
+        const safeName = `videos/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        const { data: sData, error: sErr } = await supabase.storage
+          .from('ru-uploads')
+          .upload(safeName, file, { cacheControl: '3600', upsert: true });
+
+        if (!sErr && sData) {
+          const { data: pubData } = supabase.storage.from('ru-uploads').getPublicUrl(safeName);
+          setEditVideo(pubData.publicUrl);
+          showNotification('এডিট ভিডিও সরাসরি ক্লাউডে সফলভাবে আপলোড হয়েছে!');
+          return;
+        }
+      }
+
+      if (sizeMb > 4.5) {
+        showNotification(
+          `ভিডিও সাইজ (${sizeMb.toFixed(1)}MB) Vercel লিমিটের (৪.৫MB) বেশি। ক্লাউড আপলোডের জন্য Supabase যুক্ত করুন অথবা নিচে ভিডিও URL লিঙ্ক দিন।`,
+          'error'
+        );
+        return;
+      }
+
       const formData = new FormData();
       formData.append('file', file);
       const res = await fetch('/api/upload', {
@@ -392,6 +514,15 @@ export default function AdminDashboardPage() {
         const sfData = await sfRes.json();
         if (sfData.success && sfData.config) setSteadfastConfig(sfData.config);
       }
+
+      // 5. Fetch Supabase Cloud Status
+      try {
+        const sbRes = await fetch('/api/admin/supabase-status');
+        if (sbRes.ok) {
+          const sbData = await sbRes.json();
+          if (sbData.success) setSupabaseStatus(sbData);
+        }
+      } catch {}
     } catch (e) {
       console.error('Error refreshing admin database:', e);
     } finally {
@@ -399,6 +530,48 @@ export default function AdminDashboardPage() {
       setRefreshing(false);
     }
   }, [getAdminPin]);
+
+  const handleDownloadBackup = () => {
+    const backupData = {
+      exportedAt: new Date().toISOString(),
+      products,
+      orders,
+      printJobs,
+      steadfastConfig,
+    };
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ru_insiders_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showNotification('ডাটাবেজ ব্যাকআপ (JSON) সফলভাবে ডাউনলোড হয়েছে!');
+  };
+
+  const handleSyncToSupabase = async () => {
+    setSyncingSupabase(true);
+    const pin = getAdminPin();
+    try {
+      const res = await fetch('/api/admin/supabase-status', {
+        method: 'POST',
+        headers: { 'x-admin-pin': pin },
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showNotification(data.message || 'Supabase ক্লাউডে সফলভাবে সিঙ্ক হয়েছে!');
+        loadDatabaseState();
+      } else {
+        throw new Error(data.message || 'Supabase সিঙ্ক ব্যর্থ হয়েছে');
+      }
+    } catch (err: any) {
+      showNotification(err.message || 'Supabase সিঙ্কে সমস্যা হয়েছে', 'error');
+    } finally {
+      setSyncingSupabase(false);
+    }
+  };
 
   useEffect(() => {
     const pin = sessionStorage.getItem('ru_admin_pin');
@@ -618,11 +791,23 @@ export default function AdminDashboardPage() {
             <img src="/logo.png" alt="Logo" className="w-full h-full rounded-full object-cover" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
-              RU Insiders Central Control Suite
-              <span className="text-[11px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-mono font-bold">
-                PERSISTENT DB
-              </span>
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 flex flex-wrap items-center gap-2">
+              <span>RU Insiders Central Control Suite</span>
+              {supabaseStatus?.connected ? (
+                <span className="text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-300 px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Supabase Cloud Active
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowSupabaseModal(true)}
+                  className="text-[11px] bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5 shadow-sm transition-all"
+                >
+                  <Database className="h-3 w-3 text-amber-600" />
+                  <span>⚡ Connect Supabase Cloud</span>
+                </button>
+              )}
             </h1>
             <p className="text-xs text-slate-500 font-bengali">
               পণ্য আপলোড ও এডিট, ৫-ধাপের অর্ডার ম্যানেজমেন্ট, প্রিন্ট ডেস্ক ও স্টেডফাস্ট কুরিয়ার
@@ -630,9 +815,42 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Top Actions: Refresh & Exit */}
-        <div className="flex items-center gap-3 self-stretch sm:self-auto justify-end">
+        {/* Top Actions: Supabase, Backup, Refresh & Exit */}
+        <div className="flex flex-wrap items-center gap-2.5 self-stretch sm:self-auto justify-end">
           <button
+            type="button"
+            onClick={handleDownloadBackup}
+            className="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 hover:text-slate-900 flex items-center gap-1.5 transition-all shadow-sm"
+            title="Download offline JSON backup of products and orders"
+          >
+            <Download className="h-3.5 w-3.5 text-emerald-600" />
+            <span className="hidden sm:inline">Backup</span>
+          </button>
+
+          {supabaseStatus?.connected ? (
+            <button
+              type="button"
+              onClick={handleSyncToSupabase}
+              disabled={syncingSupabase}
+              className="px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-xs font-semibold text-indigo-700 flex items-center gap-1.5 transition-all shadow-sm"
+              title="Sync current catalog to Supabase Cloud"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 text-indigo-600 ${syncingSupabase ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Sync Cloud</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowSupabaseModal(true)}
+              className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-xs font-semibold text-amber-800 flex items-center gap-1.5 transition-all shadow-sm"
+            >
+              <Database className="h-3.5 w-3.5 text-amber-600" />
+              <span>Cloud Setup</span>
+            </button>
+          )}
+
+          <button
+            type="button"
             onClick={loadDatabaseState}
             disabled={refreshing}
             className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 hover:text-slate-900 flex items-center gap-1.5 transition-all shadow-sm"
@@ -643,6 +861,7 @@ export default function AdminDashboardPage() {
           </button>
 
           <button
+            type="button"
             onClick={handleLogout}
             className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-xs font-semibold text-rose-700 flex items-center gap-1.5 transition-colors"
           >
@@ -1945,6 +2164,131 @@ export default function AdminDashboardPage() {
                 </button>
               </div>
             </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* SUPABASE CLOUD DATABASE SETUP MODAL */}
+      {showSupabaseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto space-y-6">
+            
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-200">
+                  <Database className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900">
+                    Supabase Cloud Database & Storage Setup
+                  </h3>
+                  <p className="text-xs text-slate-500 font-bengali">
+                    পেজ রিফ্রেশ বা সার্ভার রিস্টার্ট হলেও প্রোডাক্ট, অর্ডার ও PDF ফাইল আজীবনের জন্য সুরক্ষিত রাখুন
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSupabaseModal(false)}
+                className="p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Current Status Box */}
+            <div className={`p-4 rounded-2xl border ${supabaseStatus?.connected ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className={`w-3 h-3 rounded-full ${supabaseStatus?.connected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></span>
+                  <span className="font-bold text-xs text-slate-900 font-mono">
+                    {supabaseStatus?.connected ? 'STATUS: CONNECTED & LIVE CLOUD DB' : 'STATUS: LOCAL / FALLBACK MODE'}
+                  </span>
+                </div>
+                {supabaseStatus?.connected && (
+                  <span className="text-xs font-mono font-bold text-emerald-700">
+                    {supabaseStatus.counts?.products ?? 0} Products • {supabaseStatus.counts?.orders ?? 0} Orders
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-600 mt-1.5 font-bengali">
+                {supabaseStatus?.connected 
+                  ? 'আপনার RU Insiders সাইটটি সরাসরি Supabase PostgreSQL ক্লাউড ডাটাবেজ ও ক্লাউড স্টোরেজে সংযুক্ত। যেকোনো পরিবর্তন সাথে সাথে স্থায়ীভাবে সেভ হচ্ছে।' 
+                  : 'Vercel সার্ভারলেস প্ল্যাটফর্মে ফাইল স্থায়ীভাবে সংরক্ষণ করতে Supabase ক্লাউড যুক্ত করুন (সম্পূর্ণ ফ্রি)।'}
+              </p>
+            </div>
+
+            {/* Setup Steps */}
+            <div className="space-y-4 text-xs text-slate-700">
+              <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-amber-500" />
+                ৩টি সহজ ধাপে সম্পূর্ণ ফ্রি ক্লাউড ডাটাবেজ সেটআপ:
+              </h4>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                <div className="font-bold text-slate-900">ধাপ ১: Supabase অ্যাকাউন্ট ও ফ্রি প্রজেক্ট তৈরি</div>
+                <p className="font-bengali text-slate-600">
+                  <a href="https://supabase.com" target="_blank" rel="noreferrer" className="text-blue-600 font-bold underline inline-flex items-center gap-1">
+                    supabase.com <ExternalLink className="h-3 w-3" />
+                  </a>-এ গিয়ে ফ্রিতে সাইন ইন করুন এবং <strong>"New Project"</strong> তৈরি করুন (Region দিন Singapore)।
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="font-bold text-slate-900">ধাপ ২: ডাটাবেজ ও স্টোরেজ টেবিল তৈরি (SQL)</div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(SUPABASE_SCHEMA_SQL);
+                      setCopiedSql(true);
+                      setTimeout(() => setCopiedSql(false), 2500);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] flex items-center gap-1 shadow-sm transition-all"
+                  >
+                    {copiedSql ? <CheckCheck className="h-3 w-3 text-emerald-200" /> : <Copy className="h-3 w-3" />}
+                    <span>{copiedSql ? 'SQL কপি হয়েছে!' : 'Copy SQL Schema'}</span>
+                  </button>
+                </div>
+                <p className="font-bengali text-slate-600">
+                  Supabase ড্যাশবোর্ডের বাম পাশের <strong>SQL Editor</strong> মেনুতে গিয়ে <strong>"New Query"</strong> খুলুন, উপরের বাটনে ক্লিক করে সম্পূর্ণ SQL কপি করে পেস্ট করে <strong>"Run"</strong> চাপুন। সব টেবিল ও ফাইল বাকেট স্বয়ংক্রিয়ভাবে তৈরি হয়ে যাবে।
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                <div className="font-bold text-slate-900">ধাপ ৩: Vercel-এ Environment Variables যুক্ত করা</div>
+                <p className="font-bengali text-slate-600">
+                  Supabase <strong>Project Settings ➔ Data API</strong> থেকে URL ও Keys কপি করে Vercel ড্যাশবোর্ডের <strong>Settings ➔ Environment Variables</strong>-এ যুক্ত করুন:
+                </p>
+                <div className="bg-slate-900 text-emerald-400 p-3 rounded-xl font-mono text-[11px] space-y-1">
+                  <div>NEXT_PUBLIC_SUPABASE_URL = "https://your-project.supabase.co"</div>
+                  <div>NEXT_PUBLIC_SUPABASE_ANON_KEY = "your-anon-public-key"</div>
+                  <div>SUPABASE_SERVICE_ROLE_KEY = "your-service-role-key"</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={handleSyncToSupabase}
+                disabled={syncingSupabase}
+                className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md"
+              >
+                {syncingSupabase ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                <span>টেস্ট ও সিঙ্ক করুন (Test & Sync DB)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowSupabaseModal(false)}
+                className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs"
+              >
+                বন্ধ করুন (Close)
+              </button>
+            </div>
 
           </div>
         </div>

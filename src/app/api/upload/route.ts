@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { getSupabaseClient } from '@/lib/supabase';
 
 // Whitelist of allowed extensions for images, documents, and apparel showcase videos
 const ALLOWED_EXTENSIONS = new Set([
@@ -121,6 +122,39 @@ export async function POST(request: NextRequest) {
     const baseName = path.basename(originalName, ext);
     const safeBase = baseName.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30) || 'media';
     const uniqueName = `${Date.now()}-${safeBase}${ext}`;
+
+    // TIER 1: Supabase Cloud Storage (Permanent, CDN backed)
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        let contentType = 'application/octet-stream';
+        if (ext === '.png') contentType = 'image/png';
+        else if (ext === '.jpg' || ext === '.jpeg') contentType = 'image/jpeg';
+        else if (ext === '.webp') contentType = 'image/webp';
+        else if (ext === '.mp4' || ext === '.m4v') contentType = 'video/mp4';
+        else if (ext === '.mov') contentType = 'video/quicktime';
+        else if (ext === '.webm') contentType = 'video/webm';
+        else if (ext === '.pdf') contentType = 'application/pdf';
+
+        const bucketName = ext === '.pdf' ? 'ru-prints' : 'ru-uploads';
+        const { error: sUploadErr } = await supabase.storage
+          .from(bucketName)
+          .upload(uniqueName, buffer, { contentType, upsert: true });
+
+        if (!sUploadErr) {
+          const { data: publicData } = supabase.storage.from(bucketName).getPublicUrl(uniqueName);
+          return NextResponse.json({
+            success: true,
+            url: publicData.publicUrl,
+            fileName: uniqueName,
+            originalName,
+            size: file.size,
+          });
+        }
+      } catch (sErr) {
+        console.warn('Supabase upload fallback to local storage:', sErr);
+      }
+    }
 
     let successWrites = 0;
 
