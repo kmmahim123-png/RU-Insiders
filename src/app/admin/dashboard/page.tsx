@@ -571,7 +571,8 @@ export default function AdminDashboardPage() {
 
   const handleLogout = () => {
     sessionStorage.removeItem('ru_admin_pin');
-    router.push('/admin');
+    localStorage.removeItem('ru_admin_pin');
+    router.push('/');
   };
 
   // Add Product to Persistent Database

@@ -12,7 +12,8 @@ import {
   X, 
   Facebook, 
   ShieldCheck, 
-  Truck
+  Truck,
+  Compass
 } from 'lucide-react';
 import AnimatedLogo from '@/components/AnimatedLogo';
 
@@ -48,6 +49,7 @@ export default function Navbar() {
 
   const navLinks = [
     { label: 'Shop All Merch', href: '/shop', bn: 'সব পণ্য', icon: ShoppingBag },
+    { label: 'Campus Map', href: '/#campus-map', bn: 'মতিহার ম্যাপ', icon: Compass },
     { label: 'Track Order', href: '/track', bn: 'অর্ডার ট্র্যাকিং', icon: Truck },
     { label: 'Admin Portal', href: '/admin', bn: 'অ্যাডমিন প্যানেল', icon: ShieldCheck },
   ];

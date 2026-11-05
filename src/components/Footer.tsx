@@ -93,7 +93,7 @@ export default function Footer() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-emerald-600 font-bold">✔</span>
-                <span><strong>Instant Print Station:</strong> অ্যাসাইনমেন্ট, ল্যাব রিপোর্ট বা প্রেজেন্টেশন সরাসরি ওয়েবসাইট থেকে প্রিন্ট।</span>
+                <span><strong>Official Campus Merch:</strong> রাজশাহী বিশ্ববিদ্যালয়ের ব্র্যান্ড ভ্যালু ও মতিহারের স্মৃতিবাহী মানসম্মত পোশাক।</span>
               </li>
             </ul>
           </div>
@@ -125,8 +125,60 @@ export default function Footer() {
 
         </div>
 
+        {/* Dedicated Developer & Architect Credit Section (ওয়েবসাইট ডেভেলপার পরিচিতি ও অপশন) */}
+        <div className="mt-10 pt-6 border-t border-slate-200">
+          <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-4 sm:p-6 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 border border-slate-700/60">
+            <div className="flex items-center gap-4 text-center sm:text-left flex-col sm:flex-row">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-black text-white text-xl shadow-inner border border-white/20 shrink-0">
+                👨‍💻
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
+                  <span className="text-xs font-bold uppercase tracking-wider text-amber-400">System Developer & Platform Architect</span>
+                  <span className="bg-emerald-500/20 text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-mono border border-emerald-400/30">Verified Creator</span>
+                </div>
+                <h5 className="text-sm sm:text-base font-black text-white tracking-wide">
+                  Designed & Developed by <span className="text-blue-400">Mahim</span>
+                </h5>
+                <p className="text-[11px] text-slate-300 font-bengali">
+                  রাজশাহী বিশ্ববিদ্যালয়ের অফিশিয়াল ই-কমার্স মার্চেন্ডাইজ প্ল্যাটফর্ম ও মতিহার ক্যাম্পাস সিস্টেম
+                </p>
+              </div>
+            </div>
+
+            {/* Developer Contact & Links (এখানে আপনি যা যা দেখাতে চান তা সিলেক্ট করতে পারবেন) */}
+            <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-end text-xs font-semibold">
+              <a
+                href="https://github.com/kmmahim123-png/RU-Insiders"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-slate-200 hover:text-white transition-all flex items-center gap-1.5 shadow-sm"
+              >
+                <span>GitHub Profile</span>
+              </a>
+              <a
+                href="https://facebook.com/ru.insiders"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 py-1.5 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 border border-blue-400/30 text-blue-200 hover:text-white transition-all flex items-center gap-1.5 shadow-sm"
+              >
+                <span>Facebook</span>
+              </a>
+              <a
+                href="mailto:developer@ruinsiders.com"
+                className="px-3.5 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-400/30 text-emerald-200 hover:text-white transition-all flex items-center gap-1.5 shadow-sm"
+              >
+                <span>Get in Touch</span>
+              </a>
+              <span className="text-[10px] text-slate-400 bg-white/5 px-2 py-1 rounded-lg border border-white/10 font-mono">
+                RU Edition
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Bottom Bar */}
-        <div className="mt-10 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3">
+        <div className="mt-6 pt-4 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3">
           <p>© {new Date().getFullYear()} RU Insiders. Built exclusively for Rajshahi University community.</p>
           <div className="flex items-center gap-1 text-slate-600 font-medium">
             <span>Crafted with</span>

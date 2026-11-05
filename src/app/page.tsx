@@ -14,15 +14,18 @@ import {
 } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import FilterModal, { FilterState } from '@/components/FilterModal';
+import CampusMapExplorer from '@/components/CampusMapExplorer';
 import { Product } from '@/lib/types';
 import { INITIAL_PRODUCTS } from '@/lib/store';
 import { formatBDT } from '@/lib/utils';
 
 const campusSlides = [
-  { src: '/campus/paris-road.jpg', name: 'প্যারিস রোড' },
-  { src: '/campus/paris-road-rain.jpg', name: 'বৃষ্টিতে মতিহার' },
-  { src: '/campus/ru-gate.jpg', name: 'প্রধান ফটক' },
-  { src: '/campus/ru-admin.jpg', name: 'প্রশাসন ভবন' },
+  { src: '/campus/ru-admin.jpg', name: 'প্রশাসন ভবন ও গোল চত্বর' },
+  { src: '/campus/paris-road-rain.jpg', name: 'বৃষ্টিতে মতিহার ও প্যারিস রোড' },
+  { src: '/campus/ru-gate.jpg', name: 'বিশ্ববিদ্যালয় প্রধান ফটক' },
+  { src: '/campus/ru-spot.jpg', name: 'প্যারিস রোডের ছায়াবীথি' },
+  { src: '/campus/ru-roundabout.jpg', name: 'মতিহারের সবুজ প্রান্তর' },
+  { src: '/campus/ru-master-plan-3d.jpg', name: 'মতিহার ৩ডি মাস্টারপ্ল্যান' },
 ];
 
 export default function HomePage() {
@@ -172,39 +175,16 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5 self-stretch md:self-auto justify-start md:justify-end">
-              <a
-                href="#catalog"
-                className="flex-1 sm:flex-initial px-6 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg hover:shadow-blue-600/30 transition-all active:scale-[0.98]"
-              >
-                <ShoppingBag className="h-4 w-4" />
-                <span>সব পণ্য দেখুন (Browse All)</span>
-              </a>
-
-              <Link
-                href="/shop"
-                className="flex-1 sm:flex-initial px-5 py-3.5 rounded-2xl bg-white/90 hover:bg-white text-slate-900 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-lg transition-all active:scale-[0.98]"
-              >
-                <Tag className="h-4 w-4 text-blue-600" />
-                <span>ক্যাটাগরি শপ</span>
-              </Link>
-
-              <a
-                href="https://www.facebook.com/ru.insiders/followers"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-3.5 rounded-2xl bg-white/90 hover:bg-white text-blue-600 hover:text-blue-700 shadow-lg transition-colors"
-                title="Facebook Community"
-              >
-                <Facebook className="h-4 w-4" />
-              </a>
-            </div>
-
           </div>
         </div>
       </section>
 
-      {/* 2. Storefront Search, Category Pills & Product Grid with Campus Backdrop Effect */}
+      {/* 2. Interactive Campus Map & Visited Tracker (Unseen Bangladesh style) */}
+      <div id="campus-map">
+        <CampusMapExplorer />
+      </div>
+
+      {/* 3. Storefront Search, Category Pills & Product Grid with Campus Backdrop Effect */}
       <section id="catalog" className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
         
         {/* Ambient Campus Photo Background Effect behind the products */}
