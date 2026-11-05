@@ -30,6 +30,9 @@ export default function AdminLoginPage() {
 
       // Store in session storage for client-side API requests
       sessionStorage.setItem('ru_admin_pin', pin);
+      if (data.token) {
+        sessionStorage.setItem('ru_admin_token', data.token);
+      }
       router.push('/admin/dashboard');
     } catch (err: any) {
       setError(err.message || 'Authentication error');

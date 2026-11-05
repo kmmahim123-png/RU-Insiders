@@ -147,22 +147,23 @@ export function getClientIp(request: NextRequest): string {
  */
 export function verifyAdminAuth(request: NextRequest): boolean {
   const pinHeader = request.headers.get('x-admin-pin');
-  if (pinHeader && verifyAdminPin(pinHeader)) {
+  if (pinHeader && (verifyAdminPin(pinHeader) || verifyAdminSessionToken(pinHeader))) {
     return true;
   }
 
   const cookieToken = request.cookies.get('ru_admin_token')?.value;
-  if (cookieToken && verifyAdminSessionToken(cookieToken)) {
+  if (cookieToken && (verifyAdminSessionToken(cookieToken) || verifyAdminPin(cookieToken))) {
     return true;
   }
 
   const authHeader = request.headers.get('authorization');
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const bearer = authHeader.substring(7);
-    if (verifyAdminSessionToken(bearer)) {
+    if (verifyAdminSessionToken(bearer) || verifyAdminPin(bearer)) {
       return true;
     }
   }
 
   return false;
 }
+

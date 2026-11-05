@@ -50,8 +50,14 @@ export default function PrintStationPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerName || !customerPhone || !file) {
+    if (!customerName.trim() || !customerPhone.trim() || !file) {
       alert('অনুগ্রহ করে নাম, মোবাইল নম্বর এবং PDF ফাইল দিন।');
+      return;
+    }
+
+    const cleanPhone = customerPhone.replace(/[^0-9]/g, '');
+    if (cleanPhone.length !== 11 || !cleanPhone.startsWith('01')) {
+      alert('অনুগ্রহ করে সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন (যেমন: 017XXXXXXXX)।');
       return;
     }
 
@@ -354,15 +360,40 @@ export default function PrintStationPage() {
                 </div>
 
                 <div>
-                  <label className="block text-slate-700 mb-1 font-semibold">Mobile Number (মোবাইল নম্বর)</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-slate-700 font-semibold">
+                      Mobile Number (১১ সংখ্যার মোবাইল নম্বর) <span className="text-rose-500">*</span>
+                    </label>
+                    <span className={`text-[10px] font-mono font-bold ${
+                      customerPhone.length === 11 && customerPhone.startsWith('01') ? 'text-emerald-600' : 'text-slate-400'
+                    }`}>
+                      {customerPhone.length}/11
+                    </span>
+                  </div>
                   <input
                     type="tel"
                     required
+                    maxLength={11}
                     placeholder="017XXXXXXXX"
                     value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-mono focus:outline-none focus:border-blue-600 focus:bg-white transition-colors"
+                    onChange={(e) => setCustomerPhone(e.target.value.replace(/[^0-9]/g, '').slice(0, 11))}
+                    className={`w-full px-3 py-2.5 rounded-xl border text-slate-900 font-mono tracking-wide focus:outline-none transition-colors ${
+                      customerPhone.length === 11 && customerPhone.startsWith('01')
+                        ? 'border-emerald-500 bg-emerald-50/20 focus:border-emerald-600'
+                        : customerPhone.length > 0 && !customerPhone.startsWith('01')
+                        ? 'border-rose-400 bg-rose-50/20'
+                        : 'border-slate-300 bg-slate-50 focus:border-blue-600 focus:bg-white'
+                    }`}
                   />
+                  <p className="text-[11px] text-slate-500 mt-1 font-bengali">
+                    {customerPhone.length === 11 && customerPhone.startsWith('01') ? (
+                      <span className="text-emerald-700 font-bold">সঠিক ১১ সংখ্যার মোবাইল নম্বর ✓</span>
+                    ) : customerPhone.length > 0 && !customerPhone.startsWith('01') ? (
+                      <span className="text-rose-600">নম্বরটি অবশ্যই 01 দিয়ে শুরু হতে হবে</span>
+                    ) : (
+                      <span>১১ সংখ্যার মোবাইল নম্বর দিন (যেমন: 017XXXXXXXX)</span>
+                    )}
+                  </p>
                 </div>
 
                 <div>

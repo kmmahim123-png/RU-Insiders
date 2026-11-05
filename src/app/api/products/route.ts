@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getProducts, addProduct, deleteProduct, moveProductPosition, updateProduct } from '@/lib/db';
 import { Product } from '@/lib/types';
+import { verifyAdminAuth } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -40,10 +41,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const adminPin = request.headers.get('x-admin-pin') || request.cookies.get('ru_admin_token')?.value;
-    const expectedPin = process.env.ADMIN_DEFAULT_PIN || '1953';
-
-    if (adminPin !== expectedPin) {
+    if (!verifyAdminAuth(request)) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized: Admin privileges required.' },
         { status: 401 }
@@ -106,10 +104,7 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const adminPin = request.headers.get('x-admin-pin') || request.cookies.get('ru_admin_token')?.value;
-    const expectedPin = process.env.ADMIN_DEFAULT_PIN || '1953';
-
-    if (adminPin !== expectedPin) {
+    if (!verifyAdminAuth(request)) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized: Admin privileges required.' },
         { status: 401 }
@@ -151,10 +146,7 @@ export async function DELETE(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const adminPin = request.headers.get('x-admin-pin') || request.cookies.get('ru_admin_token')?.value;
-    const expectedPin = process.env.ADMIN_DEFAULT_PIN || '1953';
-
-    if (adminPin !== expectedPin) {
+    if (!verifyAdminAuth(request)) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized: Admin privileges required.' },
         { status: 401 }

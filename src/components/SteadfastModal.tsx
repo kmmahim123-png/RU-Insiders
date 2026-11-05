@@ -30,9 +30,17 @@ export default function SteadfastModal({ order, config, isOpen, onClose, onSucce
     setError(null);
 
     try {
+      const adminPin = typeof window !== 'undefined' 
+        ? sessionStorage.getItem('ru_admin_token') || sessionStorage.getItem('ru_admin_pin') || '1953' 
+        : '1953';
+
       const response = await fetch('/api/admin/steadfast', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-pin': adminPin,
+        },
+        credentials: 'include',
         body: JSON.stringify({
           orderId: order.id,
           orderNumber: order.orderNumber,

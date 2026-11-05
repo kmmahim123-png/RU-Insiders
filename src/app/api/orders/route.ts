@@ -1,20 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOrders, addOrder, updateOrderStatus, deleteOrder } from '@/lib/db';
-import { Order } from '@/lib/types';
+import { getOrders, addOrder, updateOrderStatus, deleteOrder, getProducts } from '@/lib/db';
+import { Order, CartItem } from '@/lib/types';
 import { generateToken } from '@/lib/utils';
+import { verifyAdminAuth } from '@/lib/auth';
+
+const CUSTOM_BASE_PRICES: Record<string, number> = {
+  jersey: 650,
+  dropshoulder: 580,
+  hoodie: 1150,
+  tshirt: 390,
+};
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const orderNumber = searchParams.get('orderNumber');
     const phone = searchParams.get('phone');
-    const adminPin = request.headers.get('x-admin-pin') || request.cookies.get('ru_admin_token')?.value;
-    const expectedPin = process.env.ADMIN_DEFAULT_PIN || '1953';
+    const isAdmin = verifyAdminAuth(request);
 
     const orders = await getOrders();
 
     // Admin access returns all orders
-    if (adminPin === expectedPin) {
+    if (isAdmin) {
       return NextResponse.json({
         success: true,
         orders,
@@ -75,21 +82,69 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    if (!body.customerName || !body.customerPhone || !body.items || body.items.length === 0) {
+    if (!body.customerName || !body.customerPhone || !body.items || !Array.isArray(body.items) || body.items.length === 0) {
       return NextResponse.json(
-        { success: false, message: 'Invalid payload: Customer details and items are required.' },
+        { success: false, message: 'Invalid payload: Customer name, phone, and items array are required.' },
         { status: 400 }
       );
     }
 
+    // Strict 11-digit Bangladeshi mobile number validation
+    const cleanPhone = body.customerPhone.toString().replace(/[^0-9]/g, '');
+    if (cleanPhone.length !== 11 || !cleanPhone.startsWith('01')) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'মোবাইল নম্বর অবশ্যই ১১ সংখ্যার হতে হবে এবং 01 দিয়ে শুরু হতে হবে (যেমন: 017XXXXXXXX)।' 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Server-side price verification against catalog to eliminate price tampering
+    const catalogProducts = await getProducts();
+    const productCatalog = new Map(catalogProducts.map((p) => [p.id, p]));
+
     let subtotal = 0;
     let estimatedCost = 0;
+    const validatedItems: CartItem[] = [];
 
-    for (const item of body.items) {
-      const qty = Math.max(1, Number(item.quantity) || 1);
-      const price = Number(item.price) || 0;
-      subtotal += price * qty;
-      estimatedCost += Math.round(price * 0.55) * qty;
+    for (const rawItem of body.items) {
+      const qty = Math.max(1, Math.min(100, Number(rawItem.quantity) || 1));
+      let unitPrice = 0;
+      let unitCost = 0;
+
+      // Check if item corresponds to an official catalog product
+      const catalogMatch = productCatalog.get(rawItem.productId);
+      if (catalogMatch) {
+        unitPrice = catalogMatch.price;
+        unitCost = catalogMatch.costPrice || Math.round(catalogMatch.price * 0.55);
+      } else if (rawItem.productId?.startsWith('custom-') || rawItem.customization) {
+        // Compute canonical customizer price
+        const garment = (rawItem.customization?.garmentType || 'hoodie').toLowerCase();
+        const base = CUSTOM_BASE_PRICES[garment] || 600;
+        const customization = rawItem.customization || {};
+        const fee =
+          (customization.customText ? 50 : 0) +
+          (customization.uploadedImage ? 70 : 0) +
+          (customization.playerName ? 50 : 0) +
+          (customization.playerNumber ? 50 : 0);
+        unitPrice = base + fee;
+        unitCost = Math.round(unitPrice * 0.55);
+      } else {
+        // Fallback for custom or legacy items: enforce shop minimum price floor
+        unitPrice = Math.max(350, Number(rawItem.price) || 350);
+        unitCost = Math.round(unitPrice * 0.55);
+      }
+
+      subtotal += unitPrice * qty;
+      estimatedCost += unitCost * qty;
+
+      validatedItems.push({
+        ...rawItem,
+        price: unitPrice,
+        quantity: qty,
+      });
     }
 
     const deliveryFee = body.deliveryMethod === 'ru_campus_pickup' ? 0 : 70;
@@ -104,7 +159,7 @@ export async function POST(request: NextRequest) {
       customerAddress: body.customerAddress?.trim() || 'RU Campus Point',
       deliveryMethod: body.deliveryMethod || 'ru_campus_pickup',
       paymentMethod: body.paymentMethod || 'cash_on_delivery',
-      items: body.items,
+      items: validatedItems,
       subtotal,
       deliveryFee,
       total,
@@ -118,7 +173,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Order placed successfully and saved to database.',
+      message: 'Order placed successfully and validated against catalog.',
       order: newOrder,
     }, { status: 201 });
   } catch (error: any) {
@@ -131,10 +186,7 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const adminPin = request.headers.get('x-admin-pin') || request.cookies.get('ru_admin_token')?.value;
-    const expectedPin = process.env.ADMIN_DEFAULT_PIN || '1953';
-
-    if (adminPin !== expectedPin) {
+    if (!verifyAdminAuth(request)) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized: Admin privileges required.' },
         { status: 401 }
@@ -171,10 +223,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const adminPin = request.headers.get('x-admin-pin') || request.cookies.get('ru_admin_token')?.value;
-    const expectedPin = process.env.ADMIN_DEFAULT_PIN || '1953';
-
-    if (adminPin !== expectedPin) {
+    if (!verifyAdminAuth(request)) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized: Admin privileges required.' },
         { status: 401 }

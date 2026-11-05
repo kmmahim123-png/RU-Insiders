@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSteadfastConfig, updateSteadfastConfig, updateOrderStatus } from '@/lib/db';
+import { verifyAdminAuth } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    const adminPin = request.headers.get('x-admin-pin') || request.cookies.get('ru_admin_token')?.value;
-    const expectedPin = process.env.ADMIN_DEFAULT_PIN || '1953';
-
-    if (adminPin !== expectedPin) {
+    if (!verifyAdminAuth(request)) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
@@ -19,10 +17,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const adminPin = request.headers.get('x-admin-pin') || request.cookies.get('ru_admin_token')?.value;
-    const expectedPin = process.env.ADMIN_DEFAULT_PIN || '1953';
-
-    if (adminPin !== expectedPin) {
+    if (!verifyAdminAuth(request)) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized: Admin role check failed.' },
         { status: 401 }
@@ -56,10 +51,12 @@ export async function POST(request: NextRequest) {
     const secretKey = process.env.STEADFAST_SECRET_KEY || config.secretKey;
     const baseUrl = process.env.STEADFAST_BASE_URL || config.baseUrl || 'https://portal.steadfast.com.bd/api/v1';
 
-    let consignmentId = `STDFST-${Math.floor(100000 + Math.random() * 900000)}`;
-    let trackingCode = `RU-SF-${Math.floor(1000 + Math.random() * 9000)}`;
+    const isLiveKey = apiKey && secretKey && !apiKey.startsWith('DEMO_');
 
-    if (apiKey && secretKey && !apiKey.startsWith('DEMO_')) {
+    let consignmentId = '';
+    let trackingCode = '';
+
+    if (isLiveKey) {
       try {
         const sfResponse = await fetch(`${baseUrl}/create_order`, {
           method: 'POST',
@@ -83,13 +80,33 @@ export async function POST(request: NextRequest) {
         if (sfData.status === 200 && sfData.consignment) {
           consignmentId = String(sfData.consignment.consignment_id);
           trackingCode = sfData.consignment.tracking_code;
+        } else {
+          return NextResponse.json(
+            {
+              success: false,
+              message: `Steadfast API error: ${sfData.message || 'Consignment creation rejected by courier portal.'}`,
+              details: sfData,
+            },
+            { status: 502 }
+          );
         }
-      } catch (sfErr) {
-        console.warn('Steadfast live endpoint unreachable, generating local consignment fallback:', sfErr);
+      } catch (sfErr: any) {
+        console.error('Steadfast live endpoint unreachable:', sfErr);
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Steadfast Courier API is unreachable: ${sfErr.message || 'Network timeout'}. Consignment was NOT dispatched.`,
+          },
+          { status: 502 }
+        );
       }
+    } else {
+      // Demo / simulation mode: clearly labeled so admins never confuse with real dispatch
+      consignmentId = `DEMO-STDFST-${Math.floor(100000 + Math.random() * 900000)}`;
+      trackingCode = `DEMO-RU-SF-${Math.floor(1000 + Math.random() * 9000)}`;
     }
 
-    // Update order in database directly
+    // Update order in database only after real consignment is verified (or in explicit demo mode)
     if (orderId) {
       await updateOrderStatus(orderId, 'shipped_steadfast', trackingCode, consignmentId);
     }
@@ -98,7 +115,10 @@ export async function POST(request: NextRequest) {
       success: true,
       consignmentId,
       trackingCode,
-      message: 'Steadfast Courier consignment generated and saved to database.',
+      isDemo: !isLiveKey,
+      message: isLiveKey
+        ? 'Steadfast Courier consignment successfully registered with live portal.'
+        : 'Demo consignment generated for testing (No live courier dispatch).',
     });
   } catch (error: any) {
     return NextResponse.json(

@@ -1,20 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { getPrintJobs, addPrintJob, updatePrintJobStatus, deletePrintJob } from '@/lib/db';
 import { PrintJob } from '@/lib/types';
 import { generateToken } from '@/lib/utils';
+import { verifyAdminAuth } from '@/lib/auth';
+
+/**
+ * Helper to offload large base64 file data URLs to disk storage instead of bloating db.json
+ */
+async function persistBase64Document(dataUrl: string, originalName: string): Promise<string> {
+  try {
+    const matches = dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) {
+      return dataUrl.startsWith('/uploads/') ? dataUrl : '';
+    }
+
+    const base64Data = matches[2];
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    const ext = path.extname(originalName).toLowerCase() || '.pdf';
+    const safeBase = path.basename(originalName, ext).replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30) || 'doc';
+    const uniqueName = `print-${Date.now()}-${safeBase}${ext}`;
+
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+    const dataUploadsDir = path.join(process.cwd(), 'data', 'uploads');
+    const tmpUploadsDir = path.join(os.tmpdir(), 'ru_insiders_uploads');
+
+    try { if (!fs.existsSync(uploadsDir)) await fs.promises.mkdir(uploadsDir, { recursive: true }); } catch {}
+    try { if (!fs.existsSync(dataUploadsDir)) await fs.promises.mkdir(dataUploadsDir, { recursive: true }); } catch {}
+    try { if (!fs.existsSync(tmpUploadsDir)) await fs.promises.mkdir(tmpUploadsDir, { recursive: true }); } catch {}
+
+    try { await fs.promises.writeFile(path.join(uploadsDir, uniqueName), buffer); } catch {}
+    try { await fs.promises.writeFile(path.join(dataUploadsDir, uniqueName), buffer); } catch {}
+    try { await fs.promises.writeFile(path.join(tmpUploadsDir, uniqueName), buffer); } catch {}
+
+    return `/uploads/${uniqueName}`;
+  } catch (err) {
+    console.warn('Could not persist base64 print document to disk:', err);
+    return '';
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const token = searchParams.get('token');
     const phone = searchParams.get('phone');
-    const adminPin = request.headers.get('x-admin-pin') || request.cookies.get('ru_admin_token')?.value;
-    const expectedPin = process.env.ADMIN_DEFAULT_PIN || '1953';
+    const isAdmin = verifyAdminAuth(request);
 
     const jobs = await getPrintJobs();
 
     // Admin access returns all jobs
-    if (adminPin === expectedPin) {
+    if (isAdmin) {
       return NextResponse.json({
         success: true,
         jobs,
@@ -78,6 +117,14 @@ export async function POST(request: NextRequest) {
     const totalAmount = Math.ceil(pages * copies * ratePerPage);
     const costAmount = Math.ceil(totalAmount * 0.4);
 
+    // Save document to file storage instead of keeping bloated base64 in db.json
+    let fileStorageUrl = '';
+    if (body.fileDataUrl && body.fileDataUrl.startsWith('data:')) {
+      fileStorageUrl = await persistBase64Document(body.fileDataUrl, body.fileName);
+    } else if (typeof body.fileDataUrl === 'string' && body.fileDataUrl.startsWith('/uploads/')) {
+      fileStorageUrl = body.fileDataUrl;
+    }
+
     const newJob: PrintJob = {
       id: `prnt-${Date.now()}`,
       token: generateToken('RU-PRNT'),
@@ -86,7 +133,7 @@ export async function POST(request: NextRequest) {
       customerNotes: body.customerNotes?.trim() || '',
       fileName: body.fileName.trim(),
       fileSizeMb: Number(body.fileSizeMb || 2.5),
-      fileDataUrl: body.fileDataUrl || '',
+      fileDataUrl: fileStorageUrl,
       pageCount: pages,
       printType: isColor ? 'color' : 'bw',
       paperType: body.paperType || 'standard_80gsm',
@@ -117,10 +164,7 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const adminPin = request.headers.get('x-admin-pin') || request.cookies.get('ru_admin_token')?.value;
-    const expectedPin = process.env.ADMIN_DEFAULT_PIN || '1953';
-
-    if (adminPin !== expectedPin) {
+    if (!verifyAdminAuth(request)) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized: Admin privileges required.' },
         { status: 401 }
@@ -151,10 +195,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const adminPin = request.headers.get('x-admin-pin') || request.cookies.get('ru_admin_token')?.value;
-    const expectedPin = process.env.ADMIN_DEFAULT_PIN || '1953';
-
-    if (adminPin !== expectedPin) {
+    if (!verifyAdminAuth(request)) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized: Admin privileges required.' },
         { status: 401 }

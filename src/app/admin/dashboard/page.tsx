@@ -172,7 +172,9 @@ export default function AdminDashboardPage() {
   };
 
   const getAdminPin = useCallback(() => {
-    return typeof window !== 'undefined' ? sessionStorage.getItem('ru_admin_pin') || '1953' : '1953';
+    return typeof window !== 'undefined' 
+      ? sessionStorage.getItem('ru_admin_token') || sessionStorage.getItem('ru_admin_pin') || '1953' 
+      : '1953';
   }, []);
 
   // Fetch full live database state
@@ -191,6 +193,7 @@ export default function AdminDashboardPage() {
       // 2. Fetch Orders
       const ordRes = await fetch('/api/orders', {
         headers: { 'x-admin-pin': pin },
+        credentials: 'include',
       });
       if (ordRes.ok) {
         const ordData = await ordRes.json();
@@ -200,6 +203,7 @@ export default function AdminDashboardPage() {
       // 3. Fetch Print Jobs
       const printRes = await fetch('/api/print-station', {
         headers: { 'x-admin-pin': pin },
+        credentials: 'include',
       });
       if (printRes.ok) {
         const printData = await printRes.json();
@@ -209,6 +213,7 @@ export default function AdminDashboardPage() {
       // 4. Fetch Steadfast Config
       const sfRes = await fetch('/api/admin/steadfast', {
         headers: { 'x-admin-pin': pin },
+        credentials: 'include',
       });
       if (sfRes.ok) {
         const sfData = await sfRes.json();
@@ -259,6 +264,7 @@ export default function AdminDashboardPage() {
           'Content-Type': 'application/json',
           'x-admin-pin': pin,
         },
+        credentials: 'include',
         body: JSON.stringify({
           name: newProductName,
           nameBn: newProductNameBn,
@@ -304,6 +310,7 @@ export default function AdminDashboardPage() {
       const res = await fetch(`/api/products?id=${id}`, {
         method: 'DELETE',
         headers: { 'x-admin-pin': pin },
+        credentials: 'include',
       });
 
       const data = await res.json();
@@ -328,6 +335,7 @@ export default function AdminDashboardPage() {
           'Content-Type': 'application/json',
           'x-admin-pin': pin,
         },
+        credentials: 'include',
         body: JSON.stringify({ action: 'move', id, direction }),
       });
 
@@ -353,6 +361,7 @@ export default function AdminDashboardPage() {
           'Content-Type': 'application/json',
           'x-admin-pin': pin,
         },
+        credentials: 'include',
         body: JSON.stringify({ id: orderId, status: newStatus }),
       });
 
@@ -373,6 +382,7 @@ export default function AdminDashboardPage() {
       const res = await fetch(`/api/orders?id=${orderId}`, {
         method: 'DELETE',
         headers: { 'x-admin-pin': pin },
+        credentials: 'include',
       });
       if (res.ok) {
         showNotification(`Order ${orderNumber} deleted.`);
@@ -445,6 +455,82 @@ export default function AdminDashboardPage() {
           <span>{actionMessage.text}</span>
         </div>
       )}
+
+      {/* Executive Quick Stats Bar */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {/* Metric 1 */}
+        <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 shadow-sm flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">মোট বিক্রয় (Revenue)</span>
+            <div className="text-lg sm:text-2xl font-black text-slate-900 font-mono">
+              {formatBDT(orders.reduce((sum, o) => sum + (o.status !== 'cancelled' ? o.total : 0), 0))}
+            </div>
+            <span className="text-[10px] text-emerald-600 font-bold block">
+              নেট লাভ: {formatBDT(orders.reduce((sum, o) => sum + (o.status !== 'cancelled' ? o.netProfit : 0), 0))}
+            </span>
+          </div>
+          <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <TrendingUp className="h-5 w-5" />
+          </div>
+        </div>
+
+        {/* Metric 2 */}
+        <div 
+          onClick={() => setActiveTab('orders')}
+          className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 hover:border-blue-400 shadow-sm flex items-center justify-between cursor-pointer transition-all"
+        >
+          <div className="space-y-1">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">নতুন অর্ডার (Pending)</span>
+            <div className="text-lg sm:text-2xl font-black text-blue-700 font-mono">
+              {orders.filter(o => o.status === 'pending').length}
+            </div>
+            <span className="text-[10px] text-slate-500 font-medium block">
+              মোট অর্ডার: {orders.length} টি
+            </span>
+          </div>
+          <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+            <ShoppingBag className="h-5 w-5" />
+          </div>
+        </div>
+
+        {/* Metric 3 */}
+        <div 
+          onClick={() => setActiveTab('print-desk')}
+          className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 hover:border-blue-400 shadow-sm flex items-center justify-between cursor-pointer transition-all"
+        >
+          <div className="space-y-1">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">প্রিন্ট রিকোয়েস্ট (Queue)</span>
+            <div className="text-lg sm:text-2xl font-black text-indigo-700 font-mono">
+              {printJobs.filter(j => j.status === 'queued').length}
+            </div>
+            <span className="text-[10px] text-slate-500 font-medium block">
+              মোট প্রিন্ট জব: {printJobs.length} টি
+            </span>
+          </div>
+          <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+            <Printer className="h-5 w-5" />
+          </div>
+        </div>
+
+        {/* Metric 4 */}
+        <div 
+          onClick={() => setActiveTab('products')}
+          className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 hover:border-blue-400 shadow-sm flex items-center justify-between cursor-pointer transition-all"
+        >
+          <div className="space-y-1">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">লাইভ প্রোডাক্টস</span>
+            <div className="text-lg sm:text-2xl font-black text-slate-900 font-mono">
+              {products.length}
+            </div>
+            <span className="text-[10px] text-blue-600 font-medium block">
+              স্টক ও সিকোয়েন্স রেডি
+            </span>
+          </div>
+          <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <ShieldCheck className="h-5 w-5" />
+          </div>
+        </div>
+      </div>
 
       {/* Main Tab Navigation */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200">
@@ -1136,13 +1222,40 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="space-y-4 text-xs">
+            {/* Status Indicator */}
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+              <span className="font-semibold text-slate-700">Gateway Status:</span>
+              <span className={`text-[11px] font-bold px-3 py-1 rounded-full font-mono flex items-center gap-1.5 ${
+                steadfastConfig.apiKey && !steadfastConfig.apiKey.startsWith('DEMO_')
+                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                  : 'bg-amber-50 text-amber-800 border border-amber-200'
+              }`}>
+                <span className={`w-2 h-2 rounded-full ${
+                  steadfastConfig.apiKey && !steadfastConfig.apiKey.startsWith('DEMO_') ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                }`} />
+                {steadfastConfig.apiKey && !steadfastConfig.apiKey.startsWith('DEMO_')
+                  ? 'LIVE CREDENTIALS READY'
+                  : 'DEMO / SIMULATION MODE'}
+              </span>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-200 text-slate-700 space-y-1">
+              <p className="font-bold text-blue-900">📌 কীভাবে API Key পাবেন?</p>
+              <p className="text-[11px] font-bengali leading-relaxed text-slate-600">
+                1. <a href="https://portal.steadfast.com.bd" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-bold">portal.steadfast.com.bd</a> এ লগইন করুন। <br />
+                2. বাম পাশের মেনু থেকে <strong>Settings &gt; API Key</strong> অপশনে যান। <br />
+                3. সেখানে প্রাপ্ত <strong>Api Key</strong> এবং <strong>Secret Key</strong> কপি করে নিচের বক্সে বসিয়ে সেভ করুন।
+              </p>
+            </div>
+
             <div>
               <label className="block text-slate-700 mb-1 font-semibold">Steadfast Merchant API Key</label>
               <input
                 type="text"
+                placeholder="e.g. your_steadfast_api_key"
                 value={steadfastConfig.apiKey}
                 onChange={(e) => setSteadfastConfig({ ...steadfastConfig, apiKey: e.target.value })}
-                className="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-mono focus:outline-none focus:border-blue-600 focus:bg-white"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-mono focus:outline-none focus:border-blue-600 focus:bg-white"
               />
             </div>
 
@@ -1150,9 +1263,10 @@ export default function AdminDashboardPage() {
               <label className="block text-slate-700 mb-1 font-semibold">Steadfast Merchant Secret Key</label>
               <input
                 type="password"
+                placeholder="e.g. your_steadfast_secret_key"
                 value={steadfastConfig.secretKey}
                 onChange={(e) => setSteadfastConfig({ ...steadfastConfig, secretKey: e.target.value })}
-                className="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-mono focus:outline-none focus:border-blue-600 focus:bg-white"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-mono focus:outline-none focus:border-blue-600 focus:bg-white"
               />
             </div>
 
@@ -1162,28 +1276,37 @@ export default function AdminDashboardPage() {
                 type="url"
                 value={steadfastConfig.baseUrl}
                 onChange={(e) => setSteadfastConfig({ ...steadfastConfig, baseUrl: e.target.value })}
-                className="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-mono focus:outline-none focus:border-blue-600 focus:bg-white"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-mono focus:outline-none focus:border-blue-600 focus:bg-white"
               />
             </div>
 
             <button
               onClick={async () => {
                 const pin = getAdminPin();
-                const res = await fetch('/api/admin/steadfast', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'x-admin-pin': pin,
-                  },
-                  body: JSON.stringify({ action: 'save_config', config: steadfastConfig }),
-                });
-                if (res.ok) {
-                  showNotification('Steadfast credentials saved securely to database!');
+                try {
+                  const res = await fetch('/api/admin/steadfast', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'x-admin-pin': pin,
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ action: 'save_config', config: steadfastConfig }),
+                  });
+                  const data = await res.json();
+                  if (res.ok && data.success) {
+                    showNotification('স্টেডফাস্ট সেটিংস সফলভাবে ডাটাবেজে সেভ হয়েছে!');
+                  } else {
+                    showNotification(data.message || 'সেটিংস সেভ করতে সমস্যা হয়েছে', 'error');
+                  }
+                } catch (err: any) {
+                  showNotification(err.message || 'Error saving Steadfast settings', 'error');
                 }
               }}
-              className="w-full py-3.5 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-[0.99]"
+              className="w-full py-3.5 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-[0.99] flex items-center justify-center gap-2"
             >
-              Save Steadfast Settings
+              <Truck className="h-4 w-4" />
+              <span>Save Steadfast Settings (সেটিংস সংরক্ষণ করুন)</span>
             </button>
           </div>
         </div>

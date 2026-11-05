@@ -131,14 +131,15 @@ function TrackContent() {
 
             <div>
               <label className="block text-slate-700 mb-1 font-semibold">
-                Phone Number (অর্ডারের সময় ব্যবহৃত মোবাইল নম্বর)
+                Phone Number (অর্ডারের সময় ব্যবহৃত ১১ সংখ্যার মোবাইল নম্বর)
               </label>
               <input
                 type="tel"
                 required
+                maxLength={11}
                 placeholder="017XXXXXXXX"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, '').slice(0, 11))}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-mono focus:outline-none focus:border-blue-600 focus:bg-white transition-colors"
               />
             </div>
