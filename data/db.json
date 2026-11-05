@@ -1,6 +1,118 @@
 {
   "products": [
     {
+      "id": "prod-1793775131014",
+      "slug": "a-momo-1013",
+      "name": "a momo",
+      "nameBn": "",
+      "category": "hoodies",
+      "description": "RU Insiders Official Apparel",
+      "price": 1150,
+      "regularPrice": 1438,
+      "costPrice": 650,
+      "images": [
+        "/uploads/1793775125422-134349740643136223.jpg"
+      ],
+      "colors": [
+        {
+          "name": "Heritage Maroon",
+          "hex": "#881337"
+        },
+        {
+          "name": "Royal Blue",
+          "hex": "#1d4ed8"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "stock": 30,
+      "salesCount": 0,
+      "isCustomizable": false,
+      "featured": true,
+      "badge": "New Arrival",
+      "orderIndex": 0
+    },
+    {
+      "id": "prod-1793840131747",
+      "slug": "ru-motihar-signature-hoodie-1747",
+      "name": "RU Motihar Signature Hoodie",
+      "nameBn": "রাবি মতিহার স্পেশাল হুডি",
+      "category": "hoodies",
+      "description": "Heavyweight winter fleece with 4-view gallery and showcase video",
+      "price": 1250,
+      "regularPrice": 1563,
+      "costPrice": 700,
+      "images": [
+        "/mockups/hoodie-front.jpg",
+        "/mockups/drop-shoulder-front.jpg",
+        "/mockups/jersey-front.jpg",
+        "/mockups/t-shirt-front.jpg"
+      ],
+      "colors": [
+        {
+          "name": "Heritage Maroon",
+          "hex": "#881337"
+        },
+        {
+          "name": "Royal Blue",
+          "hex": "#1d4ed8"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "stock": 50,
+      "salesCount": 0,
+      "isCustomizable": false,
+      "featured": true,
+      "badge": "New Arrival",
+      "orderIndex": 1,
+      "video": "/mockups/demo.mp4"
+    },
+    {
+      "id": "prod-1793775037443",
+      "slug": "ff-7443",
+      "name": "ff",
+      "nameBn": "ff",
+      "category": "hoodies",
+      "description": "RU Insiders Official Apparel",
+      "price": 1150,
+      "regularPrice": 1438,
+      "costPrice": 650,
+      "images": [
+        "/uploads/1793775027367-134361855682621347.jpg"
+      ],
+      "colors": [
+        {
+          "name": "Heritage Maroon",
+          "hex": "#881337"
+        },
+        {
+          "name": "Royal Blue",
+          "hex": "#1d4ed8"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "stock": 30,
+      "salesCount": 0,
+      "isCustomizable": false,
+      "featured": true,
+      "badge": "New Arrival",
+      "orderIndex": 2
+    },
+    {
       "id": "prod-1793774362085",
       "slug": "ss-2085",
       "name": "ss",
@@ -34,7 +146,7 @@
       "isCustomizable": false,
       "featured": true,
       "badge": "New Arrival",
-      "orderIndex": 0
+      "orderIndex": 3
     },
     {
       "id": "prod-1793774338433",
@@ -70,7 +182,7 @@
       "isCustomizable": false,
       "featured": true,
       "badge": "New Arrival",
-      "orderIndex": 1
+      "orderIndex": 4
     },
     {
       "id": "prod-ru-hoodie-maroon",
@@ -83,8 +195,8 @@
       "regularPrice": 1400,
       "costPrice": 680,
       "images": [
-        "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1578587018452-892bacefd3f2?auto=format&fit=crop&w=800&q=80"
+        "/mockups/hoodie-front.jpg",
+        "/mockups/drop-shoulder-front.jpg"
       ],
       "colors": [
         {
@@ -115,7 +227,7 @@
       "isCustomizable": true,
       "featured": true,
       "badge": "Best Seller",
-      "orderIndex": 2
+      "orderIndex": 5
     },
     {
       "id": "prod-1793769937850",
@@ -128,7 +240,7 @@
       "regularPrice": 1,
       "costPrice": 1,
       "images": [
-        "J2610300604.png"
+        "/mockups/hoodie-front.jpg"
       ],
       "colors": [
         {
@@ -151,7 +263,7 @@
       "isCustomizable": false,
       "featured": true,
       "badge": "New Arrival",
-      "orderIndex": 3
+      "orderIndex": 6
     },
     {
       "id": "prod-ru-custom-jersey-2026",
@@ -164,8 +276,8 @@
       "regularPrice": 850,
       "costPrice": 340,
       "images": [
-        "https://images.unsplash.com/photo-1580087433295-ab2600c1030e?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=800&q=80"
+        "/mockups/jersey-front.jpg",
+        "/mockups/t-shirt-front.jpg"
       ],
       "colors": [
         {
@@ -197,7 +309,7 @@
       "isCustomizable": true,
       "featured": true,
       "badge": "Customizable",
-      "orderIndex": 4
+      "orderIndex": 7
     },
     {
       "id": "prod-ru-shabash-ganji",
@@ -210,7 +322,7 @@
       "regularPrice": 500,
       "costPrice": 190,
       "images": [
-        "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80"
+        "/mockups/t-shirt-front.jpg"
       ],
       "colors": [
         {
@@ -237,7 +349,7 @@
       "salesCount": 145,
       "isCustomizable": true,
       "featured": false,
-      "orderIndex": 5
+      "orderIndex": 8
     },
     {
       "id": "prod-ru-varsity-jacket",
@@ -250,7 +362,7 @@
       "regularPrice": 2800,
       "costPrice": 1350,
       "images": [
-        "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=800&q=80"
+        "/mockups/hoodie-front.jpg"
       ],
       "colors": [
         {
@@ -273,7 +385,7 @@
       "isCustomizable": false,
       "featured": true,
       "badge": "Limited Edition",
-      "orderIndex": 6
+      "orderIndex": 9
     },
     {
       "id": "prod-ru-totebag",
@@ -286,7 +398,7 @@
       "regularPrice": 350,
       "costPrice": 120,
       "images": [
-        "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80"
+        "/mockups/t-shirt-front.jpg"
       ],
       "colors": [
         {
@@ -305,10 +417,37 @@
       "salesCount": 88,
       "isCustomizable": false,
       "featured": false,
-      "orderIndex": 7
+      "orderIndex": 10
     }
   ],
   "orders": [
+    {
+      "id": "ord-1793840106443",
+      "orderNumber": "RU-ORD-2448",
+      "customerName": "Mahim Test",
+      "customerPhone": "01712345678",
+      "customerAddress": "Paris Road, RU",
+      "deliveryMethod": "ru_campus_pickup",
+      "paymentMethod": "cash_on_delivery",
+      "items": [
+        {
+          "id": "prod-1",
+          "productId": "prod-ru-hoodie-maroon",
+          "name": "RU Heritage Heavyweight Winter Hoodie",
+          "price": 1150,
+          "quantity": 1,
+          "size": "L",
+          "color": "Heritage Maroon"
+        }
+      ],
+      "subtotal": 1150,
+      "deliveryFee": 0,
+      "total": 1150,
+      "estimatedCost": 633,
+      "netProfit": 517,
+      "status": "pending",
+      "createdAt": "2026-11-05T00:55:06.444Z"
+    },
     {
       "id": "ord-801",
       "orderNumber": "RU-ORD-1092",

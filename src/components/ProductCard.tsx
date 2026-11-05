@@ -1,27 +1,47 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Product } from '@/lib/types';
 import { formatBDT } from '@/lib/utils';
-import { Sparkles, ArrowRight, Check } from 'lucide-react';
+import { Sparkles, ArrowRight, Check, Play } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const [imageSrc, setImageSrc] = useState(product.images[0] || '/mockups/hoodie-front.jpg');
+
   return (
     <div className="group bg-white rounded-2xl overflow-hidden flex flex-col justify-between border border-slate-200 hover:border-blue-500 shadow-sm hover:shadow-xl transition-all duration-300">
       
-      {/* Image Container with Badges */}
+      {/* Media Container with Badges */}
       <div className="relative aspect-[4/5] w-full overflow-hidden bg-slate-100/60">
-        <img
-          src={product.images[0] || '/logo.png'}
-          alt={product.name}
-          className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-          loading="lazy"
-        />
+        {product.video ? (
+          <div className="relative w-full h-full">
+            <video
+              src={product.video}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+            />
+            <div className="absolute top-2.5 right-2.5 bg-black/70 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm border border-white/20">
+              <Play className="h-2.5 w-2.5 fill-white" />
+              <span>Video</span>
+            </div>
+          </div>
+        ) : (
+          <img
+            src={imageSrc}
+            alt={product.name}
+            onError={() => setImageSrc('/mockups/hoodie-front.jpg')}
+            className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+            loading="lazy"
+          />
+        )}
         
         {/* Badges Overlay */}
         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10">
@@ -38,8 +58,8 @@ export default function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        {/* Regular Price Discount Chip */}
-        {product.regularPrice && product.regularPrice > product.price && (
+        {/* Regular Price Discount Chip (if no video badge in top-right) */}
+        {!product.video && product.regularPrice && product.regularPrice > product.price && (
           <div className="absolute top-2.5 right-2.5 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
             SAVE {formatBDT(product.regularPrice - product.price)}
           </div>

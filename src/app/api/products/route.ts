@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
       featured: Boolean(body.featured ?? true),
       badge: body.badge || 'New Arrival',
       orderIndex: 0,
+      video: body.video?.trim() || undefined,
     };
 
     const updatedList = await addProduct(newProduct);

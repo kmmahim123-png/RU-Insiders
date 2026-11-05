@@ -16,11 +16,14 @@ export async function GET(
     // Sanitize to prevent path traversal
     const safeFilename = path.basename(filename);
 
-    // Look in public/uploads first, then data/uploads
+    // Look in public/uploads first, then data/uploads, then /tmp/uploads
     let targetPath = path.join(process.cwd(), 'public', 'uploads', safeFilename);
 
     if (!fs.existsSync(targetPath)) {
       targetPath = path.join(process.cwd(), 'data', 'uploads', safeFilename);
+    }
+    if (!fs.existsSync(targetPath)) {
+      targetPath = path.join('/tmp', 'uploads', safeFilename);
     }
 
     if (!fs.existsSync(targetPath)) {
@@ -35,6 +38,9 @@ export async function GET(
     else if (ext === '.webp') contentType = 'image/webp';
     else if (ext === '.gif') contentType = 'image/gif';
     else if (ext === '.svg') contentType = 'image/svg+xml';
+    else if (ext === '.mp4') contentType = 'video/mp4';
+    else if (ext === '.webm') contentType = 'video/webm';
+    else if (ext === '.mov') contentType = 'video/quicktime';
     else if (ext === '.pdf') contentType = 'application/pdf';
 
     return new Response(buffer, {

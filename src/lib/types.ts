@@ -26,6 +26,7 @@ export interface Product {
   featured?: boolean;
   badge?: string;
   orderIndex?: number;
+  video?: string;
 }
 
 export interface CustomizerState {

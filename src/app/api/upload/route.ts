@@ -11,8 +11,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'No file provided' }, { status: 400 });
     }
 
-    if (file.size > 15 * 1024 * 1024) {
-      return NextResponse.json({ success: false, message: 'File size exceeds 15MB limit' }, { status: 400 });
+    if (file.size > 50 * 1024 * 1024) {
+      return NextResponse.json({ success: false, message: 'File size exceeds 50MB limit' }, { status: 400 });
     }
 
     const bytes = await file.arrayBuffer();
@@ -20,19 +20,28 @@ export async function POST(request: NextRequest) {
 
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
     const dataUploadsDir = path.join(process.cwd(), 'data', 'uploads');
+    const tmpUploadsDir = path.join('/tmp', 'uploads');
 
-    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-    if (!fs.existsSync(dataUploadsDir)) fs.mkdirSync(dataUploadsDir, { recursive: true });
+    try {
+      if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+    } catch (e) {}
+    try {
+      if (!fs.existsSync(dataUploadsDir)) fs.mkdirSync(dataUploadsDir, { recursive: true });
+    } catch (e) {}
+    try {
+      if (!fs.existsSync(tmpUploadsDir)) fs.mkdirSync(tmpUploadsDir, { recursive: true });
+    } catch (e) {}
 
     const originalName = file.name || 'image.png';
     const ext = (path.extname(originalName) || '.png').toLowerCase();
     const baseName = path.basename(originalName, ext);
-    const safeBase = baseName.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30) || 'image';
+    const safeBase = baseName.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30) || 'file';
     const uniqueName = `${Date.now()}-${safeBase}${ext}`;
 
-    // Write to both public/uploads and data/uploads
-    fs.writeFileSync(path.join(uploadsDir, uniqueName), buffer);
-    fs.writeFileSync(path.join(dataUploadsDir, uniqueName), buffer);
+    // Write to all available storage locations safely
+    try { fs.writeFileSync(path.join(uploadsDir, uniqueName), buffer); } catch (e) {}
+    try { fs.writeFileSync(path.join(dataUploadsDir, uniqueName), buffer); } catch (e) {}
+    try { fs.writeFileSync(path.join(tmpUploadsDir, uniqueName), buffer); } catch (e) {}
 
     const publicUrl = `/uploads/${uniqueName}`;
 

@@ -26,7 +26,10 @@ import {
   UploadCloud,
   Camera,
   ExternalLink,
-  FolderPlus
+  FolderPlus,
+  Video,
+  Play,
+  X
 } from 'lucide-react';
 import RevenueCharts from '@/components/RevenueCharts';
 import PrintDesk from '@/components/PrintDesk';
@@ -58,7 +61,8 @@ export default function AdminDashboardPage() {
   const [newProductPrice, setNewProductPrice] = useState(1150);
   const [newProductCost, setNewProductCost] = useState(650);
   const [newProductStock, setNewProductStock] = useState(30);
-  const [newProductImage, setNewProductImage] = useState('/logo.png');
+  const [newProductImages, setNewProductImages] = useState<string[]>(['', '', '', '']);
+  const [newProductVideo, setNewProductVideo] = useState('');
   const [newProductDesc, setNewProductDesc] = useState('');
   const [newProductCustomizable, setNewProductCustomizable] = useState(false);
   const [submittingProduct, setSubmittingProduct] = useState(false);
@@ -74,9 +78,14 @@ export default function AdminDashboardPage() {
   const [isAddingNewCategory, setIsAddingNewCategory] = useState(false);
   const [customCategoryInput, setCustomCategoryInput] = useState('');
 
-  // Mobile / Laptop Product Image Upload State
-  const [uploadingProductImage, setUploadingProductImage] = useState(false);
-  const productImageInputRef = useRef<HTMLInputElement>(null);
+  // 4 Images & Video Upload State
+  const [uploadingSlot, setUploadingSlot] = useState<number | null>(null);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const slotInputRef0 = useRef<HTMLInputElement>(null);
+  const slotInputRef1 = useRef<HTMLInputElement>(null);
+  const slotInputRef2 = useRef<HTMLInputElement>(null);
+  const slotInputRef3 = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddNewCategory = (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,19 +102,25 @@ export default function AdminDashboardPage() {
     showNotification(`New category "${cleanName}" added!`);
   };
 
-  const handleProductImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSlotImageUpload = async (slotIdx: number, e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
     const file = e.target.files[0];
 
-    // Local preview immediately
+    // Local instant preview
     const reader = new FileReader();
     reader.onload = (event) => {
-      if (event.target?.result) setNewProductImage(event.target.result as string);
+      if (event.target?.result) {
+        setNewProductImages((prev) => {
+          const updated = [...prev];
+          updated[slotIdx] = event.target!.result as string;
+          return updated;
+        });
+      }
     };
     reader.readAsDataURL(file);
 
     try {
-      setUploadingProductImage(true);
+      setUploadingSlot(slotIdx);
       const formData = new FormData();
       formData.append('file', file);
       const res = await fetch('/api/upload', {
@@ -114,14 +129,45 @@ export default function AdminDashboardPage() {
       });
       const data = await res.json();
       if (res.ok && data.success && data.url) {
-        setNewProductImage(data.url);
-        showNotification('ছবি সফলভাবে আপলোড হয়েছে!');
+        setNewProductImages((prev) => {
+          const updated = [...prev];
+          updated[slotIdx] = data.url;
+          return updated;
+        });
+        showNotification(`ছবি #${slotIdx + 1} সফলভাবে আপলোড হয়েছে!`);
       }
     } catch (err) {
       console.error(err);
-      showNotification('ছবি আপলোডে সমস্যা হয়েছে', 'error');
+      showNotification(`ছবি #${slotIdx + 1} আপলোডে সমস্যা হয়েছে`, 'error');
     } finally {
-      setUploadingProductImage(false);
+      setUploadingSlot(null);
+    }
+  };
+
+  const handleProductVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0]) return;
+    const file = e.target.files[0];
+
+    try {
+      setUploadingVideo(true);
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.url) {
+        setNewProductVideo(data.url);
+        showNotification('প্রোডাক্ট ভিডিও সফলভাবে আপলোড হয়েছে!');
+      } else {
+        throw new Error(data.message || 'Video upload failed');
+      }
+    } catch (err: any) {
+      console.error(err);
+      showNotification(err.message || 'ভিডিও আপলোডে সমস্যা হয়েছে', 'error');
+    } finally {
+      setUploadingVideo(false);
     }
   };
 
@@ -201,6 +247,11 @@ export default function AdminDashboardPage() {
     setSubmittingProduct(true);
     const pin = getAdminPin();
 
+    const finalImages = newProductImages.map((s) => s.trim()).filter(Boolean);
+    if (finalImages.length === 0) {
+      finalImages.push('/mockups/hoodie-front.jpg');
+    }
+
     try {
       const res = await fetch('/api/products', {
         method: 'POST',
@@ -216,7 +267,8 @@ export default function AdminDashboardPage() {
           price: newProductPrice,
           costPrice: newProductCost,
           stock: newProductStock,
-          images: [newProductImage || '/logo.png'],
+          images: finalImages,
+          video: newProductVideo.trim() || undefined,
           isCustomizable: newProductCustomizable,
         }),
       });
@@ -230,6 +282,8 @@ export default function AdminDashboardPage() {
       setNewProductName('');
       setNewProductNameBn('');
       setNewProductDesc('');
+      setNewProductImages(['', '', '', '']);
+      setNewProductVideo('');
       setProducts(data.products || [data.product, ...products]);
       loadDatabaseState();
     } catch (err: any) {
@@ -565,61 +619,205 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* Direct Image Upload from Mobile & Laptop */}
-              <div className="space-y-2">
-                <label className="block text-slate-700 font-semibold">Product Image (পণ্যর ছবি)</label>
-                
-                <input
-                  type="file"
-                  ref={productImageInputRef}
-                  accept="image/*"
-                  onChange={handleProductImageUpload}
-                  className="hidden"
-                />
-
-                <div className="flex flex-col sm:flex-row items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => productImageInputRef.current?.click()}
-                    disabled={uploadingProductImage}
-                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm"
-                  >
-                    {uploadingProductImage ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                        <span>আপলোড হচ্ছে...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Camera className="h-4 w-4 text-blue-600" />
-                        <span>📸 মোবাইল / পিসি থেকে ছবি আপলোড করুন</span>
-                      </>
-                    )}
-                  </button>
-
-                  {newProductImage && (
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200">
-                      <img
-                        src={newProductImage}
-                        alt="Preview"
-                        className="w-8 h-8 rounded-lg object-cover border border-slate-300 bg-white"
-                      />
-                      <span className="text-[11px] text-slate-600 truncate max-w-[120px] font-mono">
-                        {newProductImage}
-                      </span>
-                    </div>
-                  )}
+              {/* 4 Photo Upload Slots + Product Video */}
+              <div className="space-y-4 pt-2 border-t border-slate-200">
+                <div>
+                  <label className="text-slate-900 font-bold text-xs flex items-center gap-1.5">
+                    <ImageIcon className="h-4 w-4 text-blue-600" />
+                    <span>Product Photo Gallery (৪টি ছবি আপলোড করুন)</span>
+                  </label>
+                  <p className="text-[11px] text-slate-500 font-bengali">
+                    ১ নম্বর ছবিটি মূল কভার হিসেবে হোমপেজে শো করবে। বাকি ছবিগুলো বিস্তারিত পেজে দেখা যাবে।
+                  </p>
                 </div>
 
-                <div className="pt-1">
+                {/* 4 Image Slots Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {[
+                    { slotIdx: 0, label: '১. মূল কভার (Main)', hint: 'হোমপেজ ও কার্ড ভিউ' },
+                    { slotIdx: 1, label: '২. সাইড / অ্যাঙ্গেল', hint: 'ডিটেইল ভিউ ২' },
+                    { slotIdx: 2, label: '৩. ফেব্রিক / ব্যাক', hint: 'ক্লোজ-আপ ভিউ ৩' },
+                    { slotIdx: 3, label: '৪. মডেল লুক', hint: 'মডেল শট ৪' },
+                  ].map(({ slotIdx, label, hint }) => {
+                    const currentImg = newProductImages[slotIdx];
+                    const isUploading = uploadingSlot === slotIdx;
+                    const ref = [slotInputRef0, slotInputRef1, slotInputRef2, slotInputRef3][slotIdx];
+
+                    return (
+                      <div key={slotIdx} className="p-2 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between space-y-2">
+                        <input
+                          type="file"
+                          ref={ref}
+                          accept="image/*"
+                          onChange={(e) => handleSlotImageUpload(slotIdx, e)}
+                          className="hidden"
+                        />
+
+                        <div>
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-[10px] font-bold text-slate-800 line-clamp-1">{label}</span>
+                            {slotIdx === 0 && (
+                              <span className="text-[8px] bg-blue-600 text-white font-mono px-1 rounded">PRIMARY</span>
+                            )}
+                          </div>
+                          <p className="text-[9px] text-slate-500 line-clamp-1">{hint}</p>
+                        </div>
+
+                        {/* Preview Box */}
+                        <div className="relative aspect-square rounded-xl overflow-hidden bg-white border border-slate-200 flex items-center justify-center group">
+                          {currentImg ? (
+                            <>
+                              <img
+                                src={currentImg}
+                                alt={`Slot ${slotIdx + 1}`}
+                                onError={(e) => { e.currentTarget.src = '/mockups/hoodie-front.jpg'; }}
+                                className="w-full h-full object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setNewProductImages((prev) => {
+                                    const updated = [...prev];
+                                    updated[slotIdx] = '';
+                                    return updated;
+                                  });
+                                }}
+                                className="absolute top-1 right-1 p-1 rounded-full bg-black/70 text-white hover:bg-rose-600 transition-colors"
+                                title="Remove"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </>
+                          ) : (
+                            <div
+                              onClick={() => ref.current?.click()}
+                              className="w-full h-full flex flex-col items-center justify-center gap-1 cursor-pointer hover:bg-blue-50/50 text-slate-400 hover:text-blue-600 transition-colors p-2 text-center"
+                            >
+                              {isUploading ? (
+                                <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                              ) : (
+                                <>
+                                  <Camera className="h-5 w-5" />
+                                  <span className="text-[9px] font-bold">+ ছবি দিন</span>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Upload Button & URL fallback */}
+                        <div className="space-y-1">
+                          <button
+                            type="button"
+                            disabled={isUploading}
+                            onClick={() => ref.current?.click()}
+                            className="w-full py-1 px-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-bold text-[10px] flex items-center justify-center gap-1 transition-all"
+                          >
+                            {isUploading ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <UploadCloud className="h-3 w-3" />
+                            )}
+                            <span>{currentImg ? 'পরিবর্তন' : 'আপলোড'}</span>
+                          </button>
+
+                          <input
+                            type="text"
+                            placeholder="বা ছবির লিংক"
+                            value={currentImg}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setNewProductImages((prev) => {
+                                const updated = [...prev];
+                                updated[slotIdx] = val;
+                                return updated;
+                              });
+                            }}
+                            className="w-full px-2 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 text-[9px] font-mono focus:outline-none focus:border-blue-600"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Product Video Upload & Player Section */}
+                <div className="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-200 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center">
+                        <Video className="h-3.5 w-3.5" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-900">Product Video (প্রোডাক্টের ভিডিও)</h4>
+                        <p className="text-[10px] text-slate-500 font-bengali">
+                          হোমপেজে মাউস আনলে বা ভিজিট করলে স্বয়ংক্রিয়ভাবে ভিডিও চলবে এবং ডিটেইল পেজে ফুল ভিডিও দেখা যাবে।
+                        </p>
+                      </div>
+                    </div>
+                    {newProductVideo && (
+                      <button
+                        type="button"
+                        onClick={() => setNewProductVideo('')}
+                        className="text-[11px] text-rose-600 hover:text-rose-800 font-bold flex items-center gap-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                        <span>রিমুভ ভিডিও</span>
+                      </button>
+                    )}
+                  </div>
+
                   <input
-                    type="text"
-                    required
-                    value={newProductImage}
-                    onChange={(e) => setNewProductImage(e.target.value)}
-                    placeholder="বা ছবির লিংক দিন (e.g. /logo.png)"
-                    className="w-full px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-mono text-[11px] focus:outline-none focus:border-blue-600 focus:bg-white"
+                    type="file"
+                    ref={videoInputRef}
+                    accept="video/*"
+                    onChange={handleProductVideoUpload}
+                    className="hidden"
                   />
+
+                  <div className="flex flex-col sm:flex-row items-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => videoInputRef.current?.click()}
+                      disabled={uploadingVideo}
+                      className="w-full sm:w-auto px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all"
+                    >
+                      {uploadingVideo ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          <span>ভিডিও আপলোড হচ্ছে...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Video className="h-3.5 w-3.5" />
+                          <span>🎥 মোবাইল/পিসি থেকে ভিডিও আপলোড</span>
+                        </>
+                      )}
+                    </button>
+
+                    <div className="flex-1 w-full">
+                      <input
+                        type="text"
+                        placeholder="বা ভিডিও ফাইল লিংক দিন (e.g. /uploads/video.mp4)"
+                        value={newProductVideo}
+                        onChange={(e) => setNewProductVideo(e.target.value)}
+                        className="w-full px-3 py-1.5 rounded-xl bg-white border border-indigo-200 text-slate-900 font-mono text-[11px] focus:outline-none focus:border-indigo-600"
+                      />
+                    </div>
+                  </div>
+
+                  {newProductVideo && (
+                    <div className="rounded-xl overflow-hidden bg-black aspect-video max-h-48 border border-slate-700 shadow-inner">
+                      <video
+                        src={newProductVideo}
+                        controls
+                        autoPlay
+                        muted
+                        loop
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -682,12 +880,25 @@ export default function AdminDashboardPage() {
                       #{idx + 1}
                     </div>
                     <img
-                      src={p.images[0] || '/logo.png'}
+                      src={p.images[0] || '/mockups/hoodie-front.jpg'}
                       alt={p.name}
+                      onError={(e) => { e.currentTarget.src = '/mockups/hoodie-front.jpg'; }}
                       className="w-12 h-12 rounded-xl object-cover bg-white border border-slate-200 shrink-0"
                     />
                     <div>
-                      <h4 className="text-xs font-bold text-slate-900 line-clamp-1">{p.name}</h4>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h4 className="text-xs font-bold text-slate-900 line-clamp-1">{p.name}</h4>
+                        {p.images && p.images.length > 1 && (
+                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 font-mono font-bold border border-blue-200">
+                            {p.images.length} Photos
+                          </span>
+                        )}
+                        {p.video && (
+                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 font-mono font-bold border border-indigo-200">
+                            ▶ Video
+                          </span>
+                        )}
+                      </div>
                       <div className="text-[10px] text-slate-500 uppercase tracking-wider font-mono flex items-center gap-2 mt-0.5">
                         <span className="text-blue-700 font-bold">{formatBDT(p.price)}</span>
                         <span>•</span>

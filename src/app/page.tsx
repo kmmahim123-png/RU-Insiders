@@ -113,62 +113,63 @@ export default function HomePage() {
   return (
     <div className="space-y-8 sm:space-y-12 pb-20 overflow-hidden bg-slate-50">
       
-      {/* 1. Header Banner & Identity with Pure White Card */}
-      <section className="bg-white border-b border-slate-200/80 pt-5 sm:pt-8 pb-5 px-4 sm:px-6 lg:px-8 shadow-sm">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-5">
-          
-          {/* Logo & Headline */}
-          <div className="flex items-center gap-3.5 sm:gap-4 text-left">
-            <div className="relative shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-amber-400 p-0.5 bg-white shadow-md overflow-hidden">
-              <img
-                src="/logo.png"
-                alt="RU Insiders Logo"
-                className="w-full h-full rounded-full object-cover"
-              />
-            </div>
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold mb-1">
+      {/* 1. Minimalist Campus Hero with Rajshahi University Scenic Background */}
+      <section className="relative overflow-hidden border-b border-slate-200/80 shadow-sm">
+        {/* Background Image Container */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center filter brightness-[0.92]"
+          style={{ backgroundImage: `url('/ru-campus.jpg')` }}
+        />
+        {/* Modern Translucent Soft Frost Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/88 to-white/70 backdrop-blur-[1.5px]" />
+
+        <div className="relative max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            
+            {/* Elegant Campus Headline (No duplicate logo circle) */}
+            <div className="max-w-2xl space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-600/10 border border-blue-600/20 text-blue-800 text-xs font-bold tracking-wide shadow-sm">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>RU Insiders • রাজশাহী বিশ্ববিদ্যালয়</span>
+                <span>RU Insiders • মতিহারের সবুজ চত্বর</span>
               </div>
-              <h1 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
                 অফিশিয়াল ক্যাম্পাস মার্চেন্ডাইজ ও প্রিন্ট স্টেশন
               </h1>
-              <p className="text-xs text-slate-500 font-bengali font-medium">
-                মতিহারের ভালোবাসায় তৈরি হুডি, ওভারসাইজড ড্রপ শোল্ডার, কাস্টম জার্সি এবং দ্রুততম PDF প্রিন্ট সেবা।
+              <p className="text-xs sm:text-sm text-slate-700 font-bengali font-medium leading-relaxed">
+                রাজশাহী বিশ্ববিদ্যালয়ের থিমে তৈরি প্রিমিয়াম উইন্টার হুডি, ওভারসাইজড ড্রপ শোল্ডার, কাস্টম ডিপার্টমেন্ট জার্সি ও ইনস্ট্যান্ট PDF প্রিন্ট সার্ভিস।
               </p>
             </div>
+
+            {/* Clean Action Buttons */}
+            <div className="flex flex-wrap items-center gap-2.5 self-stretch md:self-auto justify-start md:justify-end">
+              <Link
+                href="/customize"
+                className="flex-1 sm:flex-initial px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md transition-all active:scale-[0.98]"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span>জার্সি/হুডি কাস্টমাইজ</span>
+              </Link>
+
+              <Link
+                href="/print-station"
+                className="flex-1 sm:flex-initial px-5 py-3 rounded-2xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-[0.98]"
+              >
+                <Printer className="h-4 w-4 text-blue-600" />
+                <span>Print Lagbe (PDF)</span>
+              </Link>
+
+              <a
+                href="https://www.facebook.com/ru.insiders/followers"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-3 rounded-2xl bg-white hover:bg-blue-50 border border-slate-200 text-blue-600 hover:text-blue-700 shadow-sm transition-colors"
+                title="Facebook Community"
+              >
+                <Facebook className="h-4 w-4" />
+              </a>
+            </div>
+
           </div>
-
-          {/* Quick Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2.5 self-stretch md:self-auto justify-start md:justify-end">
-            <Link
-              href="/customize"
-              className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md transition-all active:scale-[0.98]"
-            >
-              <Sparkles className="h-4 w-4" />
-              <span>জার্সি/হুডি কাস্টমাইজ</span>
-            </Link>
-
-            <Link
-              href="/print-station"
-              className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md transition-all active:scale-[0.98]"
-            >
-              <Printer className="h-4 w-4" />
-              <span>Print Lagbe (PDF)</span>
-            </Link>
-
-            <a
-              href="https://www.facebook.com/ru.insiders/followers"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2.5 rounded-xl bg-slate-100 hover:bg-blue-50 border border-slate-200 text-blue-600 hover:text-blue-700 transition-colors"
-              title="Facebook Community"
-            >
-              <Facebook className="h-4 w-4" />
-            </a>
-          </div>
-
         </div>
       </section>
 

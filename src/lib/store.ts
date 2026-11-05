@@ -13,8 +13,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     regularPrice: 1400,
     costPrice: 680,
     images: [
-      'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1578587018452-892bacefd3f2?auto=format&fit=crop&w=800&q=80'
+      '/mockups/hoodie-front.jpg',
+      '/mockups/drop-shoulder-front.jpg'
     ],
     colors: [
       { name: 'Heritage Maroon', hex: '#881337' },
@@ -40,8 +40,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     regularPrice: 750,
     costPrice: 310,
     images: [
-      'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80'
+      '/mockups/drop-shoulder-front.jpg',
+      '/mockups/t-shirt-front.jpg'
     ],
     colors: [
       { name: 'Washed Ash', hex: '#64748b' },
@@ -67,8 +67,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     regularPrice: 850,
     costPrice: 340,
     images: [
-      'https://images.unsplash.com/photo-1580087433295-ab2600c1030e?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=800&q=80'
+      '/mockups/jersey-front.jpg',
+      '/mockups/t-shirt-front.jpg'
     ],
     colors: [
       { name: 'RU Crimson & Gold', hex: '#9f1239' },
@@ -94,7 +94,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     regularPrice: 500,
     costPrice: 190,
     images: [
-      'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80'
+      '/mockups/t-shirt-front.jpg'
     ],
     colors: [
       { name: 'Pure White', hex: '#ffffff' },
@@ -118,7 +118,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     regularPrice: 2800,
     costPrice: 1350,
     images: [
-      'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=800&q=80'
+      '/mockups/hoodie-front.jpg'
     ],
     colors: [
       { name: 'Crimson & Cream', hex: '#881337' },
@@ -142,7 +142,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     regularPrice: 350,
     costPrice: 120,
     images: [
-      'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80'
+      '/mockups/t-shirt-front.jpg'
     ],
     colors: [
       { name: 'Natural Ecru', hex: '#fef3c7' },

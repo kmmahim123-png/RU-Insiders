@@ -13,7 +13,8 @@ import {
   ShieldCheck, 
   Truck, 
   Ruler, 
-  Loader2
+  Loader2,
+  Play
 } from 'lucide-react';
 
 interface Props {
@@ -27,7 +28,8 @@ export default function ProductDetailPage({ params }: Props) {
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('L');
   const [quantity, setQuantity] = useState(1);
-  const [activeImage, setActiveImage] = useState('/logo.png');
+  const [activeImage, setActiveImage] = useState('/mockups/hoodie-front.jpg');
+  const [activeMediaType, setActiveMediaType] = useState<'image' | 'video'>('image');
   const [addedSuccess, setAddedSuccess] = useState(false);
 
   useEffect(() => {
@@ -42,7 +44,7 @@ export default function ProductDetailPage({ params }: Props) {
               setProduct(found);
               setSelectedColor(found.colors[0]?.name || 'Standard');
               setSelectedSize(found.sizes[0] || 'L');
-              setActiveImage(found.images[0] || '/logo.png');
+              setActiveImage(found.images[0] || '/mockups/hoodie-front.jpg');
             }
           }
         }
@@ -107,37 +109,88 @@ export default function ProductDetailPage({ params }: Props) {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         
-        {/* Left: Product Images Gallery (7 Cols) */}
+        {/* Left: Product Images & Video Gallery (7 Cols) */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="relative aspect-[4/5] rounded-3xl overflow-hidden glass-card border border-slate-200 bg-white shadow-md">
-            <img
-              src={activeImage}
-              alt={product.name}
-              className="w-full h-full object-cover object-center"
-            />
+          <div className="relative aspect-[4/5] rounded-3xl overflow-hidden glass-card border border-slate-200 bg-black/5 shadow-md">
+            {activeMediaType === 'video' && product.video ? (
+              <video
+                src={product.video}
+                controls
+                autoPlay
+                loop
+                playsInline
+                className="w-full h-full object-cover object-center bg-black"
+              />
+            ) : (
+              <img
+                src={activeImage}
+                alt={product.name}
+                onError={() => setActiveImage('/mockups/hoodie-front.jpg')}
+                className="w-full h-full object-cover object-center bg-white"
+              />
+            )}
+            
             {product.badge && (
-              <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-blue-600 text-white text-xs font-bold uppercase tracking-wider shadow-sm">
+              <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-blue-600 text-white text-xs font-bold uppercase tracking-wider shadow-sm z-10">
                 {product.badge}
               </span>
             )}
+
+            {product.video && activeMediaType === 'image' && (
+              <button
+                onClick={() => setActiveMediaType('video')}
+                className="absolute bottom-4 right-4 px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md text-white text-xs font-bold flex items-center gap-1.5 shadow-md hover:bg-black transition-all z-10"
+              >
+                <Play className="h-3.5 w-3.5 fill-white text-white" />
+                <span>ভিডিও প্লে করুন</span>
+              </button>
+            )}
           </div>
 
-          {/* Thumbnails */}
-          {product.images.length > 1 && (
-            <div className="flex items-center gap-3">
-              {product.images.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveImage(img)}
-                  className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${
-                    activeImage === img ? 'border-blue-600 scale-105 shadow-sm' : 'border-slate-200 opacity-70 hover:opacity-100'
-                  }`}
-                >
-                  <img src={img} alt="Thumb" className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Thumbnails (Supports up to 4 Images + Video) */}
+          <div className="flex flex-wrap items-center gap-3">
+            {product.images.map((img, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  setActiveMediaType('image');
+                  setActiveImage(img);
+                }}
+                className={`relative w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all ${
+                  activeMediaType === 'image' && activeImage === img
+                    ? 'border-blue-600 scale-105 shadow-md ring-2 ring-blue-500/30'
+                    : 'border-slate-200 opacity-70 hover:opacity-100 hover:border-slate-300'
+                }`}
+              >
+                <img
+                  src={img}
+                  alt={`View ${idx + 1}`}
+                  onError={(e) => { e.currentTarget.src = '/mockups/hoodie-front.jpg'; }}
+                  className="w-full h-full object-cover bg-white"
+                />
+                <span className="absolute bottom-1 right-1 bg-black/70 text-[9px] text-white font-mono px-1 rounded">
+                  #{idx + 1}
+                </span>
+              </button>
+            ))}
+
+            {/* Video Thumbnail Button */}
+            {product.video && (
+              <button
+                onClick={() => setActiveMediaType('video')}
+                className={`relative w-20 h-20 rounded-2xl overflow-hidden border-2 flex flex-col items-center justify-center gap-1 bg-slate-900 text-white transition-all ${
+                  activeMediaType === 'video'
+                    ? 'border-blue-500 scale-105 shadow-md ring-2 ring-blue-500/30'
+                    : 'border-slate-800 opacity-80 hover:opacity-100'
+                }`}
+              >
+                <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center">
+                  <Play className="h-3.5 w-3.5 fill-white text-white ml-0.5" />
+                </div>
+                <span className="text-[10px] font-bold tracking-tight">ভিডিও</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Right: Product Purchase Controls (5 Cols) */}
