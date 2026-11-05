@@ -9,10 +9,6 @@ export default function MobileBottomNav() {
   const pathname = usePathname();
   const [cartCount, setCartCount] = useState(0);
 
-  if (pathname?.startsWith('/admin')) {
-    return null;
-  }
-
   useEffect(() => {
     const updateCount = () => {
       try {
@@ -44,6 +40,11 @@ export default function MobileBottomNav() {
     { label: 'প্রিন্ট', href: '/print-station', icon: Printer },
     { label: 'কার্ট', href: '/cart', icon: ShoppingBag, badge: cartCount },
   ];
+
+  // Hide mobile bottom nav on admin routes (checked after all hooks)
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg border-t border-slate-200 px-3 py-2 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">

@@ -21,11 +21,6 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
 
-  // If on admin routes, hide consumer navbar to avoid duplicate header bars
-  if (pathname?.startsWith('/admin')) {
-    return null;
-  }
-
   useEffect(() => {
     const updateCartCount = () => {
       try {
@@ -69,6 +64,11 @@ export default function Navbar() {
     },
     { label: 'Track Order', href: '/track', bn: 'ট্র্যাকিং' },
   ];
+
+  // If on admin routes, hide consumer navbar to avoid duplicate header bars (checked after all hooks)
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
