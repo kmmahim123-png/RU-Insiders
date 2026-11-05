@@ -63,7 +63,7 @@ const PRESET_COLORS = [
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'print-desk' | 'analytics' | 'steadfast'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'analytics' | 'steadfast'>('products');
   
   // Real-time Database State
   const [products, setProducts] = useState<Product[]>([]);
@@ -82,17 +82,20 @@ export default function AdminDashboardPage() {
   // Order Processing Stages Filter
   const [orderStageFilter, setOrderStageFilter] = useState<'pending' | 'ready_for_pickup' | 'rider' | 'delivered' | 'cancelled' | 'all'>('pending');
 
+  // Admin Product Category Filter
+  const [adminCategoryFilter, setAdminCategoryFilter] = useState<string>('all');
+
   // New Product Form State
   const [newProductName, setNewProductName] = useState('');
   const [newProductNameBn, setNewProductNameBn] = useState('');
-  const [newProductCategory, setNewProductCategory] = useState<ProductCategory>('hoodies');
+  const [newProductCategory, setNewProductCategory] = useState<string>('hoodies');
   const [newProductPrice, setNewProductPrice] = useState(1150);
+  const [newProductRegularPrice, setNewProductRegularPrice] = useState<number | undefined>(1400);
   const [newProductCost, setNewProductCost] = useState(650);
   const [newProductStock, setNewProductStock] = useState(30);
   const [newProductImages, setNewProductImages] = useState<string[]>(['', '', '', '']);
   const [newProductVideo, setNewProductVideo] = useState('');
   const [newProductDesc, setNewProductDesc] = useState('');
-  const [newProductCustomizable, setNewProductCustomizable] = useState(false);
   const [newProductColors, setNewProductColors] = useState<{ name: string; hex: string }[]>([
     { name: 'Heritage Maroon', hex: '#881337' },
     { name: 'Midnight Black', hex: '#0f172a' },
@@ -105,7 +108,7 @@ export default function AdminDashboardPage() {
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([
     { id: 'hoodies', name: 'Winter Hoodie (শীতের হুডি)' },
     { id: 'drop-shoulder', name: 'Drop Shoulder (ড্রপ শোল্ডার)' },
-    { id: 'jerseys', name: 'Custom Sports Jersey (কাস্টম জার্সি)' },
+    { id: 'jerseys', name: 'Sports Jersey (কাস্টম জার্সি)' },
     { id: 't-shirts', name: 'Classic Ganji / T-Shirt (গেঞ্জি)' },
     { id: 'accessories', name: 'Campus Accessories (ব্যাগ ও এক্সেসরিজ)' },
   ]);
@@ -442,9 +445,9 @@ export default function AdminDashboardPage() {
             nameBn: editingProduct.nameBn?.trim() || '',
             category: editingProduct.category,
             price: Number(editingProduct.price),
+            regularPrice: editingProduct.regularPrice ? Number(editingProduct.regularPrice) : undefined,
             costPrice: Number(editingProduct.costPrice),
             stock: Number(editingProduct.stock),
-            isCustomizable: Boolean(editingProduct.isCustomizable),
             images: finalImages,
             video: editVideo.trim() || undefined,
             colors: editColors.length > 0 ? editColors : [{ name: 'Standard', hex: '#881337' }],
@@ -617,12 +620,12 @@ export default function AdminDashboardPage() {
           category: newProductCategory,
           description: newProductDesc,
           price: newProductPrice,
+          regularPrice: newProductRegularPrice,
           costPrice: newProductCost,
           stock: newProductStock,
           images: finalImages,
           video: newProductVideo.trim() || undefined,
           colors: newProductColors.length > 0 ? newProductColors : PRESET_COLORS.slice(0, 2),
-          isCustomizable: newProductCustomizable,
         }),
       });
 
@@ -886,10 +889,9 @@ export default function AdminDashboardPage() {
       {/* Main Tab Navigation */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200">
         {[
-          { id: 'products', label: 'Product Manager (পণ্য ও এডিট)', icon: PlusCircle, count: products.length },
+          { id: 'products', label: 'Product Manager (পণ্য ও ক্যাটাগরি)', icon: PlusCircle, count: products.length },
           { id: 'orders', label: 'Merchandise Orders (৫ ধাপের অর্ডার)', icon: ShoppingBag, count: orders.length },
-          { id: 'print-desk', label: 'Print Lagbe Desk', icon: Printer, count: printJobs.filter(j => j.status === 'queued').length },
-          { id: 'analytics', label: 'Revenue & Profit', icon: TrendingUp, count: null },
+          { id: 'analytics', label: 'Revenue & Profit (আয় ও লাভ)', icon: TrendingUp, count: null },
           { id: 'steadfast', label: 'Steadfast Courier API', icon: Truck, count: null },
         ].map((tab) => {
           const Icon = tab.icon;
@@ -1041,18 +1043,14 @@ export default function AdminDashboardPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-700 mb-1 font-semibold">Customizable?</label>
-                  <button
-                    type="button"
-                    onClick={() => setNewProductCustomizable(!newProductCustomizable)}
-                    className={`w-full py-2 rounded-xl border font-bold transition-all ${
-                      newProductCustomizable
-                        ? 'bg-blue-50 border-blue-600 text-blue-800'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    {newProductCustomizable ? 'YES (Customizable)' : 'NO'}
-                  </button>
+                  <label className="block text-slate-700 mb-1 font-semibold">Regular/Original Price (আগের দাম ৳)</label>
+                  <input
+                    type="number"
+                    placeholder="যেমন: 1400 (ঐচ্ছিক)"
+                    value={newProductRegularPrice || ''}
+                    onChange={(e) => setNewProductRegularPrice(e.target.value ? Number(e.target.value) : undefined)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-rose-600 font-bold focus:outline-none focus:border-blue-600 focus:bg-white"
+                  />
                 </div>
               </div>
 
@@ -1362,8 +1360,40 @@ export default function AdminDashboardPage() {
               </span>
             </div>
 
+            {/* Admin Category Filter Tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+              <button
+                type="button"
+                onClick={() => setAdminCategoryFilter('all')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  adminCategoryFilter === 'all'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                সব পণ্য ({products.length})
+              </button>
+              {categories.map((c) => {
+                const count = products.filter((p) => p.category === c.id).length;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setAdminCategoryFilter(c.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                      adminCategoryFilter === c.id
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {c.name.split('(')[0].trim()} ({count})
+                  </button>
+                );
+              })}
+            </div>
+
             <div className="space-y-3">
-              {products.map((p, idx) => (
+              {(adminCategoryFilter === 'all' ? products : products.filter((p) => p.category === adminCategoryFilter)).map((p, idx) => (
                 <div
                   key={p.id}
                   className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 hover:border-slate-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-colors"
@@ -1723,20 +1753,12 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* TAB 3: PRINT DESK */}
-      {activeTab === 'print-desk' && (
-        <PrintDesk
-          initialJobs={printJobs}
-          onJobUpdate={() => loadDatabaseState()}
-        />
-      )}
-
-      {/* TAB 4: REVENUE & PROFIT */}
+      {/* TAB 3: REVENUE & PROFIT */}
       {activeTab === 'analytics' && (
         <RevenueCharts summary={revenueSummary} />
       )}
 
-      {/* TAB 5: STEADFAST COURIER API CONFIG */}
+      {/* TAB 4: STEADFAST COURIER API CONFIG */}
       {activeTab === 'steadfast' && (
         <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white max-w-2xl mx-auto space-y-6 shadow-sm">
           <div>
@@ -1960,7 +1982,7 @@ export default function AdminDashboardPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div>
                   <label className="block text-slate-700 mb-1 font-semibold">Category</label>
                   <select
@@ -1980,7 +2002,17 @@ export default function AdminDashboardPage() {
                     required
                     value={editingProduct.price}
                     onChange={(e) => setEditingProduct({ ...editingProduct, price: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-blue-700 font-bold focus:outline-none focus:border-blue-600 focus:bg-white"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-emerald-700 font-bold focus:outline-none focus:border-blue-600 focus:bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 mb-1 font-semibold">Original Price (আগের দাম ৳)</label>
+                  <input
+                    type="number"
+                    placeholder="যেমন: 1400"
+                    value={editingProduct.regularPrice || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, regularPrice: e.target.value ? Number(e.target.value) : undefined })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-rose-600 font-bold focus:outline-none focus:border-blue-600 focus:bg-white"
                   />
                 </div>
                 <div>

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, ShoppingBag, Sparkles, Printer, User, ShieldCheck } from 'lucide-react';
+import { Home, ShoppingBag, User, ShieldCheck } from 'lucide-react';
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
@@ -36,9 +36,9 @@ export default function MobileBottomNav() {
   const navItems = [
     { label: 'হোম', href: '/', icon: Home },
     { label: 'শপ', href: '/shop', icon: ShoppingBag },
-    { label: 'কাস্টম', href: '/customize', icon: Sparkles, highlight: true },
-    { label: 'প্রিন্ট', href: '/print-station', icon: Printer },
     { label: 'কার্ট', href: '/cart', icon: ShoppingBag, badge: cartCount },
+    { label: 'ট্র্যাক', href: '/track', icon: User },
+    { label: 'অ্যাডমিন', href: '/admin', icon: ShieldCheck },
   ];
 
   // Hide mobile bottom nav on admin routes (checked after all hooks)
@@ -63,7 +63,7 @@ export default function MobileBottomNav() {
               }`}
             >
               <div className="relative">
-                <Icon className={`h-5 w-5 ${item.highlight && !isActive ? 'text-amber-500' : ''}`} />
+                <Icon className="h-5 w-5" />
                 {item.badge !== undefined && item.badge > 0 && (
                   <span className="absolute -top-1.5 -right-2 bg-rose-600 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white animate-bounce">
                     {item.badge}

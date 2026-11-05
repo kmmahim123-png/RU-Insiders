@@ -200,41 +200,7 @@ export default function FilterModal({
             </div>
           </div>
 
-          {/* 3. Customizable Only Toggle */}
-          <div className="pt-3 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={() =>
-                setLocalFilters({
-                  ...localFilters,
-                  onlyCustomizable: !localFilters.onlyCustomizable,
-                })
-              }
-              className={`w-full p-3 rounded-2xl border text-left flex items-center justify-between transition-all ${
-                localFilters.onlyCustomizable
-                  ? 'bg-amber-50 border-amber-500 text-amber-950 shadow-sm'
-                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <div className={`p-2 rounded-xl ${localFilters.onlyCustomizable ? 'bg-amber-500 text-slate-950' : 'bg-slate-100 text-slate-500'}`}>
-                  <Sparkles className="h-4 w-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold">Customizable Only (কাস্টমাইজযোগ্য)</div>
-                  <div className="text-[11px] text-slate-500 font-bengali">নিজের নাম ও নম্বর বসানোর উপযোগী পোশাক</div>
-                </div>
-              </div>
-
-              <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                localFilters.onlyCustomizable ? 'bg-amber-500 border-amber-500 text-white' : 'border-slate-300'
-              }`}>
-                {localFilters.onlyCustomizable && <Check className="h-3 w-3" />}
-              </div>
-            </button>
-          </div>
-
-          {/* 4. Sort Options */}
+          {/* 3. Sort Options */}
           <div className="pt-3 border-t border-slate-100 space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
               Sort By (সাজানোর ক্রম)

@@ -392,16 +392,6 @@ export default function ProductDetailPage({ params }: Props) {
                 </>
               )}
             </button>
-
-            {product.isCustomizable && (
-              <Link
-                href={`/customize?garment=${product.category === 'jerseys' ? 'jersey' : product.category === 'hoodies' ? 'hoodie' : 'dropshoulder'}&product=${product.id}`}
-                className="w-full py-3.5 px-6 rounded-2xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm"
-              >
-                <Sparkles className="h-4 w-4 text-blue-600" />
-                <span>Customize with Name & Number</span>
-              </Link>
-            )}
           </div>
 
           {/* Product Description */}

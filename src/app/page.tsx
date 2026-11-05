@@ -3,15 +3,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import {
-  Sparkles,
-  Printer,
-  CheckCircle2,
   Facebook,
-  FileUp,
   Search,
   SlidersHorizontal,
   Loader2,
-  X
+  X,
+  ShoppingBag,
+  Tag,
+  ArrowRight
 } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import FilterModal, { FilterState } from '@/components/FilterModal';
@@ -151,10 +150,10 @@ export default function HomePage() {
                 <span className="text-blue-600 font-semibold text-[11px]">📍 {campusSlides[activeSlide].name}</span>
               </div>
               <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-                অফিশিয়াল ক্যাম্পাস মার্চেন্ডাইজ ও প্রিন্ট স্টেশন
+                অফিশিয়াল রাজশাহী বিশ্ববিদ্যালয় মার্চেন্ডাইজ স্টোর
               </h1>
               <p className="text-xs sm:text-sm text-slate-600 font-bengali font-medium leading-relaxed max-w-xl">
-                রাজশাহী বিশ্ববিদ্যালয়ের থিমে তৈরি প্রিমিয়াম উইন্টার হুডি, ওভারসাইজড ড্রপ শোল্ডার, কাস্টম ডিপার্টমেন্ট জার্সি ও ইনস্ট্যান্ট PDF প্রিন্ট সার্ভিস।
+                মতিহারের ভালোবাসায় তৈরি অফিসিয়াল হুডি, ওভারসাইজড ড্রপ শোল্ডার, কটন গেঞ্জি, এক্সেসরিজ ও ক্যাম্পাস কালেকশন। পছন্দমতো পণ্য নির্বাচন করে সহজেই অর্ডার করুন।
               </p>
 
               {/* Campus Photo Indicators */}
@@ -174,27 +173,27 @@ export default function HomePage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5 self-stretch md:self-auto justify-start md:justify-end">
-              <Link
-                href="/customize"
-                className="flex-1 sm:flex-initial px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md transition-all active:scale-[0.98]"
+              <a
+                href="#catalog"
+                className="flex-1 sm:flex-initial px-6 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98]"
               >
-                <Sparkles className="h-4 w-4" />
-                <span>জার্সি/হুডি কাস্টমাইজ</span>
-              </Link>
+                <ShoppingBag className="h-4 w-4" />
+                <span>সব পণ্য দেখুন (Browse All)</span>
+              </a>
 
               <Link
-                href="/print-station"
-                className="flex-1 sm:flex-initial px-5 py-3 rounded-2xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-[0.98]"
+                href="/shop"
+                className="flex-1 sm:flex-initial px-5 py-3.5 rounded-2xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-[0.98]"
               >
-                <Printer className="h-4 w-4 text-blue-600" />
-                <span>Print Lagbe (PDF)</span>
+                <Tag className="h-4 w-4 text-blue-600" />
+                <span>ক্যাটাগরি শপ</span>
               </Link>
 
               <a
                 href="https://www.facebook.com/ru.insiders/followers"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-3 rounded-2xl bg-white hover:bg-blue-50 border border-slate-200 text-blue-600 hover:text-blue-700 shadow-sm transition-colors"
+                className="p-3.5 rounded-2xl bg-white hover:bg-blue-50 border border-slate-200 text-blue-600 hover:text-blue-700 shadow-sm transition-colors"
                 title="Facebook Community"
               >
                 <Facebook className="h-4 w-4" />
@@ -206,7 +205,7 @@ export default function HomePage() {
       </section>
 
       {/* 2. Storefront Search, Category Pills & Product Grid with Paris Road Backdrop Effect */}
-      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
+      <section id="catalog" className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
         
         {/* Ambient Paris Road Background Effect behind the products */}
         <div 
@@ -303,59 +302,6 @@ export default function HomePage() {
             ))}
           </div>
         )}
-        </div>
-      </section>
-
-      {/* 3. Print Lagbe Callout */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl overflow-hidden relative">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-            <div className="lg:col-span-7 space-y-3 sm:space-y-4">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white text-xs font-bold font-mono">
-                <Printer className="h-3.5 w-3.5 text-emerald-400" />
-                <span>PRINT LAGBE • প্রিন্ট লাগবে</span>
-              </div>
-              <h2 className="text-xl sm:text-3xl font-black text-white leading-tight">
-                টেলিগ্রাম ও হোয়াটসঅ্যাপের ঝামেলা শেষ! <br />
-                <span className="text-amber-300">সরাসরি ওয়েবসাইট থেকে PDF প্রিন্ট দিন</span>
-              </h2>
-              <p className="text-xs sm:text-sm text-blue-100 font-bengali leading-relaxed">
-                অ্যাসাইনমেন্ট, ল্যাব রিপোর্ট বা প্রেজেন্টেশন স্লাইড ওয়েবসাইট থেকে সরাসরি আপলোড করুন, পিকআপ টোকেন পান এবং মতিহার প্যারিস রোডের কাউন্টারে পৌঁছে রেডি প্রিন্ট কপি সংগ্রহ করুন।
-              </p>
-              <div className="pt-2">
-                <Link
-                  href="/print-station"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition-all"
-                >
-                  <FileUp className="h-4 w-4" />
-                  <span>Upload PDF & Print (প্রিন্ট অর্ডার করুন)</span>
-                </Link>
-              </div>
-            </div>
-
-            <div className="lg:col-span-5 flex justify-center">
-              <div className="w-full max-w-sm bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/20 space-y-3 shadow-2xl">
-                <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                  <span className="text-xs font-mono text-emerald-300 font-bold">LIVE PRINT QUEUE</span>
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
-                </div>
-                <div className="p-3 rounded-xl bg-slate-900/60 border border-white/10 flex items-center justify-between text-xs font-mono">
-                  <span className="text-slate-300">Token:</span>
-                  <span className="text-amber-400 font-bold">#RU-PRNT-4821</span>
-                </div>
-                <div className="space-y-1 text-xs">
-                  <div className="text-white font-semibold truncate">CSE_4102_Lab_Report.pdf</div>
-                  <div className="text-blue-200">18 Pages • Double-Sided B&W • 80 GSM</div>
-                </div>
-                <div className="p-2 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs flex items-center justify-between">
-                  <span>Status:</span>
-                  <span className="font-bold flex items-center gap-1">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Ready for Pickup
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 

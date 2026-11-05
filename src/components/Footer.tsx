@@ -49,25 +49,23 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
+                <Link href="/shop" className="text-slate-600 hover:text-blue-600 transition-colors font-semibold">
+                  Shop All Merch (সকল পণ্য)
+                </Link>
+              </li>
+              <li>
                 <Link href="/shop" className="text-slate-600 hover:text-blue-600 transition-colors">
-                  Shop All Merch (শপ)
+                  Winter Hoodies (শীতের হুডি)
                 </Link>
               </li>
               <li>
-                <Link href="/customize" className="hover:text-blue-600 transition-colors flex items-center gap-1.5 text-amber-700 font-semibold">
-                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                  Customizer Studio (জার্সি ও হুডি ডিজাইন)
-                </Link>
-              </li>
-              <li>
-                <Link href="/print-station" className="hover:text-blue-600 transition-colors flex items-center gap-1.5 text-emerald-700 font-semibold">
-                  <Printer className="h-3.5 w-3.5 text-emerald-500" />
-                  Print Station (প্রিন্ট লাগবে - PDF Upload)
+                <Link href="/shop" className="text-slate-600 hover:text-blue-600 transition-colors">
+                  Drop Shoulder & Tees (টি-শার্ট ও ড্রপ শোল্ডার)
                 </Link>
               </li>
               <li>
                 <Link href="/track" className="text-slate-600 hover:text-blue-600 transition-colors">
-                  Track Order & Print Status (অর্ডার ট্র্যাকিং)
+                  Track Order (অর্ডার ট্র্যাকিং)
                 </Link>
               </li>
               <li>

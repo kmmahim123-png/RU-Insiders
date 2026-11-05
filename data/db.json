@@ -1,6 +1,42 @@
 {
   "products": [
     {
+      "id": "prod-1793866627014",
+      "slug": "3-7014",
+      "name": "3",
+      "nameBn": "",
+      "category": "hoodies",
+      "description": "RU Insiders Official Apparel",
+      "price": 1150,
+      "regularPrice": 1438,
+      "costPrice": 650,
+      "images": [
+        "/uploads/1793866616044-134376982312850041.jpg"
+      ],
+      "colors": [
+        {
+          "name": "Heritage Maroon",
+          "hex": "#881337"
+        },
+        {
+          "name": "Midnight Black",
+          "hex": "#0f172a"
+        }
+      ],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "stock": 30,
+      "salesCount": 0,
+      "isCustomizable": false,
+      "featured": true,
+      "badge": "New Arrival",
+      "orderIndex": 0
+    },
+    {
       "id": "prod-ru-hoodie-maroon",
       "slug": "ru-heritage-winter-hoodie-maroon",
       "name": "RU Heritage Heavyweight Winter Hoodie",
@@ -50,7 +86,7 @@
       "featured": true,
       "badge": "Best Seller",
       "fabricSpecs": "340+ GSM 80% Organic Combed Cotton, 20% Polyester Anti-Pilling Brushed Fleece",
-      "orderIndex": 0
+      "orderIndex": 1
     },
     {
       "id": "prod-ru-dropshoulder-paris",
@@ -102,7 +138,7 @@
       "featured": true,
       "badge": "Trending",
       "fabricSpecs": "220 GSM 100% Compact Combed Cotton, Bio-washed and Pre-shrunk",
-      "orderIndex": 1
+      "orderIndex": 2
     },
     {
       "id": "prod-ru-custom-jersey-2026",
@@ -155,7 +191,7 @@
       "featured": true,
       "badge": "Customizable",
       "fabricSpecs": "160 GSM Sublimation Dry-Fit Polyester Mesh with Moisture Wicking Technology",
-      "orderIndex": 2
+      "orderIndex": 3
     },
     {
       "id": "prod-ru-shabash-ganji",
@@ -208,7 +244,7 @@
       "featured": false,
       "badge": "New Arrival",
       "fabricSpecs": "180 GSM 100% Ring Spun Combed Cotton, Soft Silicone Finished",
-      "orderIndex": 3
+      "orderIndex": 4
     },
     {
       "id": "prod-ru-varsity-jacket",
@@ -255,7 +291,7 @@
       "featured": true,
       "badge": "Limited Edition",
       "fabricSpecs": "Premium Heavy Wool Blend with Faux Nappa Leather Sleeves and Satin Quilted Lining",
-      "orderIndex": 4
+      "orderIndex": 5
     },
     {
       "id": "prod-ru-totebag",
@@ -293,7 +329,7 @@
       "isCustomizable": false,
       "featured": false,
       "fabricSpecs": "14oz 100% Heavy Organic Raw Cotton Canvas with Reinforced Webbed Handles",
-      "orderIndex": 5
+      "orderIndex": 6
     }
   ],
   "orders": [

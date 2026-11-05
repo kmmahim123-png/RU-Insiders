@@ -61,12 +61,6 @@ export default function ProductCard({ product }: ProductCardProps) {
               {product.badge}
             </span>
           )}
-          {product.isCustomizable && (
-            <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm border border-amber-500/40">
-              <Sparkles className="h-3 w-3" />
-              কাস্টমাইজেবল
-            </span>
-          )}
         </div>
 
         {/* Regular Price Discount Chip */}
@@ -148,23 +142,12 @@ export default function ProductCard({ product }: ProductCardProps) {
           <div className="flex items-center gap-1.5 self-stretch sm:self-auto">
             <Link
               href={`/shop/${product.slug}`}
-              className="flex-1 sm:flex-initial px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 shadow-sm transition-all active:scale-95 whitespace-nowrap"
+              className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 shadow-sm transition-all active:scale-95 whitespace-nowrap"
               title="পণ্যের ছবি, ভিডিও ও সম্পূর্ণ বিবরণ দেখুন"
             >
               <ShoppingBag className="h-3 w-3" />
               <span>অর্ডার / বিবরণ</span>
             </Link>
-
-            {product.isCustomizable && (
-              <Link
-                href={`/customize?garment=${product.category === 'jerseys' ? 'jersey' : product.category === 'hoodies' ? 'hoodie' : 'dropshoulder'}&product=${product.id}`}
-                className="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-[11px] sm:text-xs flex items-center gap-1 shadow-sm transition-all whitespace-nowrap"
-                title="কাস্টমাইজ করুন"
-              >
-                <Sparkles className="h-3 w-3 text-amber-600" />
-                <span className="hidden sm:inline">বানাও</span>
-              </Link>
-            )}
           </div>
         </div>
 

@@ -1,14 +1,18 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/ProductCard';
 import FilterModal, { FilterState } from '@/components/FilterModal';
 import { Product } from '@/lib/types';
 import { INITIAL_PRODUCTS } from '@/lib/store';
-import { Search, SlidersHorizontal, Loader2, Sparkles, X } from 'lucide-react';
+import { Search, SlidersHorizontal, Loader2, X, Tag } from 'lucide-react';
 import { formatBDT } from '@/lib/utils';
 
-export default function ShopPage() {
+function ShopContent() {
+  const searchParams = useSearchParams();
+  const initialCategoryParam = searchParams.get('category') || 'all';
+
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -16,12 +20,20 @@ export default function ShopPage() {
 
   // Filter State
   const [filters, setFilters] = useState<FilterState>({
-    category: 'all',
+    category: initialCategoryParam,
     minPrice: 0,
     maxPrice: 10000,
     onlyCustomizable: false,
     sortBy: 'featured',
   });
+
+  // Sync with URL param if it changes
+  useEffect(() => {
+    const cat = searchParams.get('category');
+    if (cat) {
+      setFilters((prev) => ({ ...prev, category: cat }));
+    }
+  }, [searchParams]);
 
   // Fetch live products from database
   useEffect(() => {
@@ -75,9 +87,8 @@ export default function ShopPage() {
           (product.nameBn && product.nameBn.includes(searchQuery)) ||
           product.description.toLowerCase().includes(searchQuery.toLowerCase());
         const matchPrice = product.price >= filters.minPrice && product.price <= filters.maxPrice;
-        const matchCustom = filters.onlyCustomizable ? product.isCustomizable : true;
 
-        return matchCategory && matchSearch && matchPrice && matchCustom;
+        return matchCategory && matchSearch && matchPrice;
       })
       .sort((a, b) => {
         if (filters.sortBy === 'price-asc') return a.price - b.price;
@@ -91,7 +102,6 @@ export default function ShopPage() {
     let count = 0;
     if (filters.category !== 'all') count++;
     if (filters.minPrice > 0 || filters.maxPrice < 10000) count++;
-    if (filters.onlyCustomizable) count++;
     if (filters.sortBy !== 'featured') count++;
     return count;
   }, [filters]);
@@ -99,7 +109,6 @@ export default function ShopPage() {
   const removeFilterTag = (key: keyof FilterState) => {
     if (key === 'category') setFilters({ ...filters, category: 'all' });
     if (key === 'minPrice' || key === 'maxPrice') setFilters({ ...filters, minPrice: 0, maxPrice: 10000 });
-    if (key === 'onlyCustomizable') setFilters({ ...filters, onlyCustomizable: false });
     if (key === 'sortBy') setFilters({ ...filters, sortBy: 'featured' });
   };
 
@@ -109,17 +118,17 @@ export default function ShopPage() {
       {/* Page Header */}
       <div className="space-y-1 sm:space-y-2">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold">
-          <span>Official RU Store</span>
+          <span>Official RU Merch Catalog</span>
         </div>
         <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-          RU Insiders Apparel & Merch
+          RU Insiders Apparel & Merchandise
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 font-bengali">
-          রাজশাহী বিশ্ববিদ্যালয়ের থিমে তৈরি অফিশিয়াল হুডি, ড্রপ শোল্ডার এবং কাস্টমাইজড পোশাক সংগ্রহ।
+          রাজশাহী বিশ্ববিদ্যালয়ের থিমে তৈরি অফিসিয়াল হুডি, ড্রপ শোল্ডার, গেঞ্জি ও এক্সক্লুসিভ ক্যাম্পাস কালেকশন।
         </p>
       </div>
 
-      {/* Clean, Decluttered Toolbar (Replacing the old crowded row) */}
+      {/* Toolbar */}
       <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
         
         {/* Search Input */}
@@ -127,7 +136,7 @@ export default function ShopPage() {
           <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
           <input
             type="text"
-            placeholder="পণ্য খুঁজুন (যেমন হুডি, ড্রপ শোল্ডার, জার্সি)..."
+            placeholder="পণ্য খুঁজুন (যেমন হুডি, ড্রপ শোল্ডার, গেঞ্জি, এক্সেসরিজ)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs sm:text-sm placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white transition-all font-medium"
@@ -160,10 +169,30 @@ export default function ShopPage() {
 
       </div>
 
-      {/* Active Filter Badges Bar (Shows active criteria clearly) */}
+      {/* Quick Category Switcher Pills */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+        {availableCategories.map((cat) => {
+          const isActive = filters.category === cat.id;
+          return (
+            <button
+              key={cat.id}
+              onClick={() => setFilters({ ...filters, category: cat.id })}
+              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${
+                isActive
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              {cat.bn} ({cat.label})
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Active Filter Badges Bar */}
       {activeFiltersCount > 0 && (
         <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-          <span className="text-slate-500 font-medium">Active filters:</span>
+          <span className="text-slate-500 font-medium">সক্রিয় ফিল্টার:</span>
           
           {filters.category !== 'all' && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-800 border border-blue-200 font-semibold">
@@ -179,16 +208,6 @@ export default function ShopPage() {
               <span>{formatBDT(filters.minPrice)} – {filters.maxPrice >= 10000 ? '৳10,000+' : formatBDT(filters.maxPrice)}</span>
               <button onClick={() => removeFilterTag('minPrice')}>
                 <X className="h-3.5 w-3.5 text-emerald-600 hover:text-emerald-900" />
-              </button>
-            </span>
-          )}
-
-          {filters.onlyCustomizable && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200 font-semibold">
-              <Sparkles className="h-3 w-3 text-amber-600" />
-              <span>Customizable Only</span>
-              <button onClick={() => removeFilterTag('onlyCustomizable')}>
-                <X className="h-3.5 w-3.5 text-amber-600 hover:text-amber-900" />
               </button>
             </span>
           )}
@@ -219,7 +238,7 @@ export default function ShopPage() {
         </div>
       )}
 
-      {/* Product Grid - Mobile 2-column, Desktop 4-column */}
+      {/* Product Grid */}
       {loading ? (
         <div className="bg-white p-16 text-center rounded-3xl border border-slate-200 flex items-center justify-center gap-2 text-slate-500 shadow-sm">
           <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
@@ -248,14 +267,14 @@ export default function ShopPage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6">
           {filteredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
       )}
 
-      {/* Filter Modal / Bottom Sheet */}
+      {/* Filter Modal */}
       <FilterModal
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
@@ -266,5 +285,18 @@ export default function ShopPage() {
       />
 
     </div>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-[50vh] flex items-center justify-center gap-2 text-slate-500">
+        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+        <span>শপ লোড হচ্ছে...</span>
+      </div>
+    }>
+      <ShopContent />
+    </Suspense>
   );
 }

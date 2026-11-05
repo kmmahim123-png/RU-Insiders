@@ -47,22 +47,9 @@ export default function Navbar() {
   }, []);
 
   const navLinks = [
-    { label: 'Shop Merch', href: '/shop', bn: 'শপ' },
-    { 
-      label: 'Custom Studio', 
-      href: '/customize', 
-      bn: 'জার্সি ও হুডি কাস্টমাইজ', 
-      highlight: true, 
-      icon: Sparkles 
-    },
-    { 
-      label: 'Print Station', 
-      href: '/print-station', 
-      bn: 'প্রিন্ট লাগবে', 
-      badge: 'PDF Print', 
-      icon: Printer 
-    },
-    { label: 'Track Order', href: '/track', bn: 'ট্র্যাকিং' },
+    { label: 'Shop All Merch', href: '/shop', bn: 'সব পণ্য', icon: ShoppingBag },
+    { label: 'Track Order', href: '/track', bn: 'অর্ডার ট্র্যাকিং', icon: Truck },
+    { label: 'Admin Portal', href: '/admin', bn: 'অ্যাডমিন প্যানেল', icon: ShieldCheck },
   ];
 
   // If on admin routes, hide consumer navbar to avoid duplicate header bars (checked after all hooks)
@@ -118,7 +105,7 @@ export default function Navbar() {
                 </span>
               </span>
               <span className="text-[11px] text-slate-500 font-bengali font-medium">
-                রাজশাহী বিশ্ববিদ্যালয় স্টোর ও প্রিন্ট স্টেশন
+                রাজশাহী বিশ্ববিদ্যালয় অফিসিয়াল মার্চেন্ডাইজ স্টোর
               </span>
             </div>
           </Link>
@@ -136,15 +123,10 @@ export default function Navbar() {
                     isActive 
                       ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm' 
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                  } ${link.highlight ? 'bg-amber-50 text-amber-900 border border-amber-200 hover:border-amber-400' : ''}`}
+                  }`}
                 >
-                  {Icon && <Icon className={`h-4 w-4 ${link.highlight ? 'text-amber-500 animate-pulse' : 'text-slate-500'}`} />}
+                  {Icon && <Icon className="h-4 w-4 text-slate-500" />}
                   <span>{link.label}</span>
-                  {link.badge && (
-                    <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] px-1.5 py-0.2 rounded-full font-bold">
-                      {link.badge}
-                    </span>
-                  )}
                 </Link>
               );
             })}
@@ -199,11 +181,6 @@ export default function Navbar() {
                   <span>{link.label}</span>
                   <span className="text-xs text-slate-400 font-bengali">({link.bn})</span>
                 </div>
-                {link.badge && (
-                  <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-bold">
-                    {link.badge}
-                  </span>
-                )}
               </Link>
             );
           })}
