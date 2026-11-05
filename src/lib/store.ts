@@ -14,20 +14,23 @@ export const INITIAL_PRODUCTS: Product[] = [
     costPrice: 680,
     images: [
       '/mockups/hoodie-front.jpg',
-      '/mockups/drop-shoulder-front.jpg'
+      '/mockups/drop-shoulder-front.jpg',
+      '/mockups/jersey-front.jpg',
+      '/mockups/t-shirt-front.jpg'
     ],
     colors: [
-      { name: 'Heritage Maroon', hex: '#881337' },
-      { name: 'Midnight Black', hex: '#09090b' },
-      { name: 'Campus Navy', hex: '#1e3a8a' },
-      { name: 'Forest Green', hex: '#064e3b' }
+      { name: 'Heritage Maroon', hex: '#881337', imageIndex: 0 },
+      { name: 'Midnight Black', hex: '#09090b', imageIndex: 1 },
+      { name: 'Campus Navy', hex: '#1e3a8a', imageIndex: 2 },
+      { name: 'Pure White', hex: '#ffffff', imageIndex: 3 }
     ],
     sizes: ['M', 'L', 'XL', 'XXL'],
     stock: 45,
     salesCount: 182,
     isCustomizable: true,
     featured: true,
-    badge: 'Best Seller'
+    badge: 'Best Seller',
+    fabricSpecs: '340+ GSM 80% Organic Combed Cotton, 20% Polyester Anti-Pilling Brushed Fleece'
   },
   {
     id: 'prod-ru-dropshoulder-paris',
@@ -41,20 +44,23 @@ export const INITIAL_PRODUCTS: Product[] = [
     costPrice: 310,
     images: [
       '/mockups/drop-shoulder-front.jpg',
-      '/mockups/t-shirt-front.jpg'
+      '/mockups/t-shirt-front.jpg',
+      '/mockups/hoodie-front.jpg',
+      '/mockups/jersey-front.jpg'
     ],
     colors: [
-      { name: 'Washed Ash', hex: '#64748b' },
-      { name: 'Off White', hex: '#f8fafc' },
-      { name: 'Deep Black', hex: '#18181b' },
-      { name: 'Vintage Olive', hex: '#3f6212' }
+      { name: 'Vintage Olive', hex: '#3f6212', imageIndex: 0 },
+      { name: 'Charcoal Black', hex: '#18181b', imageIndex: 1 },
+      { name: 'Off White', hex: '#f8fafc', imageIndex: 2 },
+      { name: 'Heritage Maroon', hex: '#881337', imageIndex: 3 }
     ],
-    sizes: ['M', 'L', 'XL', 'Oversized'],
+    sizes: ['M', 'L', 'XL', 'XXL'],
     stock: 60,
     salesCount: 240,
     isCustomizable: true,
     featured: true,
-    badge: 'Trending'
+    badge: 'Trending',
+    fabricSpecs: '220 GSM 100% Compact Combed Cotton, Bio-washed and Pre-shrunk'
   },
   {
     id: 'prod-ru-custom-jersey-2026',
@@ -68,20 +74,23 @@ export const INITIAL_PRODUCTS: Product[] = [
     costPrice: 340,
     images: [
       '/mockups/jersey-front.jpg',
-      '/mockups/t-shirt-front.jpg'
+      '/mockups/t-shirt-front.jpg',
+      '/mockups/hoodie-front.jpg',
+      '/mockups/drop-shoulder-front.jpg'
     ],
     colors: [
-      { name: 'RU Crimson & Gold', hex: '#9f1239' },
-      { name: 'Electric Cyan & Navy', hex: '#0284c7' },
-      { name: 'Emerald & Gold', hex: '#059669' },
-      { name: 'Stealth Blackout', hex: '#111827' }
+      { name: 'RU Crimson & Gold', hex: '#9f1239', imageIndex: 0 },
+      { name: 'Royal Blue & Gold', hex: '#1d4ed8', imageIndex: 1 },
+      { name: 'Stealth Blackout', hex: '#111827', imageIndex: 2 },
+      { name: 'Campus White', hex: '#ffffff', imageIndex: 3 }
     ],
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     stock: 120,
     salesCount: 310,
     isCustomizable: true,
     featured: true,
-    badge: 'Customizable'
+    badge: 'Customizable',
+    fabricSpecs: '160 GSM Sublimation Dry-Fit Polyester Mesh with Moisture Wicking Technology'
   },
   {
     id: 'prod-ru-shabash-ganji',
@@ -94,18 +103,24 @@ export const INITIAL_PRODUCTS: Product[] = [
     regularPrice: 500,
     costPrice: 190,
     images: [
-      '/mockups/t-shirt-front.jpg'
+      '/mockups/t-shirt-front.jpg',
+      '/mockups/drop-shoulder-front.jpg',
+      '/mockups/jersey-front.jpg',
+      '/mockups/hoodie-front.jpg'
     ],
     colors: [
-      { name: 'Pure White', hex: '#ffffff' },
-      { name: 'Charcoal Grey', hex: '#334155' },
-      { name: 'Maroon Red', hex: '#991b1b' }
+      { name: 'Pure White', hex: '#ffffff', imageIndex: 0 },
+      { name: 'Charcoal Grey', hex: '#334155', imageIndex: 1 },
+      { name: 'Maroon Red', hex: '#991b1b', imageIndex: 2 },
+      { name: 'Midnight Black', hex: '#0f172a', imageIndex: 3 }
     ],
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     stock: 85,
     salesCount: 145,
     isCustomizable: true,
-    featured: false
+    featured: false,
+    badge: 'New Arrival',
+    fabricSpecs: '180 GSM 100% Ring Spun Combed Cotton, Soft Silicone Finished'
   },
   {
     id: 'prod-ru-varsity-jacket',
@@ -118,18 +133,23 @@ export const INITIAL_PRODUCTS: Product[] = [
     regularPrice: 2800,
     costPrice: 1350,
     images: [
-      '/mockups/hoodie-front.jpg'
+      '/mockups/hoodie-front.jpg',
+      '/mockups/drop-shoulder-front.jpg',
+      '/mockups/jersey-front.jpg',
+      '/mockups/t-shirt-front.jpg'
     ],
     colors: [
-      { name: 'Crimson & Cream', hex: '#881337' },
-      { name: 'Navy & White', hex: '#1e3a8a' }
+      { name: 'Crimson & Cream', hex: '#881337', imageIndex: 0 },
+      { name: 'Navy & White', hex: '#1e3a8a', imageIndex: 1 },
+      { name: 'Black & Gold', hex: '#09090b', imageIndex: 2 }
     ],
     sizes: ['M', 'L', 'XL', 'XXL'],
     stock: 15,
     salesCount: 42,
     isCustomizable: false,
     featured: true,
-    badge: 'Limited Edition'
+    badge: 'Limited Edition',
+    fabricSpecs: 'Premium Heavy Wool Blend with Faux Nappa Leather Sleeves and Satin Quilted Lining'
   },
   {
     id: 'prod-ru-totebag',
@@ -142,17 +162,21 @@ export const INITIAL_PRODUCTS: Product[] = [
     regularPrice: 350,
     costPrice: 120,
     images: [
-      '/mockups/t-shirt-front.jpg'
+      '/mockups/t-shirt-front.jpg',
+      '/mockups/drop-shoulder-front.jpg',
+      '/mockups/hoodie-front.jpg',
+      '/mockups/jersey-front.jpg'
     ],
     colors: [
-      { name: 'Natural Ecru', hex: '#fef3c7' },
-      { name: 'Black Canvas', hex: '#1f2937' }
+      { name: 'Natural Ecru', hex: '#fef3c7', imageIndex: 0 },
+      { name: 'Black Canvas', hex: '#1f2937', imageIndex: 1 }
     ],
-    sizes: ['One Size (16" x 14")'],
+    sizes: ['Standard (16" x 14")'],
     stock: 50,
     salesCount: 88,
     isCustomizable: false,
-    featured: false
+    featured: false,
+    fabricSpecs: '14oz 100% Heavy Organic Raw Cotton Canvas with Reinforced Webbed Handles'
   }
 ];
 

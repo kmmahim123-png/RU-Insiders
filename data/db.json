@@ -1,190 +1,6 @@
 {
   "products": [
     {
-      "id": "prod-1793775131014",
-      "slug": "a-momo-1013",
-      "name": "a momo",
-      "nameBn": "",
-      "category": "hoodies",
-      "description": "RU Insiders Official Apparel",
-      "price": 1150,
-      "regularPrice": 1438,
-      "costPrice": 650,
-      "images": [
-        "/uploads/1793775125422-134349740643136223.jpg"
-      ],
-      "colors": [
-        {
-          "name": "Heritage Maroon",
-          "hex": "#881337"
-        },
-        {
-          "name": "Royal Blue",
-          "hex": "#1d4ed8"
-        }
-      ],
-      "sizes": [
-        "M",
-        "L",
-        "XL",
-        "XXL"
-      ],
-      "stock": 30,
-      "salesCount": 0,
-      "isCustomizable": false,
-      "featured": true,
-      "badge": "New Arrival",
-      "orderIndex": 0
-    },
-    {
-      "id": "prod-1793840131747",
-      "slug": "ru-motihar-signature-hoodie-1747",
-      "name": "RU Motihar Signature Hoodie",
-      "nameBn": "রাবি মতিহার স্পেশাল হুডি",
-      "category": "hoodies",
-      "description": "Heavyweight winter fleece with 4-view gallery and showcase video",
-      "price": 1250,
-      "regularPrice": 1563,
-      "costPrice": 700,
-      "images": [
-        "/mockups/hoodie-front.jpg",
-        "/mockups/drop-shoulder-front.jpg",
-        "/mockups/jersey-front.jpg",
-        "/mockups/t-shirt-front.jpg"
-      ],
-      "colors": [
-        {
-          "name": "Heritage Maroon",
-          "hex": "#881337"
-        },
-        {
-          "name": "Royal Blue",
-          "hex": "#1d4ed8"
-        }
-      ],
-      "sizes": [
-        "M",
-        "L",
-        "XL",
-        "XXL"
-      ],
-      "stock": 50,
-      "salesCount": 0,
-      "isCustomizable": false,
-      "featured": true,
-      "badge": "New Arrival",
-      "orderIndex": 1,
-      "video": "/mockups/demo.mp4"
-    },
-    {
-      "id": "prod-1793775037443",
-      "slug": "ff-7443",
-      "name": "ff",
-      "nameBn": "ff",
-      "category": "hoodies",
-      "description": "RU Insiders Official Apparel",
-      "price": 1150,
-      "regularPrice": 1438,
-      "costPrice": 650,
-      "images": [
-        "/uploads/1793775027367-134361855682621347.jpg"
-      ],
-      "colors": [
-        {
-          "name": "Heritage Maroon",
-          "hex": "#881337"
-        },
-        {
-          "name": "Royal Blue",
-          "hex": "#1d4ed8"
-        }
-      ],
-      "sizes": [
-        "M",
-        "L",
-        "XL",
-        "XXL"
-      ],
-      "stock": 30,
-      "salesCount": 0,
-      "isCustomizable": false,
-      "featured": true,
-      "badge": "New Arrival",
-      "orderIndex": 2
-    },
-    {
-      "id": "prod-1793774362085",
-      "slug": "ss-2085",
-      "name": "ss",
-      "nameBn": "",
-      "category": "hoodies",
-      "description": "RU Insiders Official Apparel",
-      "price": 1150,
-      "regularPrice": 1438,
-      "costPrice": 650,
-      "images": [
-        "/uploads/1793774352397-134337096780936258_j.jpg"
-      ],
-      "colors": [
-        {
-          "name": "Heritage Maroon",
-          "hex": "#881337"
-        },
-        {
-          "name": "Royal Blue",
-          "hex": "#1d4ed8"
-        }
-      ],
-      "sizes": [
-        "M",
-        "L",
-        "XL",
-        "XXL"
-      ],
-      "stock": 30,
-      "salesCount": 0,
-      "isCustomizable": false,
-      "featured": true,
-      "badge": "New Arrival",
-      "orderIndex": 3
-    },
-    {
-      "id": "prod-1793774338433",
-      "slug": "am-8432",
-      "name": "am",
-      "nameBn": "",
-      "category": "hoodies",
-      "description": "RU Insiders Official Apparel",
-      "price": 1150,
-      "regularPrice": 1438,
-      "costPrice": 650,
-      "images": [
-        "/uploads/1793774324791-134361855682621347_j.jpg"
-      ],
-      "colors": [
-        {
-          "name": "Heritage Maroon",
-          "hex": "#881337"
-        },
-        {
-          "name": "Royal Blue",
-          "hex": "#1d4ed8"
-        }
-      ],
-      "sizes": [
-        "M",
-        "L",
-        "XL",
-        "XXL"
-      ],
-      "stock": 30,
-      "salesCount": 0,
-      "isCustomizable": false,
-      "featured": true,
-      "badge": "New Arrival",
-      "orderIndex": 4
-    },
-    {
       "id": "prod-ru-hoodie-maroon",
       "slug": "ru-heritage-winter-hoodie-maroon",
       "name": "RU Heritage Heavyweight Winter Hoodie",
@@ -196,24 +12,30 @@
       "costPrice": 680,
       "images": [
         "/mockups/hoodie-front.jpg",
-        "/mockups/drop-shoulder-front.jpg"
+        "/mockups/drop-shoulder-front.jpg",
+        "/mockups/jersey-front.jpg",
+        "/mockups/t-shirt-front.jpg"
       ],
       "colors": [
         {
           "name": "Heritage Maroon",
-          "hex": "#881337"
+          "hex": "#881337",
+          "imageIndex": 0
         },
         {
           "name": "Midnight Black",
-          "hex": "#09090b"
+          "hex": "#09090b",
+          "imageIndex": 1
         },
         {
           "name": "Campus Navy",
-          "hex": "#1e3a8a"
+          "hex": "#1e3a8a",
+          "imageIndex": 2
         },
         {
-          "name": "Forest Green",
-          "hex": "#064e3b"
+          "name": "Pure White",
+          "hex": "#ffffff",
+          "imageIndex": 3
         }
       ],
       "sizes": [
@@ -227,29 +49,45 @@
       "isCustomizable": true,
       "featured": true,
       "badge": "Best Seller",
-      "orderIndex": 5
+      "fabricSpecs": "340+ GSM 80% Organic Combed Cotton, 20% Polyester Anti-Pilling Brushed Fleece",
+      "orderIndex": 0
     },
     {
-      "id": "prod-1793769937850",
-      "slug": "m-7850",
-      "name": "m",
-      "nameBn": "m",
-      "category": "hoodies",
-      "description": "RU Insiders Official Apparel",
-      "price": 1,
-      "regularPrice": 1,
-      "costPrice": 1,
+      "id": "prod-ru-dropshoulder-paris",
+      "slug": "paris-road-oversized-dropshoulder",
+      "name": "Paris Road Signature Drop Shoulder Tee",
+      "nameBn": "প্যারিস রোড ওভারসাইজড ড্রপ শোল্ডার",
+      "category": "drop-shoulder",
+      "description": "220 GSM 100% combed compact cotton with relaxed drop-shoulder cut. Featuring minimalist RU Paris Road typographic screen print on back and subtle chest crest.",
+      "price": 580,
+      "regularPrice": 750,
+      "costPrice": 310,
       "images": [
-        "/mockups/hoodie-front.jpg"
+        "/mockups/drop-shoulder-front.jpg",
+        "/mockups/t-shirt-front.jpg",
+        "/mockups/hoodie-front.jpg",
+        "/mockups/jersey-front.jpg"
       ],
       "colors": [
         {
-          "name": "Heritage Maroon",
-          "hex": "#881337"
+          "name": "Vintage Olive",
+          "hex": "#3f6212",
+          "imageIndex": 0
         },
         {
-          "name": "Royal Blue",
-          "hex": "#1d4ed8"
+          "name": "Charcoal Black",
+          "hex": "#18181b",
+          "imageIndex": 1
+        },
+        {
+          "name": "Off White",
+          "hex": "#f8fafc",
+          "imageIndex": 2
+        },
+        {
+          "name": "Heritage Maroon",
+          "hex": "#881337",
+          "imageIndex": 3
         }
       ],
       "sizes": [
@@ -258,12 +96,13 @@
         "XL",
         "XXL"
       ],
-      "stock": 30,
-      "salesCount": 0,
-      "isCustomizable": false,
+      "stock": 60,
+      "salesCount": 240,
+      "isCustomizable": true,
       "featured": true,
-      "badge": "New Arrival",
-      "orderIndex": 6
+      "badge": "Trending",
+      "fabricSpecs": "220 GSM 100% Compact Combed Cotton, Bio-washed and Pre-shrunk",
+      "orderIndex": 1
     },
     {
       "id": "prod-ru-custom-jersey-2026",
@@ -277,24 +116,30 @@
       "costPrice": 340,
       "images": [
         "/mockups/jersey-front.jpg",
-        "/mockups/t-shirt-front.jpg"
+        "/mockups/t-shirt-front.jpg",
+        "/mockups/hoodie-front.jpg",
+        "/mockups/drop-shoulder-front.jpg"
       ],
       "colors": [
         {
           "name": "RU Crimson & Gold",
-          "hex": "#9f1239"
+          "hex": "#9f1239",
+          "imageIndex": 0
         },
         {
-          "name": "Electric Cyan & Navy",
-          "hex": "#0284c7"
-        },
-        {
-          "name": "Emerald & Gold",
-          "hex": "#059669"
+          "name": "Royal Blue & Gold",
+          "hex": "#1d4ed8",
+          "imageIndex": 1
         },
         {
           "name": "Stealth Blackout",
-          "hex": "#111827"
+          "hex": "#111827",
+          "imageIndex": 2
+        },
+        {
+          "name": "Campus White",
+          "hex": "#ffffff",
+          "imageIndex": 3
         }
       ],
       "sizes": [
@@ -309,7 +154,8 @@
       "isCustomizable": true,
       "featured": true,
       "badge": "Customizable",
-      "orderIndex": 7
+      "fabricSpecs": "160 GSM Sublimation Dry-Fit Polyester Mesh with Moisture Wicking Technology",
+      "orderIndex": 2
     },
     {
       "id": "prod-ru-shabash-ganji",
@@ -322,20 +168,31 @@
       "regularPrice": 500,
       "costPrice": 190,
       "images": [
-        "/mockups/t-shirt-front.jpg"
+        "/mockups/t-shirt-front.jpg",
+        "/mockups/drop-shoulder-front.jpg",
+        "/mockups/jersey-front.jpg",
+        "/mockups/hoodie-front.jpg"
       ],
       "colors": [
         {
           "name": "Pure White",
-          "hex": "#ffffff"
+          "hex": "#ffffff",
+          "imageIndex": 0
         },
         {
           "name": "Charcoal Grey",
-          "hex": "#334155"
+          "hex": "#334155",
+          "imageIndex": 1
         },
         {
           "name": "Maroon Red",
-          "hex": "#991b1b"
+          "hex": "#991b1b",
+          "imageIndex": 2
+        },
+        {
+          "name": "Midnight Black",
+          "hex": "#0f172a",
+          "imageIndex": 3
         }
       ],
       "sizes": [
@@ -349,7 +206,9 @@
       "salesCount": 145,
       "isCustomizable": true,
       "featured": false,
-      "orderIndex": 8
+      "badge": "New Arrival",
+      "fabricSpecs": "180 GSM 100% Ring Spun Combed Cotton, Soft Silicone Finished",
+      "orderIndex": 3
     },
     {
       "id": "prod-ru-varsity-jacket",
@@ -362,16 +221,26 @@
       "regularPrice": 2800,
       "costPrice": 1350,
       "images": [
-        "/mockups/hoodie-front.jpg"
+        "/mockups/hoodie-front.jpg",
+        "/mockups/drop-shoulder-front.jpg",
+        "/mockups/jersey-front.jpg",
+        "/mockups/t-shirt-front.jpg"
       ],
       "colors": [
         {
           "name": "Crimson & Cream",
-          "hex": "#881337"
+          "hex": "#881337",
+          "imageIndex": 0
         },
         {
           "name": "Navy & White",
-          "hex": "#1e3a8a"
+          "hex": "#1e3a8a",
+          "imageIndex": 1
+        },
+        {
+          "name": "Black & Gold",
+          "hex": "#09090b",
+          "imageIndex": 2
         }
       ],
       "sizes": [
@@ -385,7 +254,8 @@
       "isCustomizable": false,
       "featured": true,
       "badge": "Limited Edition",
-      "orderIndex": 9
+      "fabricSpecs": "Premium Heavy Wool Blend with Faux Nappa Leather Sleeves and Satin Quilted Lining",
+      "orderIndex": 4
     },
     {
       "id": "prod-ru-totebag",
@@ -398,26 +268,32 @@
       "regularPrice": 350,
       "costPrice": 120,
       "images": [
-        "/mockups/t-shirt-front.jpg"
+        "/mockups/t-shirt-front.jpg",
+        "/mockups/drop-shoulder-front.jpg",
+        "/mockups/hoodie-front.jpg",
+        "/mockups/jersey-front.jpg"
       ],
       "colors": [
         {
           "name": "Natural Ecru",
-          "hex": "#fef3c7"
+          "hex": "#fef3c7",
+          "imageIndex": 0
         },
         {
           "name": "Black Canvas",
-          "hex": "#1f2937"
+          "hex": "#1f2937",
+          "imageIndex": 1
         }
       ],
       "sizes": [
-        "One Size (16\" x 14\")"
+        "Standard (16\" x 14\")"
       ],
       "stock": 50,
       "salesCount": 88,
       "isCustomizable": false,
       "featured": false,
-      "orderIndex": 10
+      "fabricSpecs": "14oz 100% Heavy Organic Raw Cotton Canvas with Reinforced Webbed Handles",
+      "orderIndex": 5
     }
   ],
   "orders": [

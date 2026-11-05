@@ -82,6 +82,11 @@ export default function ProductDetailPage({ params }: Props) {
   };
 
   const handleAddToCart = () => {
+    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
+      alert('অনুগ্রহ করে একটি সাইজ (যেমন: M, L, XL, XXL) নির্বাচন করুন।');
+      return;
+    }
+
     const item = {
       id: `${product.id}-${selectedSize}-${selectedColor}-${Date.now()}`,
       productId: product.id,
@@ -107,6 +112,11 @@ export default function ProductDetailPage({ params }: Props) {
   };
 
   const handleBuyNow = () => {
+    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
+      alert('অনুগ্রহ করে একটি সাইজ (যেমন: M, L, XL, XXL) নির্বাচন করুন।');
+      return;
+    }
+
     const item = {
       id: `${product.id}-${selectedSize}-${selectedColor}-${Date.now()}`,
       productId: product.id,
@@ -389,11 +399,16 @@ export default function ProductDetailPage({ params }: Props) {
           </div>
 
           {/* Product Description */}
-          <div className="pt-4 border-t border-slate-200 space-y-1">
+          <div className="pt-4 border-t border-slate-200 space-y-1.5">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">Overview & Fabric</h4>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-bengali">
               {product.description}
             </p>
+            {product.fabricSpecs && (
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 font-mono">
+                <strong>Fabric Specs:</strong> {product.fabricSpecs}
+              </div>
+            )}
           </div>
 
           {/* Trust Guarantees */}

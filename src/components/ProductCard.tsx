@@ -12,15 +12,21 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const [imageSrc, setImageSrc] = useState(product.images[0] || '/mockups/hoodie-front.jpg');
+  const [isHovered, setIsHovered] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
 
   const hasPlayableVideo = Boolean(product.video && !videoFailed);
+  const displayImage = isHovered && product.images && product.images[1] ? product.images[1] : imageSrc;
 
   return (
-    <div className="group bg-white rounded-2xl overflow-hidden flex flex-col justify-between border border-slate-200 hover:border-blue-500 shadow-sm hover:shadow-xl transition-all duration-300">
+    <div 
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="group bg-white rounded-2xl overflow-hidden flex flex-col justify-between border border-slate-200 hover:border-blue-500 shadow-sm hover:shadow-xl transition-all duration-300"
+    >
       
-      {/* Media Container with Badges - Clickable directly to Product Details Page */}
-      <Link href={`/shop/${product.slug}`} className="relative aspect-[4/5] w-full overflow-hidden bg-slate-100/60 block cursor-pointer">
+      {/* Media Container with Badges - Lock to aspect-[4/5] bg-slate-50 */}
+      <Link href={`/shop/${product.slug}`} className="relative aspect-[4/5] w-full overflow-hidden bg-slate-50 block cursor-pointer">
         {hasPlayableVideo ? (
           <div className="relative w-full h-full">
             <video
@@ -40,7 +46,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         ) : (
           <img
-            src={imageSrc}
+            src={displayImage}
             alt={product.name}
             onError={() => setImageSrc('/mockups/hoodie-front.jpg')}
             className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500"

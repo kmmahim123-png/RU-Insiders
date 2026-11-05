@@ -18,7 +18,7 @@ export interface Product {
   regularPrice?: number;
   costPrice: number; // For admin profit analytics
   images: string[];
-  colors: { name: string; hex: string }[];
+  colors: { name: string; hex: string; imageIndex?: number }[];
   sizes: string[];
   stock: number;
   salesCount: number;
@@ -27,6 +27,7 @@ export interface Product {
   badge?: string;
   orderIndex?: number;
   video?: string;
+  fabricSpecs?: string;
 }
 
 export interface CustomizerState {

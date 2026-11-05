@@ -1572,9 +1572,29 @@ export default function AdminDashboardPage() {
                             <div className="font-bold text-slate-900">{it.name}</div>
                             <div className="text-[10px] text-slate-500">Size: {it.size} • Color: {it.color} • Qty: {it.quantity}</div>
                             {it.customization?.playerName && (
-                              <div className="text-[10px] text-blue-700 font-mono font-semibold">
-                                Player: {it.customization.playerName} #{it.customization.playerNumber}
+                              <div className="text-[10px] text-blue-700 font-mono font-bold">
+                                👕 কাস্টম নাম: {it.customization.playerName} #{it.customization.playerNumber}
                               </div>
+                            )}
+                            {it.customization?.customText && (
+                              <div className="text-[10px] text-emerald-700 font-medium">
+                                ✍️ টেক্সট: "{it.customization.customText}"
+                              </div>
+                            )}
+                            {it.customization?.chestLogo && (
+                              <div className="text-[10px] text-amber-700 font-medium">
+                                🏛️ লোগো: {it.customization.chestLogo}
+                              </div>
+                            )}
+                            {it.customization?.uploadedImage && (
+                              <a
+                                href={it.customization.uploadedImage}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[10px] text-indigo-600 underline font-semibold flex items-center gap-1 mt-0.5"
+                              >
+                                🖼️ কাস্টমার আপলোডকৃত ডিজাইন দেখুন
+                              </a>
                             )}
                           </div>
                           <div className="font-mono text-slate-900 font-bold">{formatBDT(it.price * it.quantity)}</div>
@@ -1647,11 +1667,19 @@ export default function AdminDashboardPage() {
                       {/* 6. Restore Option for Cancelled Orders */}
                       {order.status === 'cancelled' && (
                         <button
-                          onClick={() => handleUpdateOrderStatus(order.id, 'pending')}
+                          onClick={() => {
+                            let targetStage: Order['status'] = 'pending';
+                            if (order.cancelledFrom?.includes('Ready for Pickup') || order.cancelledFrom?.includes('পিকআপ')) {
+                              targetStage = 'ready_for_pickup';
+                            } else if (order.cancelledFrom?.includes('Rider') || order.cancelledFrom?.includes('রাইডার')) {
+                              targetStage = 'rider';
+                            }
+                            handleUpdateOrderStatus(order.id, targetStage);
+                          }}
                           className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center gap-1.5 transition-colors"
                         >
                           <RotateCcw className="h-3.5 w-3.5" />
-                          <span>পুনরায় চালু করুন (Restore to Pending)</span>
+                          <span>পূর্বের ধাপে ফিরিয়ে নিন (Restore Order)</span>
                         </button>
                       )}
 
