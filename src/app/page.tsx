@@ -10,7 +10,9 @@ import {
   X,
   ShoppingBag,
   Tag,
-  ArrowRight
+  ArrowRight,
+  Maximize2,
+  Compass
 } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import FilterModal, { FilterState } from '@/components/FilterModal';
@@ -179,10 +181,43 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 2. Interactive Campus Map & Visited Tracker (Unseen Bangladesh style) */}
-      <div id="campus-map">
-        <CampusMapExplorer />
-      </div>
+      {/* 2. Unseen RU Interactive Map Section (Google Argon Model Map) */}
+      <section id="campus-map" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+        <div className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-950 rounded-3xl p-5 sm:p-7 text-white shadow-xl border border-emerald-800/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1.5 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-400/30">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>Unseen RU • ৪২টি সীমানা অঞ্চল ও রুট ম্যাপ</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+              আনসিন রাজশাহী বিশ্ববিদ্যালয় — ইন্টারঅ্যাক্টিভ সীমানা ম্যাপ
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 font-bengali leading-relaxed">
+              ম্যাপে ক্লিক করে আপনি যে যে এলাকা ঘুরে দেখেছেন সেগুলো সবুজ করুন, লাইভ পারসেন্টেজ দেখুন এবং আপনার অর্জনের পোস্টার ডাউনলোড করে বন্ধুদের সাথে শেয়ার করুন!
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <Link
+              href="/map"
+              className="px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg hover:shadow-emerald-600/30 transition-all active:scale-[0.98]"
+            >
+              <Maximize2 className="h-4 w-4" />
+              <span>⛶ ফুলস্ক্রিন ম্যাপ খুলুন</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Embedded Interactive Map Frame */}
+        <div className="w-full h-[640px] sm:h-[720px] rounded-3xl overflow-hidden border border-slate-200 shadow-xl bg-[#f6f4ec] relative">
+          <iframe
+            src="/unseen-ru.html"
+            title="Unseen Rajshahi University Interactive Map"
+            className="w-full h-full border-0 select-none"
+            allow="clipboard-write; fullscreen; web-share"
+          />
+        </div>
+      </section>
 
       {/* 3. Storefront Search, Category Pills & Product Grid with Campus Backdrop Effect */}
       <section id="catalog" className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">

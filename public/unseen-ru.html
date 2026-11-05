@@ -1,0 +1,2398 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>Unseen RU — রাজশাহী বিশ্ববিদ্যালয় ইন্টারঅ্যাক্টিভ ম্যাপ</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Hind Siliguri & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --bg-canvas: #f6f4ec;
+      --bg-panel: #ffffff;
+      --pill-idle: #e9f2ec;
+      --pill-hover: #d3e5da;
+      --pill-active: #15803d;
+      --poly-idle: #ded8ca;
+      --poly-hover: #c9c1af;
+      --poly-visited: #1f7a44;
+      --poly-visited-hover: #166534;
+      --poly-stroke: #f6f4ec;
+    }
+
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Hind Siliguri', 'Inter', sans-serif;
+      background-color: var(--bg-canvas);
+      color: #1f2937;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    /* Unseen Bangladesh Style Custom Scrollbar */
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #8e8e8e;
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #555555;
+    }
+
+    /* Place Pill Transitions (Left Sidebar) */
+    .place-pill {
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .place-pill:hover {
+      transform: translateY(-1px);
+    }
+    .place-pill.visited {
+      background-color: #1f7a44 !important;
+      color: #ffffff !important;
+      box-shadow: 0 3px 10px rgba(31, 122, 68, 0.26);
+    }
+
+    /* Contiguous Territory Polygons (Unseen Bangladesh Map Aesthetic) */
+    .territory-group {
+      cursor: pointer;
+      transition: transform 0.22s ease, filter 0.22s ease;
+    }
+    .territory-poly {
+      transition: fill 0.22s ease, stroke 0.22s ease, stroke-width 0.22s ease;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+    .territory-group:hover .territory-poly.unvisited-poly {
+      fill: var(--poly-hover);
+    }
+    .territory-group:hover .territory-poly.visited-poly {
+      fill: var(--poly-visited-hover);
+    }
+
+    /* Crisp Territory Label Halo so text is 100% legible over boundaries */
+    .territory-label {
+      pointer-events: none;
+      paint-order: stroke fill;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      transition: fill 0.2s ease, stroke 0.2s ease;
+    }
+
+    /* Active Focused Territory Outline */
+    @keyframes activeBorderPulse {
+      0%, 100% { stroke-width: 3.5px; }
+      50% { stroke-width: 5.5px; }
+    }
+    .territory-focused .territory-poly {
+      stroke: #f59e0b !important;
+      animation: activeBorderPulse 1.6s infinite ease-in-out;
+    }
+
+    /* 3D Master Plan Isometric Mode */
+    .map-3d-mode #ru-svg-map {
+      transform: perspective(1200px) rotateX(38deg) rotateZ(-6deg) scale(0.94) !important;
+      filter: drop-shadow(0 26px 32px rgba(20, 40, 28, 0.28));
+    }
+
+    /* Road Flow Animation */
+    @keyframes dashFlow {
+      to { stroke-dashoffset: -36; }
+    }
+    .road-flow-line {
+      stroke-dasharray: 7 11;
+      animation: dashFlow 1.4s linear infinite;
+    }
+
+    /* Signature Unseen Bangladesh Black Pill Floating Label */
+    #map-tooltip {
+      pointer-events: none;
+      transition: opacity 0.12s ease, transform 0.08s ease;
+      z-index: 90;
+    }
+
+    /* Mobile Bottom Sheet Transition */
+    #mobile-bottom-sheet {
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+  </style>
+</head>
+<body class="h-[100dvh] flex flex-col overflow-hidden">
+
+  <!-- =================================================================== -->
+  <!-- SIGNATURE UNSEEN BANGLADESH FLOATING BLACK PILL TOOLTIP             -->
+  <!-- =================================================================== -->
+  <div id="map-tooltip" class="fixed opacity-0 bg-[#181b19] text-white px-4 py-1.5 rounded-xl shadow-[0_8px_22px_rgba(0,0,0,0.32)] border border-white/10 flex flex-col items-center text-center">
+    <span id="tooltip-name" class="font-bold text-sm tracking-wide whitespace-nowrap">রবীন্দ্র ভবন</span>
+    <span id="tooltip-sub" class="text-[10px] text-emerald-300 font-medium hidden sm:block">একাডেমিক ভবন • ক্লিক করে বাছাই করুন</span>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- TOP FLOATING PILL NAVBAR (Desktop & Mobile Responsive)              -->
+  <!-- =================================================================== -->
+  <header class="z-30 px-2.5 sm:px-6 pt-2 pb-1.5 shrink-0">
+    <div class="max-w-[1460px] mx-auto bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-full px-3 sm:px-6 py-2 shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-emerald-900/10 flex items-center justify-between gap-2">
+      
+      <!-- Brand Logo + Title -->
+      <div class="flex items-center gap-2.5 cursor-pointer shrink-0" onclick="switchMobileTab('map')">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#1f7a44] flex items-center justify-center text-white shadow-sm relative">
+          <!-- Stylized RU Map Icon -->
+          <svg class="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6z"/>
+            <path d="M9 3v15"/>
+            <path d="M15 6v15"/>
+          </svg>
+          <span class="w-2.5 h-2.5 rounded-full bg-red-500 absolute -top-0.5 -right-0.5 ring-2 ring-white"></span>
+        </div>
+        <div class="leading-tight">
+          <div class="font-bold text-gray-900 text-sm sm:text-base tracking-tight flex items-center gap-1">
+            <span>Unseen</span>
+            <span class="text-[#1f7a44]">RU</span>
+            <span class="hidden sm:inline text-[#1f7a44]">Bangladesh</span>
+          </div>
+          <p class="text-[10px] sm:text-[11px] text-gray-500 font-medium">রাজশাহী বিশ্ববিদ্যালয় ম্যাপ</p>
+        </div>
+      </div>
+
+      <!-- Center Navigation Pill Group (Desktop) -->
+      <nav class="hidden lg:flex items-center bg-[#eff5f1] p-1 rounded-full border border-emerald-900/5 gap-1">
+        <button onclick="setMapStyle('unseen')" id="nav-unseen" class="px-4 py-1.5 rounded-full text-xs font-bold bg-white text-[#1f7a44] shadow-sm flex items-center gap-1.5 transition">
+          <span>ম্যাপ</span>
+          <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+        </button>
+        <button onclick="openGuideModal()" class="px-3.5 py-1.5 rounded-full text-xs font-semibold text-gray-700 hover:text-[#1f7a44] hover:bg-white/60 flex items-center gap-1 transition">
+          <span>ঘুরে বেড়ান</span>
+          <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+        </button>
+        <button onclick="openQuizModal()" class="px-3.5 py-1.5 rounded-full text-xs font-semibold text-gray-700 hover:text-[#1f7a44] hover:bg-white/60 flex items-center gap-1 transition">
+          <span>কুইজ</span>
+          <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+        </button>
+        <button onclick="setMapStyle('roadmap')" class="px-3.5 py-1.5 rounded-full text-xs font-semibold text-gray-700 hover:text-[#1f7a44] hover:bg-white/60 flex items-center gap-1 transition">
+          <span>রুট ও ট্রাফিক দাগ</span>
+        </button>
+        <button onclick="openEmbedModal()" class="px-3.5 py-1.5 rounded-full text-xs font-semibold text-gray-700 hover:text-[#1f7a44] hover:bg-white/60 flex items-center gap-1 transition">
+          <span>Antigravity ও ওয়েবসাইট কোড</span>
+        </button>
+      </nav>
+
+      <!-- Right Controls: Live % Badge, Share Button, Antigravity IDE Code & Language -->
+      <div class="flex items-center gap-1.5 sm:gap-2.5">
+        
+        <!-- Live Explored Percentage Pill (Clickable to Share) -->
+        <button onclick="openShareModal()" class="px-3 py-1.5 rounded-full bg-[#eaf3ed] hover:bg-[#d8eadf] border border-emerald-800/15 text-[#1f7a44] flex items-center gap-1.5 transition shadow-sm" title="আপনার অগ্রগতি শেয়ার করুন">
+          <span class="w-2 h-2 rounded-full bg-[#1f7a44] animate-pulse"></span>
+          <span id="header-pct-badge" class="font-bold text-xs sm:text-sm">৭% ঘোরা হয়েছে</span>
+        </button>
+
+        <!-- Primary Share Progress Button -->
+        <button onclick="openShareModal()" class="px-3 sm:px-4 py-1.5 rounded-full bg-[#1f7a44] hover:bg-[#166534] text-white font-bold text-xs sm:text-sm shadow-sm flex items-center gap-1.5 transition">
+          <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
+          <span>শেয়ার করুন</span>
+        </button>
+
+        <!-- Google Antigravity IDE / Website Integration Button -->
+        <button onclick="openEmbedModal()" class="hidden md:flex px-3.5 py-1.5 rounded-full text-xs font-bold bg-gray-900 hover:bg-gray-800 text-amber-300 shadow-sm items-center gap-1.5 transition border border-gray-700">
+          <i data-lucide="terminal" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span>Antigravity / ওয়েবসাইটে বসান</span>
+        </button>
+
+        <!-- Language Switch (বাং | EN) -->
+        <div class="bg-[#eff5f1] p-0.5 sm:p-1 rounded-full flex items-center text-[11px] sm:text-xs font-bold border border-emerald-900/10">
+          <button id="lang-bn" onclick="setLanguage('bn')" class="px-2 sm:px-2.5 py-1 rounded-full bg-white text-emerald-950 shadow-sm transition">বাং</button>
+          <button id="lang-en" onclick="setLanguage('en')" class="px-2 sm:px-2.5 py-1 rounded-full text-gray-600 hover:text-gray-900 transition">EN</button>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- =================================================================== -->
+  <!-- MAIN WORKSPACE (Unseen Bangladesh Split View on Desktop,            -->
+  <!-- Tabbed Full-Height View on Mobile)                                  -->
+  <!-- =================================================================== -->
+  <main class="flex-1 max-w-[1460px] w-full mx-auto px-2.5 sm:px-6 pb-16 md:pb-3 flex flex-col md:flex-row gap-3.5 overflow-hidden relative">
+
+    <!-- =============================================================== -->
+    <!-- LEFT PANEL: UNSEEN BANGLADESH STYLE CATEGORY & PILL SELECTOR    -->
+    <!-- =============================================================== -->
+    <aside id="sidebar-panel" class="hidden md:flex w-full md:w-[360px] lg:w-[395px] bg-white rounded-2xl shadow-[0_2px_16px_rgba(0,0,0,0.04)] border border-gray-200/80 flex-col h-full overflow-hidden shrink-0">
+      
+      <!-- Search & Progress Summary Header -->
+      <div class="p-3.5 sm:p-4 pb-3 border-b border-gray-100 bg-white z-10">
+        <!-- Search Box (Exact Unseen Bangladesh Style) -->
+        <div class="relative">
+          <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+          <input
+            id="search-input"
+            type="text"
+            oninput="handleSearch(this.value)"
+            placeholder="ভবন, হল বা চত্বর খুঁজুন..."
+            class="w-full pl-10 pr-8 py-2.5 bg-[#f8f7f3] border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-600/25 focus:border-emerald-600 transition"
+          />
+          <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Select All / Clear All + Live Percentage Badge -->
+        <div class="flex items-center justify-between mt-3 text-xs">
+          <div class="flex items-center gap-3">
+            <button onclick="selectAllPlaces()" id="btn-select-all" class="underline font-semibold text-gray-700 hover:text-[#1f7a44] transition">সব বাছাই করুন</button>
+            <button onclick="clearAllPlaces()" id="btn-clear-all" class="underline font-semibold text-gray-500 hover:text-red-600 transition">সব মুছুন</button>
+          </div>
+          <div class="flex items-center gap-1.5 font-bold text-[#1f7a44]">
+            <span id="sidebar-percent">৭%</span>
+            <span class="text-gray-300">|</span>
+            <span id="sidebar-count">৩/৪২</span>
+          </div>
+        </div>
+
+        <!-- Progress Bar + Explorer Rank + Share Action -->
+        <div class="mt-2.5 bg-[#f5f8f6] p-2.5 rounded-xl border border-emerald-900/10">
+          <div class="flex items-center justify-between text-[11px] mb-1.5">
+            <span id="explorer-rank-label" class="font-bold text-emerald-900">🚶 প্যারিস রোড পথিক</span>
+            <button onclick="openShareModal()" class="text-[#1f7a44] font-bold hover:underline flex items-center gap-1">
+              <i data-lucide="award" class="w-3.5 h-3.5"></i>
+              <span>কার্ড শেয়ার করুন →</span>
+            </button>
+          </div>
+          <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div id="progress-bar-fill" class="h-full bg-[#1f7a44] rounded-full transition-all duration-300" style="width: 7%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scrollable Categories & Pills List -->
+      <div id="categories-container" class="flex-1 overflow-y-auto custom-scroll p-3.5 sm:p-4 space-y-5">
+        <!-- Populated dynamically by JS -->
+      </div>
+    </aside>
+
+    <!-- =============================================================== -->
+    <!-- RIGHT PANEL: CONTIGUOUS TERRITORY MAP OF RAJSHAHI UNIVERSITY    -->
+    <!-- =============================================================== -->
+    <section id="map-panel" class="flex-1 bg-[#f7f5ee] rounded-2xl border border-gray-200/80 shadow-inner relative overflow-hidden flex flex-col h-full">
+
+      <!-- Top Floating Map Controls Bar (Responsive for Mobile & Desktop) -->
+      <div class="absolute top-2.5 left-2.5 right-2.5 z-20 flex flex-wrap items-center justify-between gap-1.5 pointer-events-none">
+        
+        <!-- Left Group: Map Style & Boundary Toggles -->
+        <div class="flex flex-wrap items-center gap-1 bg-white/95 backdrop-blur-md p-1 rounded-xl shadow-sm border border-gray-200/80 pointer-events-auto">
+          <button onclick="setMapStyle('unseen')" id="style-unseen" class="px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold bg-[#1f7a44] text-white shadow-sm transition flex items-center gap-1">
+            <span>দাগ ও সীমানা ম্যাপ</span>
+          </button>
+          <button onclick="setMapStyle('roadmap')" id="style-roadmap" class="px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-gray-700 hover:bg-gray-100 transition flex items-center gap-1">
+            <span>রাস্তা ও রুট দাগ</span>
+          </button>
+          <button onclick="setMapStyle('master3d')" id="style-master3d" class="hidden sm:flex px-2.5 py-1 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 transition items-center gap-1">
+            <span>৩ডি ভিউ</span>
+          </button>
+          <button onclick="toggleLabelsMode()" id="toggle-labels-btn" class="px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition">
+            নাম: স্পষ্ট
+          </button>
+        </div>
+
+        <!-- Right Group: Mobile Tap Mode Switcher (Direct Mark vs Info) -->
+        <div class="flex items-center gap-1 bg-white/95 backdrop-blur-md p-1 rounded-xl shadow-sm border border-gray-200/80 pointer-events-auto">
+          <button onclick="toggleQuickTapMode()" id="quick-tap-btn" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-900 border border-emerald-300 flex items-center gap-1 transition" title="ট্যাপ করলেই সবুজ হবে">
+            <i data-lucide="mouse-pointer-click" class="w-3.5 h-3.5 text-[#1f7a44]"></i>
+            <span id="quick-tap-label">১-ট্যাপে বাছাই: চালু</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom-Right Zoom & Reset Floating Buttons -->
+      <div class="absolute bottom-3.5 right-3 z-20 flex flex-col gap-1.5 bg-white/95 backdrop-blur-md p-1.5 rounded-xl shadow-md border border-gray-200/80">
+        <button onclick="zoomMap(1.25)" title="বড় করুন (Zoom In)" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg hover:bg-emerald-50 active:bg-emerald-100 text-gray-800 flex items-center justify-center font-bold text-lg transition">+</button>
+        <button onclick="zoomMap(0.8)" title="ছোট করুন (Zoom Out)" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg hover:bg-emerald-50 active:bg-emerald-100 text-gray-800 flex items-center justify-center font-bold text-lg transition">−</button>
+        <button onclick="resetMapView()" title="ম্যাপ রিসেট করুন" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg hover:bg-emerald-50 active:bg-emerald-100 text-gray-700 flex items-center justify-center transition">
+          <i data-lucide="maximize-2" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- INTERACTIVE SVG VIEWPORT (100% Static by Default, Pan Only When Zoomed) -->
+      <div id="map-viewport" class="w-full h-full flex items-center justify-center overflow-hidden cursor-default relative touch-none">
+        
+        <svg id="ru-svg-map" viewBox="0 0 1200 760" class="w-full h-full max-h-full select-none transition-transform duration-150 ease-out">
+          <defs>
+            <!-- Soft Silhouette Drop Shadow for the entire RU Campus Map -->
+            <filter id="map-silhouette-shadow" x="-5%" y="-5%" width="110%" height="110%">
+              <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#6b6352" flood-opacity="0.16" />
+            </filter>
+            <!-- Paddy Pattern for East Zone -->
+            <pattern id="paddyHatch" width="16" height="16" patternUnits="userSpaceOnUse">
+              <path d="M 0,16 L 16,0" stroke="#ffffff" stroke-width="0.8" stroke-opacity="0.35"/>
+            </pattern>
+          </defs>
+
+          <!-- ===================================================== -->
+          <!-- 1. CONTIGUOUS TERRITORY POLYGONS LAYER                -->
+          <!-- (Exact Unseen Bangladesh Choropleth Region Style)     -->
+          <!-- ===================================================== -->
+          <g id="contiguous-territories-layer" filter="url(#map-silhouette-shadow)">
+            <!-- Populated dynamically by JS with 42 interlocking polygons -->
+          </g>
+
+          <!-- ===================================================== -->
+          <!-- 2. BOUNDARY ROADS, RAILWAY & WATER LANDMARKS OVERLAY  -->
+          <!-- (Subtle geographical context lines over the regions)  -->
+          <!-- ===================================================== -->
+          <g id="roads-and-rail-overlay" class="pointer-events-none transition-opacity duration-300">
+            <!-- Rajshahi-Dhaka Railway Line dividing North wing & Main Campus -->
+            <line x1="65" y1="121" x2="1155" y2="121" stroke="#78716c" stroke-width="3.5" stroke-opacity="0.65" />
+            <line x1="65" y1="121" x2="1155" y2="121" stroke="#f7f5ee" stroke-width="2" stroke-dasharray="7 7" />
+            <text x="1030" y="112" text-anchor="middle" fill="#57534e" font-size="10.5" font-weight="700">🚂 রাজশাহী-ঢাকা রেলপথ</text>
+
+            <!-- Rajshahi-Natore Highway (South Boundary Curve) -->
+            <path
+              d="M 105,692 L 380,625 L 555,595 L 915,542 L 1125,525"
+              fill="none"
+              stroke="#44403c"
+              stroke-width="4"
+              stroke-opacity="0.45"
+              stroke-dasharray="8 6"
+            />
+            <text x="695" y="592" text-anchor="middle" fill="#57534e" font-size="10.5" font-weight="700" transform="rotate(-8, 695, 592)">রাজশাহী - নাটোর মহাসড়ক (দক্ষিণ সীমানা)</text>
+
+            <!-- Internal RU Spine Roads (Highlighted brightly in Roadmap Mode) -->
+            <path
+              id="internal-road-lines"
+              d="M 480,595 L 480,475 M 265,475 L 865,475 M 265,585 L 265,122 M 445,475 L 445,35 M 595,475 L 595,220 M 445,220 L 945,255 M 745,255 L 745,475"
+              fill="none"
+              stroke="#f7f5ee"
+              stroke-width="4.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-opacity="0.85"
+            />
+
+            <!-- Animated Traffic Flow (Visible when Roadmap Mode is active) -->
+            <g id="traffic-flow-overlay" class="opacity-0 transition-opacity duration-300">
+              <path
+                class="road-flow-line"
+                d="M 480,595 L 480,475 M 265,475 L 865,475 M 265,585 L 265,122 M 445,475 L 445,35 M 595,475 L 595,220 M 445,220 L 945,255 M 745,255 L 745,475"
+                fill="none"
+                stroke="#fde047"
+                stroke-width="3"
+              />
+            </g>
+          </g>
+
+          <!-- ===================================================== -->
+          <!-- 3. TERRITORY NAMES & BOUNDARY LABELS LAYER            -->
+          <!-- (Rendered on top so names are always sharp & clear)   -->
+          <!-- ===================================================== -->
+          <g id="territory-labels-layer" class="pointer-events-none">
+            <!-- Populated dynamically by JS -->
+          </g>
+
+          <!-- ===================================================== -->
+          <!-- 4. COMPASS & MINIMALIST UNSEEN RU WATERMARK           -->
+          <!-- ===================================================== -->
+          <g id="map-corner-meta" class="pointer-events-none">
+            <!-- Compass Rose (Bottom Left) -->
+            <g transform="translate(75, 675)">
+              <circle cx="0" cy="0" r="22" fill="#ffffff" fill-opacity="0.85" stroke="#d6d0c4" stroke-width="1.5"/>
+              <polygon points="0,-17 4,-4 0,-7 -4,-4" fill="#1f7a44"/>
+              <polygon points="0,17 4,4 0,7 -4,4" fill="#a8a29e"/>
+              <text x="0" y="-25" text-anchor="middle" font-size="9.5" font-weight="700" fill="#44403c">উত্তর (N)</text>
+            </g>
+
+            <!-- Legend / Summary Pill on SVG Canvas (Bottom Center-Right) -->
+            <g transform="translate(650, 682)">
+              <rect x="0" y="0" width="440" height="54" rx="14" fill="#ffffff" fill-opacity="0.9" stroke="#e5e0d5" stroke-width="1.2"/>
+              <rect x="16" y="18" width="18" height="18" rx="4" fill="#1f7a44"/>
+              <text x="42" y="31" font-size="12" font-weight="700" fill="#1f2937">ঘুরে দেখা স্থান (Visited)</text>
+
+              <rect x="185" y="18" width="18" height="18" rx="4" fill="#ded8ca" stroke="#c7c0b0" stroke-width="1"/>
+              <text x="211" y="31" font-size="12" font-weight="700" fill="#4b5563">এখনো ঘোরা হয়নি</text>
+
+              <line x1="330" y1="27" x2="352" y2="27" stroke="#16a34a" stroke-width="3" stroke-dasharray="4 3"/>
+              <text x="360" y="31" font-size="11.5" font-weight="700" fill="#15803d">সীমানা ও রাস্তা</text>
+            </g>
+          </g>
+        </svg>
+
+        <!-- DESKTOP & MOBILE SELECTED TERRITORY DETAIL CARD / BOTTOM SHEET -->
+        <div id="place-detail-card" class="hidden absolute bottom-3 left-3 right-3 sm:right-auto z-30 sm:w-[365px] bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-emerald-900/15 p-3.5 sm:p-4 transition-all">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <div class="flex items-center gap-1.5 mb-1">
+                <span id="detail-badge" class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">একাডেমিক ভবন</span>
+                <span id="detail-status-pill" class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-700 text-white">✓ ঘোরা হয়েছে</span>
+              </div>
+              <h3 id="detail-title" class="font-bold text-gray-900 text-sm sm:text-base leading-snug">রবীন্দ্রনাথ ঠাকুর একাডেমিক ভবন</h3>
+              <p id="detail-en" class="text-[11px] text-gray-500 font-medium">Rabindranath Tagore Academic Building</p>
+            </div>
+            <button onclick="closeDetailCard()" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <p id="detail-desc" class="text-xs text-gray-600 mt-2 leading-relaxed">
+            রাজশাহী বিশ্ববিদ্যালয়ের অন্যতম প্রধান একাডেমিক ভবন। প্যারিস রোডের উত্তর-পশ্চিম পাশে অবস্থিত।
+          </p>
+
+          <div class="grid grid-cols-2 gap-2 mt-2.5 pt-2 border-t border-gray-100 text-[11px]">
+            <div class="bg-[#f7f6f2] p-2 rounded-lg">
+              <span class="text-gray-400 block text-[10px]">নিকটস্থ গেইট ও সীমানা</span>
+              <span id="detail-gate" class="font-bold text-gray-800">মেইন গেট ও কাজলা গেট</span>
+            </div>
+            <div class="bg-[#f7f6f2] p-2 rounded-lg">
+              <span class="text-gray-400 block text-[10px]">যানবাহন নিয়ম</span>
+              <span id="detail-traffic" class="font-bold text-emerald-700">🛺 রিক্সা ও 🚗 কার চলবে</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between gap-2 mt-3">
+            <button id="detail-toggle-btn" onclick="toggleCurrentDetailPlace()" class="flex-1 py-2 px-3 rounded-xl font-bold text-xs bg-[#1f7a44] text-white hover:bg-[#166534] transition flex items-center justify-center gap-1.5">
+              <span>ঘুরে দেখেছি হিসেবে চিহ্নিত করুন</span>
+            </button>
+            <a id="detail-gmap-link" href="https://www.google.com/maps/search/Rajshahi+University" target="_blank" rel="noopener noreferrer" class="py-2 px-3 rounded-xl font-semibold text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 transition flex items-center gap-1">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-red-600"></i>
+              <span>Google Map</span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =================================================================== -->
+  <!-- MOBILE BOTTOM NAVIGATION BAR (< 768px)                              -->
+  <!-- =================================================================== -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 px-2 py-1.5 flex items-center justify-around shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+    <button onclick="switchMobileTab('map')" id="mob-tab-map" class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-[#1f7a44] font-bold text-[11px]">
+      <i data-lucide="map" class="w-5 h-5"></i>
+      <span>সীমানা ম্যাপ</span>
+    </button>
+    <button onclick="switchMobileTab('list')" id="mob-tab-list" class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-gray-600 font-semibold text-[11px] relative">
+      <i data-lucide="check-square" class="w-5 h-5"></i>
+      <span>তালিকা (<span id="mob-list-count">৩/৪২</span>)</span>
+    </button>
+    <button onclick="openShareModal()" id="mob-tab-share" class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-gray-600 font-semibold text-[11px]">
+      <i data-lucide="share-2" class="w-5 h-5 text-emerald-700"></i>
+      <span>শেয়ার (<span id="mob-pct-text">৭%</span>)</span>
+    </button>
+    <button onclick="openEmbedModal()" id="mob-tab-ag" class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-gray-900 font-bold text-[11px]">
+      <i data-lucide="terminal" class="w-5 h-5 text-amber-600"></i>
+      <span>Antigravity কোড</span>
+    </button>
+  </nav>
+
+  <!-- =================================================================== -->
+  <!-- MODAL 1: SHARE PROGRESS & HIGH-RES POSTER GENERATOR                 -->
+  <!-- ("কত পার্সেন্ট ঘোরা হলো তা শেয়ার করার সুবিধা")                        -->
+  <!-- =================================================================== -->
+  <div id="share-modal" class="hidden fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[92dvh] flex flex-col shadow-2xl border border-gray-200 overflow-hidden">
+      <div class="px-5 py-4 bg-gradient-to-r from-[#1f7a44] to-emerald-800 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="share-2" class="w-5 h-5"></i>
+          <div>
+            <h2 class="font-bold text-base sm:text-lg">আপনার রাবি ভ্রমণ অগ্রগতি শেয়ার করুন</h2>
+            <p class="text-xs text-emerald-100">কত পার্সেন্ট ঘোরা হলো তার পোস্টার ডাউনলোড বা লিংক শেয়ার করুন</p>
+          </div>
+        </div>
+        <button onclick="closeShareModal()" class="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-4 sm:p-5 overflow-y-auto custom-scroll space-y-4 flex-1">
+        <div class="grid sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-1">আপনার নাম (পোস্টারে দেখাবে)</label>
+            <input id="share-user-name" type="text" oninput="renderShareCanvas()" placeholder="যেমন: তানভীর আহমেদ" class="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-600" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-1">বিভাগ / হল বা পরিচয়</label>
+            <input id="share-user-dept" type="text" oninput="renderShareCanvas()" placeholder="যেমন: সিএসই বিভাগ • শামসুজ্জোহা হল" class="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-600" />
+          </div>
+        </div>
+
+        <div class="bg-[#f6f4ec] p-2 sm:p-3 rounded-2xl border border-gray-200 flex items-center justify-center overflow-hidden">
+          <canvas id="share-card-canvas" width="1080" height="650" class="w-full h-auto max-h-[340px] object-contain rounded-xl shadow-sm"></canvas>
+        </div>
+
+        <p id="share-toast-msg" class="hidden text-center text-xs font-bold text-emerald-700 bg-emerald-50 py-2 rounded-xl border border-emerald-200"></p>
+      </div>
+
+      <div class="px-5 py-3.5 bg-gray-50 border-t border-gray-200 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="downloadPosterPNG()" class="px-4 py-2 rounded-xl bg-[#1f7a44] hover:bg-[#166534] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>পোস্টার ডাউনলোড (PNG)</span>
+          </button>
+          <button onclick="copyShareableUrl(this)" class="px-4 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-xs font-bold flex items-center gap-1.5 transition">
+            <i data-lucide="link" class="w-4 h-4"></i>
+            <span>শেয়ার লিংক কপি করুন</span>
+          </button>
+          <button onclick="nativeShareProgress()" class="px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold flex items-center gap-1.5 transition">
+            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+            <span>সরাসরি শেয়ার</span>
+          </button>
+        </div>
+        <button onclick="closeShareModal()" class="px-4 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-bold transition">বন্ধ করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- MODAL 2: GOOGLE ANTIGRAVITY IDE / CLI & WEBSITE INTEGRATION GUIDE   -->
+  <!-- =================================================================== -->
+  <div id="embed-modal" class="hidden fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[92dvh] flex flex-col shadow-2xl border border-gray-200 overflow-hidden">
+      
+      <!-- Modal Header -->
+      <div class="px-5 py-4 bg-gradient-to-r from-gray-900 via-emerald-950 to-emerald-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-400/15 border border-amber-400/30 flex items-center justify-center">
+            <i data-lucide="terminal" class="w-5 h-5 text-amber-300"></i>
+          </div>
+          <div>
+            <h2 class="font-bold text-base sm:text-lg">Google Antigravity IDE / CLI ও ওয়েবসাইটে যুক্ত করার গাইড</h2>
+            <p class="text-xs text-emerald-200">আপনার ওয়েবসাইটে রাবির এই ম্যাপটি বসাতে নিচের যেকোনো একটি পদ্ধতি ব্যবহার করুন</p>
+          </div>
+        </div>
+        <button onclick="closeEmbedModal()" class="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Integration Method Tabs -->
+      <div class="px-5 pt-3 bg-gray-100 border-b border-gray-200 flex flex-wrap gap-1.5">
+        <button onclick="switchEmbedTab('ag-cli')" id="etab-ag-cli" class="px-3.5 py-2 rounded-t-xl font-bold text-xs bg-white text-emerald-900 border-t border-x border-gray-200 shadow-sm">
+          ১. Antigravity IDE / CLI কমান্ড
+        </button>
+        <button onclick="switchEmbedTab('react')" id="etab-react" class="px-3.5 py-2 rounded-t-xl font-semibold text-xs text-gray-600 hover:bg-white/60">
+          ২. Next.js / React Component
+        </button>
+        <button onclick="switchEmbedTab('html')" id="etab-html" class="px-3.5 py-2 rounded-t-xl font-semibold text-xs text-gray-600 hover:bg-white/60">
+          ৩. ফাইল ডাউনলোড ও HTML কোড
+        </button>
+        <button onclick="switchEmbedTab('iframe')" id="etab-iframe" class="px-3.5 py-2 rounded-t-xl font-semibold text-xs text-gray-600 hover:bg-white/60">
+          ৪. সরাসরি Iframe Embed
+        </button>
+      </div>
+
+      <!-- Modal Content Body -->
+      <div class="p-5 overflow-y-auto custom-scroll space-y-5 text-sm text-gray-700 flex-1">
+        
+        <!-- Quick Download Bar (Always visible at top of modal) -->
+        <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <h4 class="font-bold text-emerald-950 text-xs sm:text-sm">📦 সম্পূর্ণ ম্যাপ ফাইলটি (`ru-map.html`) আপনার প্রজেক্টে নিন</h4>
+            <p class="text-xs text-emerald-800 mt-0.5">
+              ১ ক্লিকে এই সম্পূর্ণ স্ট্যান্ডঅ্যালোন ফাইলটি ডাউনলোড করে আপনার Antigravity প্রজেক্টের `public/ru-map.html` ফোল্ডারে রেখে দিন।
+            </p>
+          </div>
+          <button onclick="downloadStandaloneMapHTML()" class="shrink-0 px-4 py-2 rounded-xl bg-[#1f7a44] hover:bg-[#166534] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>ru-map.html ডাউনলোড করুন</span>
+          </button>
+        </div>
+
+        <!-- TAB 1: GOOGLE ANTIGRAVITY IDE / CLI WORKFLOW -->
+        <div id="epanel-ag-cli" class="space-y-4">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-gray-900 text-sm">ধাপ ১: Google Antigravity টার্মিনালে ফাইলটি প্রজেক্টে যুক্ত করুন</h3>
+              <button onclick="copyCodeBlock('code-ag-terminal', this)" class="px-3 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-xs hover:bg-emerald-200 transition">
+                কমান্ড কপি করুন
+              </button>
+            </div>
+            <pre id="code-ag-terminal" class="bg-gray-900 text-emerald-300 p-3.5 rounded-xl text-xs overflow-x-auto font-mono leading-relaxed"># ১. আপনার প্রজেক্টের public ফোল্ডারে ডাউনলোড করা ru-map.html ফাইলটি রাখুন:
+mkdir -p public
+mv ~/Downloads/ru-map.html ./public/ru-map.html
+
+# ২. যদি ভ্যানিলা HTML/Vite প্রজেক্ট হয় তবে সরাসরি রুটেও রাখতে পারেন:
+cp ./public/ru-map.html ./ru-map.html</pre>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-gray-900 text-sm">ধাপ ২: Antigravity AI Agent-কে দেওয়ার রেডি প্রম্পট (Prompt)</h3>
+              <button onclick="copyCodeBlock('code-ag-prompt', this)" class="px-3 py-1 rounded-lg bg-amber-100 text-amber-900 font-bold text-xs hover:bg-amber-200 transition">
+                প্রম্পট কপি করুন
+              </button>
+            </div>
+            <p class="text-xs text-gray-500">Google Antigravity-এর চ্যাট বা এজেন্ট বক্সে নিচের প্রম্পটটি পেস্ট করলেই এটি আপনার ওয়েবসাইটের সাথে ম্যাপটি যুক্ত করে দেবে:</p>
+            <pre id="code-ag-prompt" class="bg-gray-900 text-amber-300 p-3.5 rounded-xl text-xs overflow-x-auto font-mono leading-relaxed">I have placed the interactive Rajshahi University map in `public/ru-map.html`. 
+Please create a responsive `/map` route (or section on my homepage) that embeds `/ru-map.html` inside a full-height container (`height: 85vh`, rounded-2xl, shadow-lg, border-0) and add a "রাবি ক্যাম্পাস ম্যাপ" link in my main navigation bar.</pre>
+          </div>
+        </div>
+
+        <!-- TAB 2: NEXT.JS / REACT COMPONENT -->
+        <div id="epanel-react" class="hidden space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-gray-900 text-sm">Next.js / React Component (`components/UnseenRUMap.jsx`)</h3>
+              <p class="text-xs text-gray-500">`public/ru-map.html` ফাইলটি রেখে নিচের কম্পোনেন্টটি আপনার যেকোনো পেজে (`app/map/page.jsx`) ব্যবহার করুন:</p>
+            </div>
+            <button onclick="copyCodeBlock('code-react-comp', this)" class="px-3 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-xs hover:bg-emerald-200 transition">
+              React কোড কপি করুন
+            </button>
+          </div>
+          <pre id="code-react-comp" class="bg-gray-900 text-emerald-300 p-3.5 rounded-xl text-xs overflow-x-auto font-mono leading-relaxed">import React from 'react';
+
+export default function UnseenRUMap() {
+  return (
+    &lt;section className="w-full max-w-[1440px] mx-auto px-3 sm:px-6 py-6"&gt;
+      &lt;div className="w-full h-[85dvh] min-h-[640px] rounded-2xl overflow-hidden shadow-xl border border-emerald-900/10 bg-[#f6f4ec]"&gt;
+        &lt;iframe
+          src="/ru-map.html"
+          title="Unseen Rajshahi University Interactive Map"
+          className="w-full h-full border-0"
+          allow="clipboard-write; web-share"
+          loading="lazy"
+        /&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+  );
+}</pre>
+        </div>
+
+        <!-- TAB 3: HTML / VANILLA JS SECTION -->
+        <div id="epanel-html" class="hidden space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-gray-900 text-sm">যেকোনো HTML / PHP / WordPress ওয়েবসাইটে বসানোর কোড</h3>
+              <p class="text-xs text-gray-500">আপনার ওয়েবসাইটের যেখানে ম্যাপটি দেখাতে চান সেখানে এই কোডটুকু পেস্ট করুন:</p>
+            </div>
+            <button onclick="copyCodeBlock('code-html-section', this)" class="px-3 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-xs hover:bg-emerald-200 transition">
+              HTML কোড কপি করুন
+            </button>
+          </div>
+          <pre id="code-html-section" class="bg-gray-900 text-emerald-300 p-3.5 rounded-xl text-xs overflow-x-auto font-mono leading-relaxed">&lt;!-- Unseen Rajshahi University Map Section --&gt;
+&lt;section id="unseen-ru-map-section" style="max-width: 1440px; margin: 0 auto; padding: 16px;"&gt;
+  &lt;div style="width: 100%; height: 84vh; min-height: 620px; border-radius: 20px; overflow: hidden; box-shadow: 0 12px 32px rgba(0,0,0,0.08); border: 1px solid #e5e0d5;"&gt;
+    &lt;iframe 
+      src="./ru-map.html" 
+      width="100%" 
+      height="100%" 
+      style="border: none; display: block;" 
+      loading="lazy"
+      title="Unseen Rajshahi University Interactive Map"&gt;
+    &lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</pre>
+        </div>
+
+        <!-- TAB 4: 1-LINE IFRAME EMBED -->
+        <div id="epanel-iframe" class="hidden space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-gray-900 text-sm">১-লাইনের রেসপনসিভ Iframe Embed কোড:</h3>
+            <button onclick="copyCodeBlock('iframe-code-block', this)" class="px-3 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-xs hover:bg-emerald-200 transition">
+              Iframe কপি করুন
+            </button>
+          </div>
+          <pre id="iframe-code-block" class="bg-gray-900 text-emerald-300 p-3.5 rounded-xl text-xs overflow-x-auto font-mono leading-relaxed">&lt;iframe src="/ru-map.html" style="width:100%; height:82vh; min-height:600px; border:0; border-radius:18px;" loading="lazy" title="Unseen Rajshahi University Map"&gt;&lt;/iframe&gt;</pre>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+        <span id="copy-toast" class="text-xs font-bold text-emerald-700 opacity-0 transition">✓ ক্লিপবোর্ডে কপি হয়েছে!</span>
+        <button onclick="closeEmbedModal()" class="px-5 py-2 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 transition">বন্ধ করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- MODAL 3: RAJSHAHI UNIVERSITY CAMPUS QUIZ ("কুইজ")                    -->
+  <!-- =================================================================== -->
+  <div id="quiz-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-gray-200">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+        <div class="flex items-center gap-2.5">
+          <span class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">?</span>
+          <div>
+            <h3 class="font-bold text-gray-900 text-base">রাবি ক্যাম্পাস কুইজ</h3>
+            <p class="text-xs text-gray-500">দেখুন রাজশাহী বিশ্ববিদ্যালয় সম্পর্কে আপনি কতটুকু জানেন!</p>
+          </div>
+        </div>
+        <button onclick="closeQuizModal()" class="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div id="quiz-body" class="py-4 space-y-3.5">
+        <div class="text-xs font-bold text-emerald-700" id="quiz-step-label">প্রশ্ন ১/৪</div>
+        <h4 id="quiz-question" class="font-bold text-gray-900 text-sm sm:text-base"></h4>
+        <div id="quiz-options" class="space-y-2"></div>
+        <p id="quiz-feedback" class="text-xs font-bold hidden"></p>
+      </div>
+
+      <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+        <span id="quiz-score-label" class="text-xs font-bold text-gray-500">স্কোর: ০</span>
+        <button onclick="nextQuizQuestion()" class="px-4 py-2 rounded-xl bg-[#1f7a44] text-white text-xs font-bold hover:bg-emerald-800 transition">পরবর্তী প্রশ্ন →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- MODAL 4: CAMPUS TOUR GUIDE ("ঘুরে বেড়ান")                           -->
+  <!-- =================================================================== -->
+  <div id="guide-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl border border-gray-200 max-h-[85dvh] overflow-y-auto custom-scroll">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+        <div>
+          <h3 class="font-bold text-gray-900 text-base sm:text-lg">🌿 রাজশাহী বিশ্ববিদ্যালয় ভ্রমণ ও সীমানা গাইড</h3>
+          <p class="text-xs text-gray-500">১ ক্লিকে যেকোনো জনপ্রিয় ট্যুর রুট ম্যাপে সবুজ করে দেখুন</p>
+        </div>
+        <button onclick="closeGuideModal()" class="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-3.5 my-4 text-xs">
+        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-1.5">
+          <span class="font-bold text-emerald-900 text-sm block">১. ঐতিহাসিক ও সাংস্কৃতিক রুট</span>
+          <p class="text-emerald-800 leading-relaxed">মেইন গেট → জোহা চত্বর → সাবাস বাংলাদেশ → প্যারিস রোড → শহীদ স্মৃতি সংগ্রহশালা → বধ্যভূমি স্মৃতিস্তম্ভ।</p>
+          <button onclick="selectTourRoute(['main_gate','shabash_bd','paris_road','smriti_museum','boddhobhumi']); closeGuideModal();" class="mt-2 px-3 py-1.5 rounded-lg bg-[#1f7a44] text-white font-bold">ম্যাপে এই রুটটি দেখুন</button>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-pink-50 border border-pink-200 space-y-1.5">
+          <span class="font-bold text-pink-900 text-sm block">২. একাডেমিক ভবনসমূহ (১১টি অঞ্চল)</span>
+          <p class="text-pink-800 leading-relaxed">সিরাজী ভবন → রবীন্দ্র ভবন → মমতাজউদ্দিন ও শহীদুল্লাহ ভবন → সত্যেন্দ্রনাথ বসু, ওয়াজেদ মিয়া ও জগদীশ চন্দ্র বসু ভবন।</p>
+          <button onclick="selectTourRoute(['siraji_bldg','rabindra_bldg','momtaz_bldg','shahidullah_bldg','sn_bose_bldg','wazed_bldg','jc_bose_bldg']); closeGuideModal();" class="mt-2 px-3 py-1.5 rounded-lg bg-pink-700 text-white font-bold">একাডেমিক জোন দেখুন</button>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-blue-50 border border-blue-200 space-y-1.5">
+          <span class="font-bold text-blue-900 text-sm block">৩. প্রকৃতি, চারুকলা ও স্টেশন বাজার</span>
+          <p class="text-blue-800 leading-relaxed">বোটানিক্যাল গার্ডেন → চারুকলা গেইট → কৃষি অনুষদ → চারুকলা → রাবি রেলস্টেশন ও শেখ কামাল স্টেডিয়াম।</p>
+          <button onclick="selectTourRoute(['botanical_garden','charukola_gate','agri_faculty','fine_arts','ru_station','stadium']); closeGuideModal();" class="mt-2 px-3 py-1.5 rounded-lg bg-blue-700 text-white font-bold">প্রকৃতি রুট দেখুন</button>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-1.5">
+          <span class="font-bold text-amber-900 text-sm block">৪. রাস্তা ও যানবাহন দাগ ভিউ</span>
+          <p class="text-amber-800 leading-relaxed">কোন সীমানা দিয়ে রিক্সা ও কার চলতে পারবে এবং কোথায় শুধু পথচারী চলবে তা দেখতে রুট ম্যাপ চালু করুন।</p>
+          <button onclick="setMapStyle('roadmap'); closeGuideModal();" class="mt-2 px-3 py-1.5 rounded-lg bg-amber-600 text-white font-bold">রাস্তা ও রুট দাগ দেখুন</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- COMPLETE JAVASCRIPT ENGINE (CONTIGUOUS POLYGONS + SHARE + MOBILE)   -->
+  <!-- =================================================================== -->
+  <script>
+    /**
+     * 1. CONTIGUOUS TERRITORY POLYGON DATASET FOR RAJSHAHI UNIVERSITY (42 REGIONS)
+     * Every region has interlocking polygon points (`poly`) that share borders
+     * with neighboring regions, forming the authentic silhouette of RU Campus
+     * just like the districts in Unseen Bangladesh (`unseenbangladesh.com/map`).
+     */
+    const RU_CATEGORIES = [
+      { id: 'academic', titleBn: 'একাডেমিক ভবনসমূহ', titleEn: 'Academic Zones', color: '#db2777' },
+      { id: 'male_halls', titleBn: 'ছাত্রদের আবাসিক হল', titleEn: 'Male Residential Halls', color: '#0284c7' },
+      { id: 'female_halls', titleBn: 'ছাত্রীদের আবাসিক হল', titleEn: 'Female Residential Halls', color: '#7c3aed' },
+      { id: 'landmarks', titleBn: 'গেইট, চত্বর ও ল্যান্ডমার্ক', titleEn: 'Gates, Squares & Landmarks', color: '#0d9488' }
+    ];
+
+    const RU_PLACES = [
+      // ================= NORTH OF RAILWAY WING (3 Contiguous Territories) =================
+      {
+        id: 'agri_faculty',
+        cat: 'academic',
+        nameBn: 'কৃষি অনুষদ',
+        shortBn: 'কৃষি অনুষদ',
+        nameEn: 'Agriculture Faculty',
+        poly: '165,42 405,42 405,118 130,118',
+        lx: 278, ly: 84,
+        gate: 'চারুকলা গেইট (উত্তর)',
+        traffic: '🛺 রিক্সা ও 🚗 কার চলবে',
+        desc: 'রেললাইনের উত্তর পাশে বিস্তৃত রাবির কৃষি ও ভেটেরিনারি সায়েন্স অনুষদ অঞ্চল।'
+      },
+      {
+        id: 'charukola_gate',
+        cat: 'landmarks',
+        nameBn: 'চারুকলা গেইট চত্বর',
+        shortBn: 'চারুকলা গেইট',
+        nameEn: 'Charukola Gate Zone',
+        poly: '405,24 485,24 485,118 405,118',
+        lx: 445, ly: 74,
+        gate: 'চারুকলা গেইট',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'উত্তর ক্যাম্পাসের প্রধান প্রবেশদ্বার, রেলক্রসিং এবং চারুকলা সংযোগ সড়ক অঞ্চল।'
+      },
+      {
+        id: 'fine_arts',
+        cat: 'academic',
+        nameBn: 'চারুকলা অনুষদ (জয়নুল আবেদীন ভবন)',
+        shortBn: 'চারুকলা অনুষদ',
+        nameEn: 'Fine Arts (Charukola)',
+        poly: '485,38 650,56 630,118 485,118',
+        lx: 558, ly: 84,
+        gate: 'চারুকলা গেইট',
+        traffic: '🛺 রিক্সা ও পথচারী',
+        desc: 'শিল্পাচার্য জয়নুল আবেদীন একাডেমিক ভবন ও চারুকলা অনুষদের সবুজ চত্বর।'
+      },
+
+      // ================= NORTHERN BELT (SOUTH OF RAILWAY - 9 Contiguous Territories) =================
+      {
+        id: 'rokeya_hall',
+        cat: 'female_halls',
+        nameBn: 'রোকেয়া হল ও পশ্চিমপাড়া উত্তর',
+        shortBn: 'রোকেয়া হল',
+        nameEn: 'Rokeya Hall',
+        poly: '95,124 265,124 265,255 82,255',
+        lx: 178, ly: 192,
+        gate: 'কাজলা গেট',
+        traffic: '🚶 পশ্চিম সড়কে শুধু পথচারী',
+        desc: 'বেগম রোকেয়ার নামে নামকরণকৃত ছাত্রী আবাসিক হল ও সংলগ্ন শিক্ষক ডরমেটরি সীমানা।'
+      },
+      {
+        id: 'botanical_garden',
+        cat: 'landmarks',
+        nameBn: 'বোটানিক্যাল গার্ডেন',
+        shortBn: 'বোটানিক্যাল গার্ডেন',
+        nameEn: 'Botanical Garden',
+        poly: '265,124 445,124 445,205 265,205',
+        lx: 355, ly: 166,
+        gate: 'বোটানিক্যাল ও চারুকলা গেইট',
+        traffic: '🚶 দর্শনার্থী ও গবেষক',
+        desc: 'দুর্লভ উদ্ভিদ প্রজাতি, পুকুর ও সবুজ প্রকৃতিতে ঘেরা রাবি বোটানিক্যাল গার্ডেন অঞ্চল।'
+      },
+      {
+        id: 'habibur_hall',
+        cat: 'male_halls',
+        nameBn: 'শহীদ হবিবুর রহমান হল',
+        shortBn: 'হবিবুর রহমান হল',
+        nameEn: 'Habibur Rahman Hall',
+        poly: '445,124 555,124 555,220 445,220',
+        lx: 500, ly: 174,
+        gate: 'চারুকলা ও মেইন গেট',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'হবিবুর রহমান খেলার মাঠের উত্তর পাশে অবস্থিত বৃহৎ ছাত্র আবাসিক হল অঞ্চল।'
+      },
+      {
+        id: 'ziaur_hall',
+        cat: 'male_halls',
+        nameBn: 'শহীদ জিয়াউর রহমান হল',
+        shortBn: 'জিয়াউর রহমান হল',
+        nameEn: 'Ziaur Rahman Hall',
+        poly: '555,124 655,124 655,220 555,220',
+        lx: 605, ly: 174,
+        gate: 'স্টেশন বাজার ও মেইন গেট',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'উত্তর ক্যাম্পাসে হবিবুর রহমান হলের পূর্ব পাশে অবস্থিত ছাত্র আবাসিক হল।'
+      },
+      {
+        id: 'ru_station',
+        cat: 'landmarks',
+        nameBn: 'রাবি রেলস্টেশন ও স্টেশন বাজার',
+        shortBn: 'রাবি স্টেশন বাজার',
+        nameEn: 'RU Station & Bazar',
+        poly: '655,124 800,124 800,178 655,178',
+        lx: 728, ly: 153,
+        gate: 'স্টেশন বাজার',
+        traffic: '🚂 ট্রেন ও 🛺 রিক্সা',
+        desc: 'রাজশাহী-ঢাকা রেলপথে বিশ্ববিদ্যালয়ের নিজস্ব রেলস্টেশন ও জনপ্রিয় স্টেশন বাজার চত্বর।'
+      },
+      {
+        id: 'madar_bux_hall',
+        cat: 'male_halls',
+        nameBn: 'মাদার বখ্শ হল',
+        shortBn: 'মাদার বখ্শ হল',
+        nameEn: 'Madar Bux Hall',
+        poly: '655,178 745,178 745,255 655,255',
+        lx: 700, ly: 218,
+        gate: 'স্টেশন বাজার',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'রাবির অন্যতম প্রতিষ্ঠাতা মাদার বখ্শের নামে নামকরণকৃত ছাত্র আবাসিক হল অঞ্চল।'
+      },
+      {
+        id: 'suhrawardy_hall',
+        cat: 'male_halls',
+        nameBn: 'হোসেন শহীদ সোহরাওয়ার্দী হল',
+        shortBn: 'সোহরাওয়ার্দী হল',
+        nameEn: 'Suhrawardy Hall',
+        poly: '745,178 835,178 835,255 745,255',
+        lx: 790, ly: 218,
+        gate: 'রাবি রেলস্টেশন',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'স্টেশন বাজার ও জোহা হলের মধ্যবর্তী স্থানে অবস্থিত ছাত্রদের আবাসিক হল।'
+      },
+      {
+        id: 'shamsuzzoha_hall',
+        cat: 'male_halls',
+        nameBn: 'শহীদ শামসুজ্জোহা হল',
+        shortBn: 'শামসুজ্জোহা হল',
+        nameEn: 'Shamsuzzoha Hall',
+        poly: '800,124 955,124 955,255 835,255 835,178 800,178',
+        lx: 888, ly: 192,
+        gate: 'বিনোদপুর ও স্টেশন গেট',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'শহীদ বুদ্ধিজীবী ড. শামসুজ্জোহার স্মৃতিবিজড়িত আবাসিক হল ও সংলগ্ন পুকুর অঞ্চল।'
+      },
+      {
+        id: 'boddhobhumi',
+        cat: 'landmarks',
+        nameBn: 'বধ্যভূমি স্মৃতিস্তম্ভ ও পূর্ব প্রান্ত',
+        shortBn: 'বধ্যভূমি স্মৃতিস্তম্ভ',
+        nameEn: 'Boddhobhumi Memorial',
+        poly: '955,124 1148,124 1125,275 955,255',
+        lx: 1048, ly: 198,
+        gate: 'বিনোদপুর ও পূর্ব সড়ক',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: '১৯৭১ সালের মহান মুক্তিযুদ্ধে শহীদদের স্মরণে ক্যাম্পাসের উত্তর-পূর্ব প্রান্তে নির্মিত বধ্যভূমি স্মৃতিস্তম্ভ।'
+      },
+
+      // ================= FEMALE HALLS & WEST RESIDENTIAL BELT (6 Contiguous Territories) =================
+      {
+        id: 'rahamatunnesa_hall',
+        cat: 'female_halls',
+        nameBn: 'রহমতুন্নেসা হল',
+        shortBn: 'রহমতুন্নেসা হল',
+        nameEn: 'Rahamatunnesa Hall',
+        poly: '265,205 445,205 445,255 265,255',
+        lx: 355, ly: 232,
+        gate: 'কাজলা ও চারুকলা গেইট',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'বোটানিক্যাল গার্ডেনের দক্ষিণ সীমানায় অবস্থিত ছাত্রীদের আবাসিক হল।'
+      },
+      {
+        id: 'taposhi_rabeya_hall',
+        cat: 'female_halls',
+        nameBn: 'তাপসী রাবেয়া হল',
+        shortBn: 'তাপসী রাবেয়া হল',
+        nameEn: 'Taposhi Rabeya Hall',
+        poly: '265,255 365,255 365,308 265,308',
+        lx: 315, ly: 284,
+        gate: 'কাজলা গেট',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'রোকেয়া হলের পূর্ব পাশে এবং রহমতুন্নেসা হলের দক্ষিণে অবস্থিত ছাত্রী হল।'
+      },
+      {
+        id: 'khaleda_zia_hall',
+        cat: 'female_halls',
+        nameBn: 'বেগম খালেদা জিয়া হল',
+        shortBn: 'খালেদা জিয়া হল',
+        nameEn: 'Khaleda Zia Hall',
+        poly: '265,308 365,308 365,362 265,362',
+        lx: 315, ly: 337,
+        gate: 'কাজলা গেট',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'সিরাজী ভবনের উত্তর সীমানায় অবস্থিত ছাত্রীদের আবাসিক হল।'
+      },
+      {
+        id: 'sheikh_hasina_hall',
+        cat: 'female_halls',
+        nameBn: 'শেখ হাসিনা হল',
+        shortBn: 'শেখ হাসিনা হল',
+        nameEn: 'Sheikh Hasina Hall',
+        poly: '365,255 445,255 445,362 365,362',
+        lx: 405, ly: 310,
+        gate: 'কাজলা ও মেইন গেট',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'ছাত্রী হল জোনের পূর্ব প্রান্তে বিজ্ঞান ভবন সংলগ্ন আবাসিক হল।'
+      },
+      {
+        id: 'fazilatunnesa_hall',
+        cat: 'female_halls',
+        nameBn: 'বঙ্গমাতা শেখ ফজিলাতুন্নেছা হল',
+        shortBn: 'ফজিলাতুন্নেছা হল',
+        nameEn: 'Fazilatunnesa Hall',
+        poly: '82,255 265,255 265,355 72,355',
+        lx: 172, ly: 306,
+        gate: 'কাজলা গেট',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'রোকেয়া হলের দক্ষিণে এবং মন্নুজান হলের উত্তরে অবস্থিত ছাত্রী আবাসিক হল।'
+      },
+      {
+        id: 'mannujan_hall',
+        cat: 'female_halls',
+        nameBn: 'মন্নুজান হল ও পশ্চিমপাড়া আবাসিক',
+        shortBn: 'মন্নুজান হল',
+        nameEn: 'Mannujan Hall',
+        poly: '72,355 265,355 265,475 88,475',
+        lx: 172, ly: 416,
+        gate: 'কাজলা গেট',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'রাবির ছাত্রীদের প্রথম আবাসিক হল, শেখ রাসেল স্কুল মাঠ ও পশ্চিমপাড়া আবাসিক এলাকা।'
+      },
+
+      // ================= CENTRAL ACADEMIC & STADIUM HEART (10 Contiguous Territories) =================
+      {
+        id: 'twenty_storied',
+        cat: 'academic',
+        nameBn: '২০তলা একাডেমিক ভবন ও হবিবুর মাঠ',
+        shortBn: '২০তলা ভবন ও মাঠ',
+        nameEn: '20-Storied Bldg & Field',
+        poly: '445,220 655,220 655,255 595,295 445,295',
+        lx: 538, ly: 258,
+        gate: 'মেইন গেট / চারুকলা গেইট',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'শহীদ হবিবুর রহমান খেলার মাঠ এবং নির্মিতব্য আধুনিক ২০তলা একাডেমিক ভবন অঞ্চল।'
+      },
+      {
+        id: 'jc_bose_bldg',
+        cat: 'academic',
+        nameBn: 'জগদীশ চন্দ্র বসু একাডেমিক ভবন',
+        shortBn: 'জগদীশ চন্দ্র বসু ভবন',
+        nameEn: 'J.C. Bose Science Bldg',
+        poly: '445,295 595,295 570,362 445,362',
+        lx: 515, ly: 330,
+        gate: 'কাজলা ও মেইন গেট',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'দ্বিতীয় ও তৃতীয় বিজ্ঞান ভবন সমন্বিত একাডেমিক কমপ্লেক্স সীমানা।'
+      },
+      {
+        id: 'wazed_bldg',
+        cat: 'academic',
+        nameBn: 'ড. এম এ ওয়াজেদ মিয়া একাডেমিক ভবন',
+        shortBn: 'ওয়াজেদ মিয়া ভবন',
+        nameEn: 'Dr. Wazed Miah Bldg',
+        poly: '445,362 518,362 518,430 445,430',
+        lx: 481, ly: 398,
+        gate: 'মেইন গেট ও কাজলা গেট',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'চতুর্থ বিজ্ঞান ভবন; প্রকৌশল ও বিজ্ঞান অনুষদের আধুনিক ল্যাবরেটরি ও বিভাগসমূহ।'
+      },
+      {
+        id: 'sn_bose_bldg',
+        cat: 'academic',
+        nameBn: 'সত্যেন্দ্রনাথ বসু একাডেমিক ভবন',
+        shortBn: 'সত্যেন্দ্রনাথ বসু ভবন',
+        nameEn: 'S.N. Bose Science Bldg',
+        poly: '518,362 570,362 575,430 518,430',
+        lx: 545, ly: 398,
+        gate: 'মেইন গেট',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'প্রথম বিজ্ঞান ভবন (পদার্থবিজ্ঞান ও গণিতসহ বিভিন্ন বিজ্ঞান বিভাগ)।'
+      },
+      {
+        id: 'siraji_bldg',
+        cat: 'academic',
+        nameBn: 'সৈয়দ ইসমাইল হোসেন সিরাজী ভবন',
+        shortBn: 'সিরাজী ভবন',
+        nameEn: 'Siraji Academic Bldg',
+        poly: '265,362 355,362 355,425 265,425',
+        lx: 310, ly: 395,
+        gate: 'কাজলা গেট',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'শিক্ষা ও গবেষণা ইনস্টিটিউট (IER) এবং সামাজিক বিজ্ঞান ও কলা অনুষদের বিভিন্ন বিভাগ।'
+      },
+      {
+        id: 'rabindra_bldg',
+        cat: 'academic',
+        nameBn: 'রবীন্দ্রনাথ ঠাকুর একাডেমিক ভবন',
+        shortBn: 'রবীন্দ্র ভবন',
+        nameEn: 'Rabindra Tagore Bldg',
+        poly: '355,362 445,362 445,425 355,425',
+        lx: 400, ly: 395,
+        gate: 'কাজলা ও মেইন গেট',
+        traffic: '🛺 রিক্সা ও 🚗 কার চলবে',
+        desc: 'কলা, আইন ও সামাজিক বিজ্ঞান অনুষদের অন্যতম প্রধান একাডেমিক ভবন।'
+      },
+      {
+        id: 'momtaz_bldg',
+        cat: 'academic',
+        nameBn: 'মমতাজউদ্দিন একাডেমিক ভবন',
+        shortBn: 'মমতাজউদ্দিন ভবন',
+        nameEn: 'Momtazuddin Arts Bldg',
+        poly: '265,425 355,425 355,475 265,475',
+        lx: 310, ly: 452,
+        gate: 'কাজলা ও মেইন গেট',
+        traffic: '🛺 রিক্সা ও 🚗 কার চলবে',
+        desc: 'প্যারিস রোডের উত্তর-পশ্চিম প্রান্তে কলা অনুষদের ঐতিহাসিক মমতাজউদ্দিন ভবন।'
+      },
+      {
+        id: 'shahidullah_bldg',
+        cat: 'academic',
+        nameBn: 'ড. মুহম্মদ শহীদুল্লাহ একাডেমিক ভবন',
+        shortBn: 'শহীদুল্লাহ ভবন',
+        nameEn: 'Shahidullah Arts Bldg',
+        poly: '355,425 445,425 445,475 355,475',
+        lx: 400, ly: 452,
+        gate: 'মেইন গেট',
+        traffic: '🛺 রিক্সা ও 🚗 কার চলবে',
+        desc: 'কেন্দ্রীয় গ্রন্থাগারের পশ্চিম পাশে অবস্থিত সুপরিচিত কলা অনুষদ ভবন।'
+      },
+      {
+        id: 'central_library',
+        cat: 'academic',
+        nameBn: 'কেন্দ্রীয় গ্রন্থাগার ও টিএসসিসি',
+        shortBn: 'কেন্দ্রীয় গ্রন্থাগার',
+        nameEn: 'Central Library',
+        poly: '445,430 575,430 575,475 445,475',
+        lx: 510, ly: 454,
+        gate: 'মেইন গেট',
+        traffic: '🚶 পথচারী ও রিক্সা',
+        desc: 'লক্ষাধিক বই ও জার্নাল সমৃদ্ধ রাবি কেন্দ্রীয় গ্রন্থাগার এবং কাজী নজরুল ইসলাম মিলনায়তন সংলগ্ন অঞ্চল।'
+      },
+      {
+        id: 'stadium',
+        cat: 'landmarks',
+        nameBn: 'শেখ কামাল স্টেডিয়াম ও ইনডোর স্টেডিয়াম',
+        shortBn: 'শেখ কামাল স্টেডিয়াম',
+        nameEn: 'Sheikh Kamal Stadium',
+        poly: '595,255 745,255 745,425 575,430 570,362 595,295',
+        lx: 662, ly: 345,
+        gate: 'মেইন গেট ও বিনোদপুর গেট',
+        traffic: '🛺 চারপাশের সড়কে রিক্সা চলবে',
+        desc: 'ক্যাম্পাসের ঠিক হৃদপিণ্ডে অবস্থিত বিশাল স্টেডিয়াম এবং ইনডোর স্টেডিয়াম চত্বর।'
+      },
+
+      // ================= EAST HALLS & AGRICULTURAL PROJECT WING (5 Contiguous Territories) =================
+      {
+        id: 'latif_hall',
+        cat: 'male_halls',
+        nameBn: 'নবাব আব্দুল লতিফ হল',
+        shortBn: 'আব্দুল লতিফ হল',
+        nameEn: 'Nawab Abdul Latif Hall',
+        poly: '745,255 885,255 885,345 745,345',
+        lx: 815, ly: 302,
+        gate: 'বিনোদপুর গেট',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'পূর্ব ক্যাম্পাসে শামসুজ্জোহা হলের দক্ষিণে ও আন্তর্জাতিক ডরমেটরি সংলগ্ন আবাসিক হল।'
+      },
+      {
+        id: 'amer_ali_hall',
+        cat: 'male_halls',
+        nameBn: 'সৈয়দ আমীর আলী হল ও পূর্বপাড়া কৃষি প্রকল্প',
+        shortBn: 'আমীর আলী হল',
+        nameEn: 'Syed Amer Ali Hall',
+        poly: '885,255 955,255 1125,275 1095,415 885,415',
+        lx: 995, ly: 340,
+        gate: 'বিনোদপুর গেট',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'সৈয়দ আমীর আলী হল, পূর্বপাড়া আবাসিক এলাকা এবং পূর্বাঞ্চলীয় কৃষি প্রকল্প মাঠ।'
+      },
+      {
+        id: 'shah_makhdum_hall',
+        cat: 'male_halls',
+        nameBn: 'শাহ্ মখদুম হল ও চিকিৎসা কেন্দ্র',
+        shortBn: 'শাহ্ মখদুম হল',
+        nameEn: 'Shah Makhdum Hall',
+        poly: '745,345 885,345 885,475 745,475',
+        lx: 815, ly: 412,
+        gate: 'বিনোদপুর গেট',
+        traffic: '🛺 রিক্সা চলতে পারবে',
+        desc: 'হযরত শাহ মখদুম (রহ.) ছাত্র হল, রাবি চিকিৎসা কেন্দ্র ও আই.বি.এস সংলগ্ন অঞ্চল।'
+      },
+      {
+        id: 'bangabandhu_hall',
+        cat: 'male_halls',
+        nameBn: 'বঙ্গবন্ধু শেখ মুজিবুর রহমান হল',
+        shortBn: 'বঙ্গবন্ধু হল',
+        nameEn: 'Bangabandhu Hall',
+        poly: '575,430 662,427 662,475 575,475',
+        lx: 618, ly: 454,
+        gate: 'মেইন গেট ও বিনোদপুর গেট',
+        traffic: '🛺 রিক্সা ও 🚗 কার চলবে',
+        desc: 'স্টেডিয়ামের দক্ষিণ পাশে অবস্থিত আবাসিক হল।'
+      },
+      {
+        id: 'motihar_hall',
+        cat: 'male_halls',
+        nameBn: 'মতিহার হল ও কেন্দ্রীয় মন্দির',
+        shortBn: 'মতিহার হল',
+        nameEn: 'Motihar Hall',
+        poly: '662,427 745,425 745,475 662,475',
+        lx: 703, ly: 454,
+        gate: 'বিনোদপুর ও মেইন গেট',
+        traffic: '🛺 রিক্সা ও 🚗 কার চলবে',
+        desc: 'মতিহারের সবুজ চত্বরের নামে নামকরণকৃত ছাত্র হল ও কেন্দ্রীয় মন্দির সীমানা।'
+      },
+
+      // ================= SOUTHERN HIGHWAY, GATES, PARIS ROAD & ADMIN BELT (9 Contiguous Territories) =================
+      {
+        id: 'kajla_gate',
+        cat: 'landmarks',
+        nameBn: 'কাজলা গেট, জুবেরী মাঠ ও অক্ট্রয় মোড়',
+        shortBn: 'কাজলা গেট ও জুবেরী মাঠ',
+        nameEn: 'Kajla Gate & Zuberi Field',
+        poly: '88,475 265,475 265,645 112,688',
+        lx: 182, ly: 575,
+        gate: 'কাজলা গেট (দক্ষিণ-পশ্চিম)',
+        traffic: '🛺 রিক্সা ও 🚗 কার চলবে',
+        desc: 'কাজলা গেট, জুবেরী ভবন ও খেলার মাঠ, শেখ রাসেল মডেল স্কুল এবং রুয়েট সংলগ্ন সীমানা।'
+      },
+      {
+        id: 'paris_road',
+        cat: 'landmarks',
+        nameBn: 'ঐতিহাসিক প্যারিস রোড চত্বর',
+        shortBn: 'প্যারিস রোড',
+        nameEn: 'Historic Paris Road',
+        poly: '265,475 480,475 480,520 265,520',
+        lx: 372, ly: 500,
+        gate: 'মেইন গেট ও কাজলা গেট',
+        traffic: '🛺 রিক্সা ও 🚗 কার চলবে',
+        desc: 'সুউচ্চ গগনশিরীষ বৃক্ষশোভিত রাবির সবচেয়ে নান্দনিক ও ঐতিহাসিক রাস্তা প্যারিস রোড।'
+      },
+      {
+        id: 'admin_senate',
+        cat: 'landmarks',
+        nameBn: 'প্রশাসন ভবন, সিনেট ভবন ও উপাচার্য ভবন',
+        shortBn: 'প্রশাসন ও সিনেট ভবন',
+        nameEn: 'Admin & Senate Building',
+        poly: '265,520 395,520 395,622 265,645',
+        lx: 330, ly: 576,
+        gate: 'মেইন গেট ও কাজলা গেট',
+        traffic: '🚗 কার ও 🛺 রিক্সা চলবে',
+        desc: 'সৈয়দ নজরুল ইসলাম প্রশাসন ভবন, সিনেট ভবন এবং উপাচার্যের বাসভবন অঞ্চল।'
+      },
+      {
+        id: 'shabash_bd',
+        cat: 'landmarks',
+        nameBn: 'সাবাস বাংলাদেশ ভাস্কর্য ও মাঠ',
+        shortBn: 'সাবাস বাংলাদেশ',
+        nameEn: 'Shabash Bangladesh',
+        poly: '395,520 480,520 480,565 395,575',
+        lx: 438, ly: 548,
+        gate: 'মেইন গেট',
+        traffic: '🚶 পথচারী ও পার্কিং জোন',
+        desc: 'শিল্পী নিতুন কুন্ডু নির্মিত মহান মুক্তিযুদ্ধের অমর ভাস্কর্য "সাবাস বাংলাদেশ" ও উন্মুক্ত মাঠ।'
+      },
+      {
+        id: 'main_gate',
+        cat: 'landmarks',
+        nameBn: 'মেইন গেট ও জোহা চত্বর',
+        shortBn: 'মেইন গেট ও জোহা চত্বর',
+        nameEn: 'Main Gate & Zoha Chattar',
+        poly: '395,575 480,565 555,555 555,595 395,622',
+        lx: 475, ly: 590,
+        gate: 'মেইন গেট (রাজশাহী-নাটোর মহাসড়ক)',
+        traffic: '🚗 সকল অনুমোদিত যানবাহন',
+        desc: 'রাজশাহী বিশ্ববিদ্যালয়ের প্রধান প্রবেশদ্বার এবং ড. শামসুজ্জোহার সমাধিস্থল সংলগ্ন জোহা চত্বর।'
+      },
+      {
+        id: 'central_mosque',
+        cat: 'landmarks',
+        nameBn: 'কেন্দ্রীয় জামে মসজিদ চত্বর',
+        shortBn: 'কেন্দ্রীয় জামে মসজিদ',
+        nameEn: 'Central Mosque',
+        poly: '480,475 555,475 555,555 480,565',
+        lx: 518, ly: 520,
+        gate: 'মেইন গেট',
+        traffic: '🛺 রিক্সা ও পথচারী',
+        desc: 'মেইন গেটের উত্তর-পূর্ব পাশে অবস্থিত অনন্য স্থাপত্যশৈলীর রাবি কেন্দ্রীয় জামে মসজিদ।'
+      },
+      {
+        id: 'smriti_museum',
+        cat: 'landmarks',
+        nameBn: 'শহীদ স্মৃতি সংগ্রহশালা',
+        shortBn: 'শহীদ স্মৃতি সংগ্রহশালা',
+        nameEn: 'Shaheed Smriti Museum',
+        poly: '555,475 635,475 635,582 555,595',
+        lx: 595, ly: 532,
+        gate: 'মেইন গেট',
+        traffic: '🛺 রিক্সা ও পথচারী',
+        desc: 'বাংলাদেশের প্রথম স্থায়ী মুক্তিযুদ্ধ জাদুঘর — শহীদ স্মৃতি সংগ্রহশালা অঞ্চল।'
+      },
+      {
+        id: 'sher_e_bangla_hall',
+        cat: 'male_halls',
+        nameBn: 'শের-ই-বাংলা ফজলুল হক হল',
+        shortBn: 'শের-ই-বাংলা হল',
+        nameEn: 'Sher-e-Bangla Hall',
+        poly: '635,475 775,475 775,562 635,582',
+        lx: 705, ly: 525,
+        gate: 'মেইন গেট ও বিনোদপুর গেট',
+        traffic: '🛺 রিক্সা ও 🚗 কার চলবে',
+        desc: 'শহীদ স্মৃতি সংগ্রহশালার পূর্ব পাশে ও দক্ষিণ সড়কের সাথে অবস্থিত ঐতিহাসিক ছাত্র হল।'
+      },
+      {
+        id: 'binodpur_gate',
+        cat: 'landmarks',
+        nameBn: 'বিনোদপুর গেট ও দক্ষিণ-পূর্ব সীমানা',
+        shortBn: 'বিনোদপুর গেট',
+        nameEn: 'Binodpur Gate Zone',
+        poly: '775,475 885,475 885,415 1095,415 1075,525 775,562',
+        lx: 925, ly: 495,
+        gate: 'বিনোদপুর বাজার সংলগ্ন',
+        traffic: '🛺 রিক্সা ও 🚗 কার চলবে',
+        desc: 'বিনোদপুর গেট, পুলিশ ফাঁড়ি, আইবিএস এবং বিনোদপুর বাজার সংযোগ অঞ্চল।'
+      }
+    ];
+
+    // ================= APPLICATION STATE =================
+    let visitedPlaces = new Set();
+    let currentLang = 'bn';
+    let currentMapStyle = 'unseen'; // 'unseen' | 'roadmap' | 'master3d'
+    let labelsMode = 'all'; // 'all' | 'compact' | 'none'
+    let quickTapMode = true; // true = 1-tap immediately toggles visited state
+    let activeDetailPlaceId = null;
+    let searchQuery = '';
+
+    // Map Pan & Pinch-Zoom State (100% Static at default scale = 1)
+    let mapScale = 1;
+    let mapPanX = 0;
+    let mapPanY = 0;
+    let isPanning = false;
+    let panStartX = 0;
+    let panStartY = 0;
+    let pointerDownX = 0;
+    let pointerDownY = 0;
+    let initialPinchDist = null;
+    let initialPinchScale = 1;
+
+    // ================= LOAD / SAVE & URL SHARE HASH =================
+    function loadSavedProgress() {
+      // 1. Check if URL has shared `#visited=0,4,12...` indices
+      if (window.location.hash && window.location.hash.startsWith('#visited=')) {
+        try {
+          const raw = window.location.hash.replace('#visited=', '');
+          const indices = raw.split(',').map((n) => parseInt(n, 10)).filter((n) => !isNaN(n));
+          visitedPlaces = new Set();
+          indices.forEach((idx) => {
+            if (RU_PLACES[idx]) visitedPlaces.add(RU_PLACES[idx].id);
+          });
+          return;
+        } catch (e) {}
+      }
+
+      // 2. Otherwise check localStorage
+      try {
+        const saved = localStorage.getItem('unseen_ru_visited_v2');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            visitedPlaces = new Set(parsed);
+            return;
+          }
+        }
+      } catch (e) {}
+
+      // Default 3 starter places so user immediately sees how green territories look
+      visitedPlaces = new Set(['main_gate', 'paris_road', 'rabindra_bldg']);
+    }
+
+    function saveProgress() {
+      try {
+        localStorage.setItem('unseen_ru_visited_v2', JSON.stringify([...visitedPlaces]));
+      } catch (e) {}
+    }
+
+    // ================= EXPLORER RANK HELPER =================
+    function getExplorerRank(pct) {
+      if (pct === 0) return { bn: '🌱 নবীন অভিযাত্রী', en: '🌱 Newcomer' };
+      if (pct <= 25) return { bn: '🚶 প্যারিস রোড পথিক', en: '🚶 Paris Road Walker' };
+      if (pct <= 50) return { bn: '☕ চত্বর আড্ডাবাজ', en: '☕ Campus Explorer' };
+      if (pct <= 75) return { bn: '🧭 রাবি ক্যাম্পাস নেভিগেটর', en: '🧭 RU Navigator' };
+      if (pct < 100) return { bn: '🌟 মতিহারের মুসাফির', en: '🌟 Motihar Voyager' };
+      return { bn: '👑 রাবি কিংবদন্তি (১০০%)', en: '👑 RU Legend (100%)' };
+    }
+
+    function toBengaliNum(num) {
+      const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+      return String(num)
+        .split('')
+        .map((c) => (bnDigits[c] !== undefined ? bnDigits[c] : c))
+        .join('');
+    }
+
+    // ================= RENDER LEFT SIDEBAR PILLS =================
+    function renderSidebar() {
+      const container = document.getElementById('categories-container');
+      container.innerHTML = '';
+
+      const q = searchQuery.trim().toLowerCase();
+
+      RU_CATEGORIES.forEach((cat) => {
+        const placesInCat = RU_PLACES.filter((p) => {
+          if (p.cat !== cat.id) return false;
+          if (!q) return true;
+          return (
+            p.nameBn.toLowerCase().includes(q) ||
+            p.shortBn.toLowerCase().includes(q) ||
+            p.nameEn.toLowerCase().includes(q) ||
+            p.desc.toLowerCase().includes(q)
+          );
+        });
+
+        if (placesInCat.length === 0) return;
+
+        const totalCatPlaces = RU_PLACES.filter((p) => p.cat === cat.id);
+        const visitedInCat = totalCatPlaces.filter((p) => visitedPlaces.has(p.id)).length;
+        const allCatSelected = visitedInCat === totalCatPlaces.length;
+
+        const section = document.createElement('div');
+        section.className = 'space-y-2.5 pb-4 border-b border-gray-100 last:border-b-0';
+
+        const catTitle = currentLang === 'bn' ? cat.titleBn : cat.titleEn;
+        const countStr = currentLang === 'bn'
+          ? `${toBengaliNum(visitedInCat)}/${toBengaliNum(totalCatPlaces.length)}`
+          : `${visitedInCat}/${totalCatPlaces.length}`;
+        const selectAllText = allCatSelected
+          ? (currentLang === 'bn' ? 'সব মুছুন' : 'Clear All')
+          : (currentLang === 'bn' ? 'সব বাছাই' : 'Select All');
+
+        section.innerHTML = `
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-gray-900 text-sm">${catTitle} <span class="text-gray-500 font-semibold">${countStr}</span></h3>
+            <button onclick="toggleCategory('${cat.id}')" class="text-xs underline font-semibold text-gray-600 hover:text-[#1f7a44] transition">
+              ${selectAllText}
+            </button>
+          </div>
+          <div class="flex flex-wrap gap-2" id="cat-pills-${cat.id}"></div>
+        `;
+
+        container.appendChild(section);
+        const pillsWrap = section.querySelector(`#cat-pills-${cat.id}`);
+
+        placesInCat.forEach((place) => {
+          const isVisited = visitedPlaces.has(place.id);
+          const btn = document.createElement('button');
+          btn.id = `pill-${place.id}`;
+          btn.dataset.placeId = place.id;
+          btn.className = `place-pill px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#e9f2ec] text-gray-800 hover:bg-[#d3e5da] flex items-center gap-1.5 ${
+            isVisited ? 'visited' : ''
+          }`;
+          btn.textContent = currentLang === 'bn' ? place.shortBn : place.nameEn;
+
+          btn.addEventListener('click', () => {
+            togglePlace(place.id, false);
+          });
+
+          btn.addEventListener('mouseenter', () => highlightMapTerritory(place.id, true));
+          btn.addEventListener('mouseleave', () => highlightMapTerritory(place.id, false));
+
+          pillsWrap.appendChild(btn);
+        });
+      });
+
+      updateProgressUI();
+    }
+
+    // ================= RENDER CONTIGUOUS SVG TERRITORIES & CLEAR NAMES =================
+    function renderContiguousMap() {
+      const polyLayer = document.getElementById('contiguous-territories-layer');
+      const labelLayer = document.getElementById('territory-labels-layer');
+      polyLayer.innerHTML = '';
+      labelLayer.innerHTML = '';
+
+      RU_PLACES.forEach((place) => {
+        const isVisited = visitedPlaces.has(place.id);
+        const isFocused = activeDetailPlaceId === place.id;
+
+        // 1. Create Polygon Group
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('id', `territory-${place.id}`);
+        g.setAttribute('class', `territory-group ag-svg-target ${isFocused ? 'territory-focused' : ''}`);
+        g.dataset.placeId = place.id;
+
+        const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        poly.setAttribute('points', place.poly);
+
+        const { fill, stroke, strokeWidth } = getTerritoryStyle(place, isVisited);
+        poly.setAttribute('fill', fill);
+        poly.setAttribute('stroke', stroke);
+        poly.setAttribute('stroke-width', strokeWidth);
+        poly.setAttribute('class', `territory-poly ${isVisited ? 'visited-poly' : 'unvisited-poly'}`);
+
+        g.appendChild(poly);
+
+        // Hover & Pointer Events
+        g.addEventListener('mouseenter', (e) => showTooltip(e, place));
+        g.addEventListener('mousemove', (e) => moveTooltip(e));
+        g.addEventListener('mouseleave', () => hideTooltip());
+
+        // Tap / Click handling (keeps map 100% still on click)
+        g.addEventListener('pointerdown', (e) => {
+          pointerDownX = e.clientX;
+          pointerDownY = e.clientY;
+        });
+        g.addEventListener('pointerup', (e) => {
+          isPanning = false; // Always release pan lock so map NEVER follows mouse after clicking
+          const dist = Math.hypot(e.clientX - pointerDownX, e.clientY - pointerDownY);
+          if (dist < 8) {
+            if (quickTapMode) {
+              togglePlace(place.id, true);
+            } else {
+              activeDetailPlaceId = place.id;
+              renderContiguousMap();
+              showDetailCard(place.id);
+            }
+          }
+        });
+
+        polyLayer.appendChild(g);
+
+        // 2. Create Crisp Multi-Line Territory Name Label
+        if (labelsMode !== 'none') {
+          const labelGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          labelGroup.setAttribute('id', `label-${place.id}`);
+          labelGroup.setAttribute('class', 'ag-label-target');
+
+          const rawText = currentLang === 'bn' ? place.shortBn : place.nameEn;
+          const lines = splitLabelIntoLines(rawText);
+
+          const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          textEl.setAttribute('x', place.lx);
+          textEl.setAttribute('y', place.ly);
+          textEl.setAttribute('text-anchor', 'middle');
+          textEl.setAttribute('class', 'territory-label');
+
+          const fontSize = labelsMode === 'compact' ? '9' : '10.5';
+          textEl.setAttribute('font-size', fontSize);
+          textEl.setAttribute('font-weight', '700');
+
+          if (isVisited) {
+            textEl.setAttribute('fill', '#ffffff');
+            textEl.setAttribute('stroke', '#14532d');
+            textEl.setAttribute('stroke-width', '2.5');
+          } else {
+            textEl.setAttribute('fill', '#292524');
+            textEl.setAttribute('stroke', '#f7f5ee');
+            textEl.setAttribute('stroke-width', '3');
+          }
+
+          lines.forEach((line, idx) => {
+            const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+            tspan.setAttribute('x', place.lx);
+            const dy = idx === 0 ? (lines.length === 1 ? '3' : '-3') : '12';
+            tspan.setAttribute('dy', dy);
+            tspan.textContent = line;
+            textEl.appendChild(tspan);
+          });
+
+          labelGroup.appendChild(textEl);
+          labelLayer.appendChild(labelGroup);
+        }
+      });
+    }
+
+    function splitLabelIntoLines(str) {
+      const words = str.split(' ');
+      if (words.length <= 2 || str.length <= 13) return [str];
+      const mid = Math.ceil(words.length / 2);
+      return [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
+    }
+
+    function getTerritoryStyle(place, isVisited) {
+      if (currentMapStyle === 'unseen') {
+        // Exact Unseen Bangladesh Choropleth Palette
+        if (isVisited) {
+          return { fill: '#1f7a44', stroke: '#f7f5ee', strokeWidth: '2.5' };
+        }
+        return { fill: '#ded8ca', stroke: '#f7f5ee', strokeWidth: '2.5' };
+      } else if (currentMapStyle === 'roadmap') {
+        // Category-tinted Territory Boundaries + Bright Roads
+        if (isVisited) {
+          return { fill: '#15803d', stroke: '#fef08a', strokeWidth: '2.8' };
+        }
+        if (place.cat === 'academic') return { fill: '#fbcfe8', stroke: '#db2777', strokeWidth: '2' };
+        if (place.cat === 'male_halls') return { fill: '#e0f2fe', stroke: '#0284c7', strokeWidth: '2' };
+        if (place.cat === 'female_halls') return { fill: '#ede9fe', stroke: '#7c3aed', strokeWidth: '2' };
+        return { fill: '#dcfce7', stroke: '#15803d', strokeWidth: '2' };
+      } else {
+        // 3D Isometric Master Plan View
+        if (isVisited) {
+          return { fill: '#16a34a', stroke: '#fef08a', strokeWidth: '3' };
+        }
+        return { fill: '#d6d0c2', stroke: '#57534e', strokeWidth: '2' };
+      }
+    }
+
+    // ================= PROGRESS & RANK UPDATER =================
+    function updateProgressUI() {
+      const total = RU_PLACES.length;
+      const count = visitedPlaces.size;
+      const pct = Math.round((count / total) * 100);
+      const rank = getExplorerRank(pct);
+
+      if (currentLang === 'bn') {
+        const bnPct = `${toBengaliNum(pct)}%`;
+        const bnCount = `${toBengaliNum(count)}/${toBengaliNum(total)}`;
+        document.getElementById('sidebar-percent').textContent = bnPct;
+        document.getElementById('sidebar-count').textContent = bnCount;
+        document.getElementById('header-pct-badge').textContent = `${bnPct} ঘোরা হয়েছে (${bnCount})`;
+        document.getElementById('explorer-rank-label').textContent = rank.bn;
+        document.getElementById('mob-list-count').textContent = bnCount;
+        document.getElementById('mob-pct-text').textContent = bnPct;
+      } else {
+        document.getElementById('sidebar-percent').textContent = `${pct}%`;
+        document.getElementById('sidebar-count').textContent = `${count}/${total}`;
+        document.getElementById('header-pct-badge').textContent = `${pct}% Explored (${count}/${total})`;
+        document.getElementById('explorer-rank-label').textContent = rank.en;
+        document.getElementById('mob-list-count').textContent = `${count}/${total}`;
+        document.getElementById('mob-pct-text').textContent = `${pct}%`;
+      }
+
+      document.getElementById('progress-bar-fill').style.width = `${pct}%`;
+    }
+
+    // ================= SELECTION & INTERACTION HANDLERS =================
+    function togglePlace(placeId, showCard = false) {
+      if (visitedPlaces.has(placeId)) {
+        visitedPlaces.delete(placeId);
+      } else {
+        visitedPlaces.add(placeId);
+      }
+      activeDetailPlaceId = placeId;
+      saveProgress();
+      renderSidebar();
+      renderContiguousMap();
+      if (showCard) {
+        showDetailCard(placeId);
+      }
+    }
+
+    function toggleCategory(catId) {
+      const catPlaces = RU_PLACES.filter((p) => p.cat === catId);
+      const allSelected = catPlaces.every((p) => visitedPlaces.has(p.id));
+      catPlaces.forEach((p) => {
+        if (allSelected) visitedPlaces.delete(p.id);
+        else visitedPlaces.add(p.id);
+      });
+      saveProgress();
+      renderSidebar();
+      renderContiguousMap();
+    }
+
+    function selectAllPlaces() {
+      RU_PLACES.forEach((p) => visitedPlaces.add(p.id));
+      saveProgress();
+      renderSidebar();
+      renderContiguousMap();
+    }
+
+    function clearAllPlaces() {
+      visitedPlaces.clear();
+      activeDetailPlaceId = null;
+      closeDetailCard();
+      saveProgress();
+      renderSidebar();
+      renderContiguousMap();
+    }
+
+    function selectTourRoute(placeIds) {
+      visitedPlaces.clear();
+      placeIds.forEach((id) => visitedPlaces.add(id));
+      activeDetailPlaceId = placeIds[0];
+      saveProgress();
+      renderSidebar();
+      renderContiguousMap();
+      showDetailCard(placeIds[0]);
+    }
+
+    function highlightMapTerritory(placeId, isHover) {
+      const g = document.getElementById(`territory-${placeId}`);
+      if (!g) return;
+      const poly = g.querySelector('polygon');
+      if (!poly) return;
+      if (isHover) {
+        poly.setAttribute('stroke', '#f59e0b');
+        poly.setAttribute('stroke-width', '4.5');
+      } else {
+        const isVisited = visitedPlaces.has(placeId);
+        const place = RU_PLACES.find((p) => p.id === placeId);
+        const { stroke, strokeWidth } = getTerritoryStyle(place, isVisited);
+        poly.setAttribute('stroke', stroke);
+        poly.setAttribute('stroke-width', strokeWidth);
+      }
+    }
+
+    function toggleLabelsMode() {
+      const btn = document.getElementById('toggle-labels-btn');
+      if (labelsMode === 'all') {
+        labelsMode = 'compact';
+        btn.textContent = 'নাম: সংক্ষিপ্ত';
+      } else if (labelsMode === 'compact') {
+        labelsMode = 'none';
+        btn.textContent = 'নাম: লুকানো';
+      } else {
+        labelsMode = 'all';
+        btn.textContent = 'নাম: স্পষ্ট';
+      }
+      renderContiguousMap();
+    }
+
+    function toggleQuickTapMode() {
+      quickTapMode = !quickTapMode;
+      const label = document.getElementById('quick-tap-label');
+      const btn = document.getElementById('quick-tap-btn');
+      if (quickTapMode) {
+        label.textContent = '১-ট্যাপে বাছাই: চালু';
+        btn.className = 'px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-900 border border-emerald-300 flex items-center gap-1 transition';
+      } else {
+        label.textContent = 'শুধু তথ্য দেখুন';
+        btn.className = 'px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-gray-100 text-gray-700 border border-gray-300 flex items-center gap-1 transition';
+      }
+    }
+
+    // ================= DETAIL DRAWER / BOTTOM SHEET =================
+    function showDetailCard(placeId) {
+      const place = RU_PLACES.find((p) => p.id === placeId);
+      if (!place) return;
+      const card = document.getElementById('place-detail-card');
+      const catObj = RU_CATEGORIES.find((c) => c.id === place.cat);
+      const isVisited = visitedPlaces.has(placeId);
+
+      document.getElementById('detail-badge').textContent = currentLang === 'bn' ? catObj.titleBn : catObj.titleEn;
+      document.getElementById('detail-title').textContent = place.nameBn;
+      document.getElementById('detail-en').textContent = place.nameEn;
+      document.getElementById('detail-desc').textContent = place.desc;
+      document.getElementById('detail-gate').textContent = place.gate;
+      document.getElementById('detail-traffic').textContent = place.traffic;
+
+      const statusPill = document.getElementById('detail-status-pill');
+      const toggleBtn = document.getElementById('detail-toggle-btn');
+
+      if (isVisited) {
+        statusPill.textContent = '✓ ঘোরা হয়েছে';
+        statusPill.className = 'inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#1f7a44] text-white';
+        toggleBtn.className = 'flex-1 py-2 px-3 rounded-xl font-bold text-xs bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition flex items-center justify-center gap-1.5';
+        toggleBtn.innerHTML = '<span>✕ তালিকা থেকে মুছুন</span>';
+      } else {
+        statusPill.textContent = 'এখনো ঘোরা হয়নি';
+        statusPill.className = 'inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-200 text-gray-700';
+        toggleBtn.className = 'flex-1 py-2 px-3 rounded-xl font-bold text-xs bg-[#1f7a44] text-white hover:bg-[#166534] transition flex items-center justify-center gap-1.5';
+        toggleBtn.innerHTML = '<span>✓ ঘুরে দেখেছি চিহ্নিত করুন</span>';
+      }
+
+      document.getElementById('detail-gmap-link').href = `https://www.google.com/maps/search/${encodeURIComponent(place.nameEn + ' Rajshahi University')}`;
+      card.classList.remove('hidden');
+    }
+
+    function toggleCurrentDetailPlace() {
+      if (!activeDetailPlaceId) return;
+      togglePlace(activeDetailPlaceId, true);
+    }
+
+    function closeDetailCard() {
+      document.getElementById('place-detail-card').classList.add('hidden');
+      activeDetailPlaceId = null;
+      renderContiguousMap();
+    }
+
+    // ================= MOBILE TAB SWITCHER =================
+    function switchMobileTab(tab) {
+      const sidebar = document.getElementById('sidebar-panel');
+      const mapPanel = document.getElementById('map-panel');
+      const tabMapBtn = document.getElementById('mob-tab-map');
+      const tabListBtn = document.getElementById('mob-tab-list');
+
+      if (window.innerWidth >= 768) return; // Desktop always shows both side-by-side
+
+      if (tab === 'list') {
+        sidebar.classList.remove('hidden');
+        sidebar.classList.add('flex');
+        mapPanel.classList.add('hidden');
+        tabListBtn.className = 'flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-[#1f7a44] font-bold text-[11px]';
+        tabMapBtn.className = 'flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-gray-600 font-semibold text-[11px]';
+      } else {
+        sidebar.classList.add('hidden');
+        sidebar.classList.remove('flex');
+        mapPanel.classList.remove('hidden');
+        tabMapBtn.className = 'flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-[#1f7a44] font-bold text-[11px]';
+        tabListBtn.className = 'flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-gray-600 font-semibold text-[11px]';
+      }
+    }
+
+    // ================= FLOATING BLACK PILL TOOLTIP =================
+    const tooltipEl = document.getElementById('map-tooltip');
+    const tooltipName = document.getElementById('tooltip-name');
+    const tooltipSub = document.getElementById('tooltip-sub');
+
+    function showTooltip(e, place) {
+      tooltipName.textContent = currentLang === 'bn' ? place.shortBn : place.nameEn;
+      const isVisited = visitedPlaces.has(place.id);
+      tooltipSub.textContent = isVisited
+        ? `${place.gate} • ✓ ঘোরা হয়েছে`
+        : `${place.gate} • ${place.traffic}`;
+      tooltipEl.classList.remove('opacity-0');
+      tooltipEl.classList.add('opacity-100');
+      moveTooltip(e);
+    }
+
+    function moveTooltip(e) {
+      const x = Math.min(window.innerWidth - 150, Math.max(90, e.clientX));
+      const y = Math.max(58, e.clientY - 46);
+      tooltipEl.style.left = `${x}px`;
+      tooltipEl.style.top = `${y}px`;
+      tooltipEl.style.transform = 'translate(-50%, 0)';
+    }
+
+    function hideTooltip() {
+      tooltipEl.classList.remove('opacity-100');
+      tooltipEl.classList.add('opacity-0');
+    }
+
+    // ================= MAP STYLE SWITCHER (UNSEEN / ROADMAP / 3D) =================
+    function setMapStyle(style) {
+      currentMapStyle = style;
+      const mapPanel = document.getElementById('map-panel');
+      const trafficFlow = document.getElementById('traffic-flow-overlay');
+      const roadLines = document.getElementById('internal-road-lines');
+
+      const btnUnseen = document.getElementById('style-unseen');
+      const btnRoad = document.getElementById('style-roadmap');
+      const btn3d = document.getElementById('style-master3d');
+
+      const activeCls = 'px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold bg-[#1f7a44] text-white shadow-sm transition flex items-center gap-1';
+      const idleCls = 'px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-gray-700 hover:bg-gray-100 transition flex items-center gap-1';
+
+      if (btnUnseen) btnUnseen.className = style === 'unseen' ? activeCls : idleCls;
+      if (btnRoad) btnRoad.className = style === 'roadmap' ? activeCls : idleCls;
+      if (btn3d) {
+        btn3d.className = style === 'master3d'
+          ? 'hidden sm:flex px-2.5 py-1 rounded-lg text-xs font-bold bg-[#1f7a44] text-white shadow-sm transition items-center gap-1'
+          : 'hidden sm:flex px-2.5 py-1 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 transition items-center gap-1';
+      }
+
+      if (style === 'roadmap') {
+        trafficFlow.classList.remove('opacity-0');
+        trafficFlow.classList.add('opacity-100');
+        roadLines.setAttribute('stroke', '#15803d');
+        roadLines.setAttribute('stroke-width', '7');
+      } else {
+        trafficFlow.classList.add('opacity-0');
+        trafficFlow.classList.remove('opacity-100');
+        roadLines.setAttribute('stroke', '#f7f5ee');
+        roadLines.setAttribute('stroke-width', '4.5');
+      }
+
+      if (style === 'master3d') {
+        mapPanel.classList.add('map-3d-mode');
+      } else {
+        mapPanel.classList.remove('map-3d-mode');
+        applyMapTransform();
+      }
+
+      renderContiguousMap();
+    }
+
+    // ================= TOUCH PINCH-TO-ZOOM & SAFE DRAG PAN =================
+    const svgMap = document.getElementById('ru-svg-map');
+    const mapViewport = document.getElementById('map-viewport');
+
+    function applyMapTransform() {
+      if (currentMapStyle === 'master3d') return;
+      // When scale is at default (1x), lock pan to (0, 0) so the map stays 100% rock-solid
+      if (mapScale <= 1.02) {
+        mapScale = 1;
+        mapPanX = 0;
+        mapPanY = 0;
+        mapViewport.classList.remove('cursor-grab', 'active:cursor-grabbing');
+        mapViewport.classList.add('cursor-default');
+      } else {
+        mapViewport.classList.remove('cursor-default');
+        mapViewport.classList.add('cursor-grab', 'active:cursor-grabbing');
+      }
+      svgMap.style.transform = `translate3d(${mapPanX}px, ${mapPanY}px, 0) scale(${mapScale})`;
+    }
+
+    function zoomMap(factor) {
+      if (currentMapStyle === 'master3d') setMapStyle('unseen');
+      mapScale = Math.min(3.2, Math.max(1, mapScale * factor));
+      applyMapTransform();
+    }
+
+    function resetMapView() {
+      mapScale = 1;
+      mapPanX = 0;
+      mapPanY = 0;
+      isPanning = false;
+      if (currentMapStyle === 'master3d') setMapStyle('unseen');
+      applyMapTransform();
+    }
+
+    // Mouse Wheel Zoom
+    mapViewport.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? 1.15 : 0.87;
+      zoomMap(factor);
+    }, { passive: false });
+
+    // Safe Pointer Drag Pan (ONLY active when zoomed in > 1x AND primary button held)
+    mapViewport.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('#place-detail-card')) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (mapScale <= 1.02) {
+        isPanning = false;
+        return;
+      }
+      isPanning = true;
+      panStartX = e.clientX - mapPanX;
+      panStartY = e.clientY - mapPanY;
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!isPanning) return;
+      // Crucial check: if mouse button is not actively pressed, stop panning immediately!
+      if (e.pointerType === 'mouse' && e.buttons !== 1) {
+        isPanning = false;
+        return;
+      }
+      if (mapScale <= 1.02) {
+        isPanning = false;
+        return;
+      }
+      const movedDist = Math.hypot(e.clientX - pointerDownX, e.clientY - pointerDownY);
+      if (movedDist < 6) return;
+
+      mapPanX = e.clientX - panStartX;
+      mapPanY = e.clientY - panStartY;
+      applyMapTransform();
+    });
+
+    const stopMapPanning = () => {
+      isPanning = false;
+    };
+    window.addEventListener('pointerup', stopMapPanning);
+    window.addEventListener('pointercancel', stopMapPanning);
+    window.addEventListener('mouseup', stopMapPanning);
+    window.addEventListener('blur', stopMapPanning);
+    mapViewport.addEventListener('mouseleave', stopMapPanning);
+
+    // Mobile Touch Pinch-to-Zoom
+    mapViewport.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        isPanning = false;
+        initialPinchDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        initialPinchScale = mapScale;
+      }
+    }, { passive: true });
+
+    mapViewport.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && initialPinchDist) {
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const ratio = dist / initialPinchDist;
+        mapScale = Math.min(3.2, Math.max(1, initialPinchScale * ratio));
+        applyMapTransform();
+      }
+    }, { passive: true });
+
+    mapViewport.addEventListener('touchend', () => {
+      initialPinchDist = null;
+      isPanning = false;
+    });
+
+    // ================= 🏆 SHARE PROGRESS & HTML5 CANVAS POSTER GENERATOR =================
+    function openShareModal() {
+      document.getElementById('share-modal').classList.remove('hidden');
+      renderShareCanvas();
+    }
+
+    function closeShareModal() {
+      document.getElementById('share-modal').classList.add('hidden');
+    }
+
+    function renderShareCanvas() {
+      const canvas = document.getElementById('share-card-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width;
+      const H = canvas.height;
+
+      const total = RU_PLACES.length;
+      const count = visitedPlaces.size;
+      const pct = Math.round((count / total) * 100);
+      const rank = getExplorerRank(pct);
+      const userName = document.getElementById('share-user-name').value.trim() || 'রাবি অভিযাত্রী';
+      const userDept = document.getElementById('share-user-dept').value.trim() || 'রাজশাহী বিশ্ববিদ্যালয় ক্যাম্পাস ম্যাপ';
+
+      // 1. Background Fill (Warm Unseen Bangladesh Cream)
+      ctx.fillStyle = '#f6f4ec';
+      ctx.fillRect(0, 0, W, H);
+
+      // Decorative Border Frame
+      ctx.strokeStyle = '#d6d0c2';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(20, 20, W - 40, H - 40);
+
+      // 2. Left Header & Stats Block
+      ctx.fillStyle = '#1f7a44';
+      ctx.beginPath();
+      ctx.roundRect(48, 48, 210, 38, 19);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 18px "Hind Siliguri", sans-serif';
+      ctx.fillText('UNSEEN RAJSHAHI UNIVERSITY', 64, 73);
+
+      // User Name & Headline
+      ctx.fillStyle = '#111827';
+      ctx.font = 'bold 34px "Hind Siliguri", sans-serif';
+      ctx.fillText(userName, 48, 134);
+
+      ctx.fillStyle = '#4b5563';
+      ctx.font = '600 18px "Hind Siliguri", sans-serif';
+      ctx.fillText(userDept, 48, 164);
+
+      // Big Percentage Circle / Card
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#e5e0d5';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(48, 195, 325, 165, 22);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#1f7a44';
+      ctx.font = 'bold 64px "Hind Siliguri", sans-serif';
+      ctx.fillText(`${toBengaliNum(pct)}%`, 70, 278);
+
+      ctx.fillStyle = '#1f2937';
+      ctx.font = 'bold 22px "Hind Siliguri", sans-serif';
+      ctx.fillText('রাবি ক্যাম্পাস ঘুরে দেখেছি!', 70, 314);
+
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '600 16px "Hind Siliguri", sans-serif';
+      ctx.fillText(`মোট ${toBengaliNum(count)} / ${toBengaliNum(total)} টি সীমানা অঞ্চল সম্পন্ন`, 70, 342);
+
+      // Category Breakdown Pills
+      const cats = [
+        { label: 'একাডেমিক ভবন', id: 'academic' },
+        { label: 'ছাত্রদের আবাসিক হল', id: 'male_halls' },
+        { label: 'ছাত্রীদের আবাসিক হল', id: 'female_halls' },
+        { label: 'গেইট ও ল্যান্ডমার্ক', id: 'landmarks' }
+      ];
+
+      cats.forEach((c, idx) => {
+        const totC = RU_PLACES.filter((p) => p.cat === c.id).length;
+        const visC = RU_PLACES.filter((p) => p.cat === c.id && visitedPlaces.has(p.id)).length;
+        const yPos = 385 + idx * 46;
+
+        ctx.fillStyle = '#e9f2ec';
+        ctx.beginPath();
+        ctx.roundRect(48, yPos, 325, 38, 12);
+        ctx.fill();
+
+        ctx.fillStyle = '#1f2937';
+        ctx.font = 'bold 16px "Hind Siliguri", sans-serif';
+        ctx.fillText(c.label, 64, yPos + 25);
+
+        ctx.fillStyle = '#1f7a44';
+        ctx.font = 'bold 16px "Hind Siliguri", sans-serif';
+        ctx.fillText(`${toBengaliNum(visC)}/${toBengaliNum(totC)}`, 315, yPos + 25);
+      });
+
+      // Rank Footer on Left
+      ctx.fillStyle = '#1f7a44';
+      ctx.font = 'bold 18px "Hind Siliguri", sans-serif';
+      ctx.fillText(`র‍্যাংক: ${rank.bn}`, 48, 615);
+
+      // 3. Draw Contiguous RU Territory Map on the Right Side of Poster
+      ctx.save();
+      ctx.translate(385, 55);
+      ctx.scale(0.57, 0.57);
+
+      RU_PLACES.forEach((place) => {
+        const isVisited = visitedPlaces.has(place.id);
+        const pts = place.poly.split(' ').map((pair) => pair.split(',').map(Number));
+
+        ctx.beginPath();
+        pts.forEach((pt, i) => {
+          if (i === 0) ctx.moveTo(pt[0], pt[1]);
+          else ctx.lineTo(pt[0], pt[1]);
+        });
+        ctx.closePath();
+
+        ctx.fillStyle = isVisited ? '#1f7a44' : '#ded8ca';
+        ctx.fill();
+        ctx.strokeStyle = '#f6f4ec';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Draw short label inside polygon
+        ctx.fillStyle = isVisited ? '#ffffff' : '#374151';
+        ctx.font = 'bold 11px "Hind Siliguri", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(place.shortBn, place.lx, place.ly + 4);
+      });
+
+      ctx.restore();
+      ctx.textAlign = 'left';
+    }
+
+    function downloadPosterPNG() {
+      renderShareCanvas();
+      const canvas = document.getElementById('share-card-canvas');
+      const link = document.createElement('a');
+      const pct = Math.round((visitedPlaces.size / RU_PLACES.length) * 100);
+      link.download = `unseen-rajshahi-university-${pct}pct.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      showShareToast('✓ পোস্টার ইমেজ ডাউনলোড হয়েছে!');
+    }
+
+    function getShareableUrl() {
+      const indices = [];
+      RU_PLACES.forEach((p, idx) => {
+        if (visitedPlaces.has(p.id)) indices.push(idx);
+      });
+      const baseUrl = window.location.href.split('#')[0];
+      return `${baseUrl}#visited=${indices.join(',')}`;
+    }
+
+    function copyShareableUrl(btnEl) {
+      const url = getShareableUrl();
+      const pct = Math.round((visitedPlaces.size / RU_PLACES.length) * 100);
+      const shareText = `আমি রাজশাহী বিশ্ববিদ্যালয়ের ${toBengaliNum(pct)}% (${toBengaliNum(visitedPlaces.size)}/৪২ টি স্থান) ঘুরে দেখেছি! আপনি কত পার্সেন্ট ঘুরেছেন? দেখুন: ${url}`;
+
+      const textarea = document.createElement('textarea');
+      textarea.value = shareText;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+
+      // Also update current URL hash
+      window.history.replaceState(null, '', `#visited=${RU_PLACES.map((p, i) => visitedPlaces.has(p.id) ? i : -1).filter((i) => i >= 0).join(',')}`);
+      showShareToast('✓ শেয়ার লিংক ও টেক্সট কপি হয়েছে! এখন ফেসবুক বা মেসেঞ্জারে পেস্ট করুন।');
+    }
+
+    async function nativeShareProgress() {
+      renderShareCanvas();
+      const pct = Math.round((visitedPlaces.size / RU_PLACES.length) * 100);
+      const url = getShareableUrl();
+      const text = `আমি রাজশাহী বিশ্ববিদ্যালয়ের ${toBengaliNum(pct)}% (${toBengaliNum(visitedPlaces.size)}/৪২ টি স্থান) ঘুরে দেখেছি! Unseen RU ম্যাপে আপনারটা মিলিয়ে নিন:`;
+
+      if (navigator.share) {
+        try {
+          const canvas = document.getElementById('share-card-canvas');
+          const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
+          const file = new File([blob], 'unseen-ru.png', { type: 'image/png' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ title: 'Unseen Rajshahi University', text, files: [file] });
+            return;
+          }
+          await navigator.share({ title: 'Unseen Rajshahi University', text, url });
+          return;
+        } catch (err) {}
+      }
+      copyShareableUrl();
+    }
+
+    function showShareToast(msg) {
+      const el = document.getElementById('share-toast-msg');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 3500);
+    }
+
+    // ================= GOOGLE ANTIGRAVITY IDE / WEBSITE INTEGRATION HELPERS =================
+    function switchEmbedTab(tabId) {
+      const tabs = ['ag-cli', 'react', 'html', 'iframe'];
+      tabs.forEach((t) => {
+        const btn = document.getElementById(`etab-${t}`);
+        const panel = document.getElementById(`epanel-${t}`);
+        if (t === tabId) {
+          btn.className = 'px-3.5 py-2 rounded-t-xl font-bold text-xs bg-white text-emerald-900 border-t border-x border-gray-200 shadow-sm';
+          panel.classList.remove('hidden');
+        } else {
+          btn.className = 'px-3.5 py-2 rounded-t-xl font-semibold text-xs text-gray-600 hover:bg-white/60';
+          panel.classList.add('hidden');
+        }
+      });
+    }
+
+    function downloadStandaloneMapHTML() {
+      const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ru-map.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      const toast = document.getElementById('copy-toast');
+      if (toast) {
+        toast.textContent = '✓ ru-map.html ডাউনলোড হয়েছে! আপনার প্রজেক্টের public/ ফোল্ডারে রাখুন।';
+        toast.classList.remove('opacity-0');
+        setTimeout(() => toast.classList.add('opacity-0'), 3500);
+      }
+    }
+
+    // ================= LANGUAGE, SEARCH & OTHER MODALS =================
+    function setLanguage(lang) {
+      currentLang = lang;
+      const bnBtn = document.getElementById('lang-bn');
+      const enBtn = document.getElementById('lang-en');
+      const searchInput = document.getElementById('search-input');
+
+      if (lang === 'bn') {
+        bnBtn.className = 'px-2 sm:px-2.5 py-1 rounded-full bg-white text-emerald-950 shadow-sm transition';
+        enBtn.className = 'px-2 sm:px-2.5 py-1 rounded-full text-gray-600 hover:text-gray-900 transition';
+        searchInput.placeholder = 'ভবন, হল বা চত্বর খুঁজুন...';
+        document.getElementById('btn-select-all').textContent = 'সব বাছাই করুন';
+        document.getElementById('btn-clear-all').textContent = 'সব মুছুন';
+      } else {
+        enBtn.className = 'px-2 sm:px-2.5 py-1 rounded-full bg-white text-emerald-950 shadow-sm transition';
+        bnBtn.className = 'px-2 sm:px-2.5 py-1 rounded-full text-gray-600 hover:text-gray-900 transition';
+        searchInput.placeholder = 'Search building, hall or spot...';
+        document.getElementById('btn-select-all').textContent = 'Select All';
+        document.getElementById('btn-clear-all').textContent = 'Clear All';
+      }
+
+      renderSidebar();
+      renderContiguousMap();
+      if (activeDetailPlaceId) showDetailCard(activeDetailPlaceId);
+    }
+
+    function handleSearch(val) {
+      searchQuery = val;
+      const clearBtn = document.getElementById('clear-search-btn');
+      if (val.trim().length > 0) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+      renderSidebar();
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('search-input');
+      input.value = '';
+      handleSearch('');
+    }
+
+    function openEmbedModal() {
+      document.getElementById('embed-modal').classList.remove('hidden');
+    }
+
+    function closeEmbedModal() {
+      document.getElementById('embed-modal').classList.add('hidden');
+    }
+
+    function copyCodeBlock(elementId, btnEl) {
+      const codeEl = document.getElementById(elementId);
+      if (!codeEl) return;
+      const textarea = document.createElement('textarea');
+      textarea.value = codeEl.innerText;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+
+      const originalText = btnEl.textContent;
+      btnEl.textContent = '✓ কপি হয়েছে!';
+      const toast = document.getElementById('copy-toast');
+      if (toast) {
+        toast.textContent = '✓ ক্লিপবোর্ডে কপি হয়েছে!';
+        toast.classList.remove('opacity-0');
+      }
+      setTimeout(() => {
+        btnEl.textContent = originalText;
+        if (toast) toast.classList.add('opacity-0');
+      }, 2200);
+    }
+
+    // ================= CAMPUS QUIZ MODAL =================
+    const RU_QUIZ_DATA = [
+      {
+        q: 'রাজশাহী বিশ্ববিদ্যালয়ের "সাবাস বাংলাদেশ" ভাস্কর্যটির স্থপতি কে?',
+        options: ['নিতুন কুন্ডু', 'হামিদুজ্জামান খান', 'শামীম শিকদার', 'মৃণাল হক'],
+        ans: 0
+      },
+      {
+        q: 'রাবির বিখ্যাত "প্যারিস রোড"-এর দুই পাশে কোন গাছ সারি সারি দাঁড়িয়ে আছে?',
+        options: ['দেবদারু গাছ', 'গগনশিরীষ গাছ', 'কৃষ্ণচূড়া গাছ', 'শাল গাছ'],
+        ans: 1
+      },
+      {
+        q: 'বাংলাদেশের প্রথম স্থায়ী মুক্তিযুদ্ধ জাদুঘর কোনটি যা রাবিতে অবস্থিত?',
+        options: ['বধ্যভূমি স্মৃতিস্তম্ভ', 'জোহা স্মৃতি জাদুঘর', 'শহীদ স্মৃতি সংগ্রহশালা', 'বরেন্দ্র জাদুঘর'],
+        ans: 2
+      },
+      {
+        q: 'রেললাইনের উত্তর পাশে রাজশাহী বিশ্ববিদ্যালয়ের কোন অনুষদটি অবস্থিত?',
+        options: ['প্রকৌশল অনুষদ', 'কৃষি ও চারুকলা অনুষদ', 'আইন অনুষদ', 'বিজ্ঞান অনুষদ'],
+        ans: 1
+      }
+    ];
+    let quizIndex = 0;
+    let quizScore = 0;
+
+    function openQuizModal() {
+      quizIndex = 0;
+      quizScore = 0;
+      document.getElementById('quiz-modal').classList.remove('hidden');
+      renderQuizQuestion();
+    }
+
+    function closeQuizModal() {
+      document.getElementById('quiz-modal').classList.add('hidden');
+    }
+
+    function renderQuizQuestion() {
+      const item = RU_QUIZ_DATA[quizIndex];
+      document.getElementById('quiz-step-label').textContent = `প্রশ্ন ${toBengaliNum(quizIndex + 1)}/${toBengaliNum(RU_QUIZ_DATA.length)}`;
+      document.getElementById('quiz-question').textContent = item.q;
+      document.getElementById('quiz-score-label').textContent = `স্কোর: ${toBengaliNum(quizScore)}`;
+      const feedback = document.getElementById('quiz-feedback');
+      feedback.classList.add('hidden');
+
+      const optsWrap = document.getElementById('quiz-options');
+      optsWrap.innerHTML = '';
+      item.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full text-left px-4 py-2.5 rounded-xl border border-gray-200 text-xs sm:text-sm font-semibold text-gray-800 hover:bg-emerald-50 hover:border-emerald-300 transition';
+        btn.textContent = opt;
+        btn.onclick = () => {
+          if (idx === item.ans) {
+            quizScore++;
+            btn.className = 'w-full text-left px-4 py-2.5 rounded-xl border border-emerald-600 bg-emerald-600 text-white text-xs sm:text-sm font-bold';
+            feedback.textContent = '✓ সঠিক উত্তর!';
+            feedback.className = 'text-xs font-bold text-emerald-700 block';
+          } else {
+            btn.className = 'w-full text-left px-4 py-2.5 rounded-xl border border-red-400 bg-red-50 text-red-700 text-xs sm:text-sm font-bold';
+            feedback.textContent = `✕ সঠিক উত্তর: ${item.options[item.ans]}`;
+            feedback.className = 'text-xs font-bold text-red-600 block';
+          }
+          document.getElementById('quiz-score-label').textContent = `স্কোর: ${toBengaliNum(quizScore)}`;
+        };
+        optsWrap.appendChild(btn);
+      });
+    }
+
+    function nextQuizQuestion() {
+      quizIndex = (quizIndex + 1) % RU_QUIZ_DATA.length;
+      renderQuizQuestion();
+    }
+
+    function openGuideModal() {
+      document.getElementById('guide-modal').classList.remove('hidden');
+    }
+
+    function closeGuideModal() {
+      document.getElementById('guide-modal').classList.add('hidden');
+    }
+
+    // ================= INITIALIZE APPLICATION =================
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSavedProgress();
+      renderSidebar();
+      renderContiguousMap();
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+    });
+  </script>
+</body>
+</html>

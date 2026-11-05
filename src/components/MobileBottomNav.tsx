@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, ShoppingBag, User, ShieldCheck } from 'lucide-react';
+import { Home, ShoppingBag, User, ShieldCheck, Compass } from 'lucide-react';
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
@@ -36,8 +36,8 @@ export default function MobileBottomNav() {
   const navItems = [
     { label: 'হোম', href: '/', icon: Home },
     { label: 'শপ', href: '/shop', icon: ShoppingBag },
+    { label: 'ম্যাপ', href: '/map', icon: Compass },
     { label: 'কার্ট', href: '/cart', icon: ShoppingBag, badge: cartCount },
-    { label: 'ট্র্যাক', href: '/track', icon: User },
     { label: 'অ্যাডমিন', href: '/admin', icon: ShieldCheck },
   ];
 
