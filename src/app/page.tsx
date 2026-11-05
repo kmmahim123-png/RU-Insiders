@@ -122,37 +122,37 @@ export default function HomePage() {
     <div className="space-y-8 sm:space-y-12 pb-20 overflow-hidden bg-white">
 
       {/* 1. Minimalist Campus Hero with Dynamic Slideshow */}
-      <section className="relative overflow-hidden border-b border-slate-200/80 bg-slate-50 min-h-[220px] sm:min-h-[260px] flex items-center">
-        {/* Dynamic Campus Photos Slideshow (halka halka thakbe and akta akta kore change hobe) */}
+      <section className="relative overflow-hidden border-b border-slate-200/80 bg-slate-900 min-h-[300px] sm:min-h-[340px] flex items-center">
+        {/* Dynamic Campus Photos Slideshow - Vivid, clearly visible */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {campusSlides.map((slide, index) => (
             <div
               key={slide.src}
-              className={`absolute inset-0 bg-cover bg-center transition-all duration-1000 ease-in-out filter brightness-[0.96] ${
-                index === activeSlide ? 'opacity-25 scale-105' : 'opacity-0 scale-100'
+              className={`absolute inset-0 bg-cover bg-center transition-all duration-1000 ease-in-out filter brightness-[0.92] ${
+                index === activeSlide ? 'opacity-85 scale-105' : 'opacity-0 scale-100'
               }`}
               style={{ backgroundImage: `url('${slide.src}')` }}
             />
           ))}
-          {/* Gentle gradient overlay so text remains 100% crisp & readable */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/75" />
-          <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-white/40" />
+          {/* Subtle gradient to keep left text ultra-readable while preserving full picture visibility */}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/30" />
         </div>
 
         <div className="relative w-full max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
 
-            <div className="max-w-2xl space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50/90 backdrop-blur-sm border border-blue-200 text-blue-800 text-xs font-bold tracking-wide shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <div className="max-w-2xl space-y-3 bg-slate-950/40 backdrop-blur-md p-5 sm:p-7 rounded-3xl border border-white/10 shadow-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white text-xs font-bold tracking-wide shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span>RU Insiders • মতিহারের সবুজ চত্বর</span>
-                <span className="text-slate-300">|</span>
-                <span className="text-blue-600 font-semibold text-[11px]">📍 {campusSlides[activeSlide].name}</span>
+                <span className="text-white/40">|</span>
+                <span className="text-amber-300 font-semibold text-[11px]">📍 {campusSlides[activeSlide].name}</span>
               </div>
-              <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+              <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight leading-tight drop-shadow-md">
                 অফিশিয়াল রাজশাহী বিশ্ববিদ্যালয় মার্চেন্ডাইজ স্টোর
               </h1>
-              <p className="text-xs sm:text-sm text-slate-600 font-bengali font-medium leading-relaxed max-w-xl">
+              <p className="text-xs sm:text-sm text-slate-200 font-bengali font-medium leading-relaxed max-w-xl">
                 মতিহারের ভালোবাসায় তৈরি অফিসিয়াল হুডি, ওভারসাইজড ড্রপ শোল্ডার, কটন গেঞ্জি, এক্সেসরিজ ও ক্যাম্পাস কালেকশন। পছন্দমতো পণ্য নির্বাচন করে সহজেই অর্ডার করুন।
               </p>
 
@@ -165,7 +165,7 @@ export default function HomePage() {
                     onClick={() => setActiveSlide(idx)}
                     title={slide.name}
                     className={`h-1.5 rounded-full transition-all ${
-                      idx === activeSlide ? 'w-6 bg-blue-600' : 'w-2 bg-slate-300 hover:bg-slate-400'
+                      idx === activeSlide ? 'w-7 bg-amber-400' : 'w-2 bg-white/40 hover:bg-white/70'
                     }`}
                   />
                 ))}
@@ -175,7 +175,7 @@ export default function HomePage() {
             <div className="flex flex-wrap items-center gap-2.5 self-stretch md:self-auto justify-start md:justify-end">
               <a
                 href="#catalog"
-                className="flex-1 sm:flex-initial px-6 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98]"
+                className="flex-1 sm:flex-initial px-6 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg hover:shadow-blue-600/30 transition-all active:scale-[0.98]"
               >
                 <ShoppingBag className="h-4 w-4" />
                 <span>সব পণ্য দেখুন (Browse All)</span>
@@ -183,7 +183,7 @@ export default function HomePage() {
 
               <Link
                 href="/shop"
-                className="flex-1 sm:flex-initial px-5 py-3.5 rounded-2xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-[0.98]"
+                className="flex-1 sm:flex-initial px-5 py-3.5 rounded-2xl bg-white/90 hover:bg-white text-slate-900 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-lg transition-all active:scale-[0.98]"
               >
                 <Tag className="h-4 w-4 text-blue-600" />
                 <span>ক্যাটাগরি শপ</span>
@@ -193,7 +193,7 @@ export default function HomePage() {
                 href="https://www.facebook.com/ru.insiders/followers"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-3.5 rounded-2xl bg-white hover:bg-blue-50 border border-slate-200 text-blue-600 hover:text-blue-700 shadow-sm transition-colors"
+                className="p-3.5 rounded-2xl bg-white/90 hover:bg-white text-blue-600 hover:text-blue-700 shadow-lg transition-colors"
                 title="Facebook Community"
               >
                 <Facebook className="h-4 w-4" />
@@ -204,15 +204,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 2. Storefront Search, Category Pills & Product Grid with Paris Road Backdrop Effect */}
+      {/* 2. Storefront Search, Category Pills & Product Grid with Campus Backdrop Effect */}
       <section id="catalog" className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
         
-        {/* Ambient Paris Road Background Effect behind the products */}
+        {/* Ambient Campus Photo Background Effect behind the products */}
         <div 
-          className="absolute inset-0 -mx-4 sm:-mx-6 lg:-mx-8 rounded-3xl bg-cover bg-center pointer-events-none opacity-[0.07] filter saturate-150 contrast-125"
-          style={{ backgroundImage: `url('/campus/paris-road.jpg')` }}
+          className="absolute inset-0 -mx-4 sm:-mx-6 lg:-mx-8 rounded-3xl bg-cover bg-center pointer-events-none opacity-[0.16] filter saturate-150 contrast-110"
+          style={{ backgroundImage: `url('/campus/ru-admin.jpg')` }}
         />
-        <div className="absolute inset-0 -mx-4 sm:-mx-6 lg:-mx-8 rounded-3xl bg-gradient-to-b from-white/95 via-white/80 to-white/95 pointer-events-none" />
+        <div className="absolute inset-0 -mx-4 sm:-mx-6 lg:-mx-8 rounded-3xl bg-gradient-to-b from-white/90 via-white/80 to-white/95 pointer-events-none" />
 
         <div className="relative z-10 space-y-5">
         {/* Search & Filter Bar */}

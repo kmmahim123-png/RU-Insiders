@@ -33,17 +33,13 @@ export async function GET(request: NextRequest) {
       .from('orders')
       .select('*', { count: 'exact', head: true });
 
-    const { count: printCount, error: prError } = await supabase
-      .from('print_jobs')
-      .select('*', { count: 'exact', head: true });
-
-    if (pError || oError || prError) {
+    if (pError || oError) {
       return NextResponse.json({
         success: true,
         configured: true,
         connected: false,
-        error: pError?.message || oError?.message || prError?.message,
-        message: 'Supabase environment variables exist, but database tables might need schema setup.',
+        error: pError?.message || oError?.message,
+        message: 'Supabase environment variables exist, but tables need to be created in Supabase SQL editor.',
       });
     }
 
@@ -54,7 +50,6 @@ export async function GET(request: NextRequest) {
       counts: {
         products: productCount ?? 0,
         orders: orderCount ?? 0,
-        printJobs: printCount ?? 0,
       },
       message: 'Supabase Cloud Database connected and healthy.',
     });
