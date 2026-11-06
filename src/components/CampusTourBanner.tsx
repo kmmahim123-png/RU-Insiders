@@ -77,7 +77,7 @@ export default function CampusTourBanner() {
   const [slides, setSlides] = useState<CampusSpotSlide[]>(RU_SPOTS_SLIDES);
   const [currentIdx, setCurrentIdx] = useState(0);
 
-  // Load custom slides configured in Admin Dashboard
+  // Load custom slides configured in Admin Dashboard (with server sync)
   useEffect(() => {
     const loadSlides = () => {
       try {
@@ -94,6 +94,24 @@ export default function CampusTourBanner() {
     };
 
     loadSlides();
+
+    // Fetch from server for cross-device persistence
+    async function syncBannerSlides() {
+      try {
+        const res = await fetch('/api/spots', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.bannerSlides) && data.bannerSlides.length > 0) {
+            setSlides(data.bannerSlides);
+            try {
+              localStorage.setItem('ru_main_banner_slides_v1', JSON.stringify(data.bannerSlides));
+            } catch (e) {}
+          }
+        }
+      } catch (e) {}
+    }
+    syncBannerSlides();
+
     window.addEventListener('ru_banner_slides_updated', loadSlides);
     return () => window.removeEventListener('ru_banner_slides_updated', loadSlides);
   }, []);

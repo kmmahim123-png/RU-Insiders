@@ -1662,6 +1662,20 @@ export function saveStoredTouristSpot(updatedSpot: TouristSpot): void {
     const updated = current.map(s => s.id === updatedSpot.id ? updatedSpot : s);
     localStorage.setItem(TOURIST_SPOTS_STORAGE_KEY, JSON.stringify(updated));
     window.dispatchEvent(new Event('ru_tourist_spots_updated'));
+
+    // Cross-device server sync
+    const pin = localStorage.getItem('ru_insiders_admin_pin') || '1953';
+    fetch('/api/spots', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-pin': pin,
+      },
+      body: JSON.stringify({
+        action: 'save_spot',
+        spot: updatedSpot,
+      }),
+    }).catch(err => console.warn('Failed to sync spot to server:', err));
   } catch (e) {
     console.error('Failed to save tourist spot:', e);
   }

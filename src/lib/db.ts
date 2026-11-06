@@ -10,6 +10,9 @@ export interface DatabaseSchema {
   orders: Order[];
   printJobs: PrintJob[];
   steadfastConfig: SteadfastConfig;
+  customTouristSpots?: any[];
+  bannerSlides?: any[];
+  customMapPhotos?: { [key: string]: { url: string; credit: string }[] };
 }
 
 // Global cache to persist across serverless warm invocations
@@ -39,6 +42,9 @@ function getFallbackDb(): DatabaseSchema {
     orders: INITIAL_ORDERS,
     printJobs: INITIAL_PRINT_JOBS,
     steadfastConfig: INITIAL_STEADFAST_CONFIG,
+    customTouristSpots: [],
+    bannerSlides: [],
+    customMapPhotos: {},
   };
 }
 
@@ -311,19 +317,6 @@ export async function getProducts(): Promise<Product[]> {
 
 export async function addProduct(product: Product): Promise<Product[]> {
   return runAtomic(async () => {
-    const supabase = getSupabaseClient();
-    if (supabase) {
-      try {
-        const row = mapProductToRow(product);
-        const { error } = await supabase.from('products').insert([row]);
-        if (!error) {
-          return getProducts();
-        }
-      } catch (err) {
-        console.warn('Supabase addProduct fallback:', err);
-      }
-    }
-
     const db = await readDb();
     const updatedList = [
       { ...product, orderIndex: 0 },
@@ -331,12 +324,30 @@ export async function addProduct(product: Product): Promise<Product[]> {
     ];
     db.products = updatedList;
     await writeDb(db);
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        const row = mapProductToRow(product);
+        await supabase.from('products').insert([row]);
+      } catch (err) {
+        console.warn('Supabase addProduct sync warning:', err);
+      }
+    }
+
     return db.products;
   });
 }
 
 export async function updateProduct(id: string, updates: Partial<Product>): Promise<Product | null> {
   return runAtomic(async () => {
+    const db = await readDb();
+    const index = db.products.findIndex((p) => p.id === id);
+    if (index === -1) return null;
+
+    db.products[index] = { ...db.products[index], ...updates };
+    await writeDb(db);
+
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
@@ -357,43 +368,21 @@ export async function updateProduct(id: string, updates: Partial<Product>): Prom
         if (updates.video !== undefined) updatePayload.video = updates.video;
         if (updates.badge !== undefined) updatePayload.badge = updates.badge;
 
-        const { data, error } = await supabase
+        await supabase
           .from('products')
           .update(updatePayload)
-          .eq('id', id)
-          .select()
-          .single();
-
-        if (!error && data) {
-          return mapProductFromRow(data);
-        }
+          .eq('id', id);
       } catch (err) {
-        console.warn('Supabase updateProduct fallback:', err);
+        console.warn('Supabase updateProduct sync warning:', err);
       }
     }
 
-    const db = await readDb();
-    const index = db.products.findIndex((p) => p.id === id);
-    if (index === -1) return null;
-
-    db.products[index] = { ...db.products[index], ...updates };
-    await writeDb(db);
     return db.products[index];
   });
 }
 
 export async function deleteProduct(id: string): Promise<boolean> {
   return runAtomic(async () => {
-    const supabase = getSupabaseClient();
-    if (supabase) {
-      try {
-        const { error } = await supabase.from('products').delete().eq('id', id);
-        if (!error) return true;
-      } catch (err) {
-        console.warn('Supabase deleteProduct fallback:', err);
-      }
-    }
-
     const db = await readDb();
     const initialLength = db.products.length;
     db.products = db.products.filter((p) => p.id !== id);
@@ -401,6 +390,87 @@ export async function deleteProduct(id: string): Promise<boolean> {
 
     db.products = db.products.map((p, idx) => ({ ...p, orderIndex: idx }));
     await writeDb(db);
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        await supabase.from('products').delete().eq('id', id);
+      } catch (err) {
+        console.warn('Supabase deleteProduct sync warning:', err);
+      }
+    }
+
+    return true;
+  });
+}
+
+// ---------------- TOURIST SPOTS & LANDMARKS SERVER PERSISTENCE ----------------
+export async function getStoredSpotsData(): Promise<{
+  customTouristSpots: any[];
+  bannerSlides: any[];
+  customMapPhotos: { [key: string]: { url: string; credit: string }[] };
+}> {
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('tourist_spots')
+        .select('*');
+      if (!error && data && data.length > 0) {
+        // Return spots from Supabase
+        const db = await readDb();
+        return {
+          customTouristSpots: data,
+          bannerSlides: db.bannerSlides || [],
+          customMapPhotos: db.customMapPhotos || {},
+        };
+      }
+    } catch (e) {
+      console.warn('Supabase getStoredSpotsData fallback:', e);
+    }
+  }
+
+  const db = await readDb();
+  return {
+    customTouristSpots: db.customTouristSpots || [],
+    bannerSlides: db.bannerSlides || [],
+    customMapPhotos: db.customMapPhotos || {},
+  };
+}
+
+export async function saveStoredSpotsData(data: {
+  customTouristSpots?: any[];
+  bannerSlides?: any[];
+  customMapPhotos?: { [key: string]: { url: string; credit: string }[] };
+}): Promise<boolean> {
+  return runAtomic(async () => {
+    const db = await readDb();
+    if (data.customTouristSpots !== undefined) db.customTouristSpots = data.customTouristSpots;
+    if (data.bannerSlides !== undefined) db.bannerSlides = data.bannerSlides;
+    if (data.customMapPhotos !== undefined) db.customMapPhotos = data.customMapPhotos;
+    await writeDb(db);
+
+    const supabase = getSupabaseClient();
+    if (supabase && data.customTouristSpots && Array.isArray(data.customTouristSpots)) {
+      try {
+        const rows = data.customTouristSpots.map((s: any) => ({
+          id: s.id,
+          name_bn: s.nameBn || '',
+          name_en: s.nameEn || '',
+          district_id: s.districtId || '',
+          district_bn: s.districtBn || '',
+          description_bn: s.descriptionBn || '',
+          image_url: s.imageUrl || '',
+          images: Array.isArray(s.images) ? s.images : (s.imageUrl ? [s.imageUrl] : []),
+          location_bn: s.locationBn || '',
+          updated_at: new Date().toISOString(),
+        }));
+        await supabase.from('tourist_spots').upsert(rows);
+      } catch (e) {
+        console.warn('Supabase saveStoredSpotsData sync warning:', e);
+      }
+    }
+
     return true;
   });
 }

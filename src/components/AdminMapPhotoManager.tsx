@@ -107,11 +107,26 @@ export default function AdminMapPhotoManager() {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setBannerSlides(parsed);
-          return;
         }
       }
     } catch (e) {}
-    setBannerSlides(DEFAULT_BANNER_SLIDES);
+
+    // Cross-device sync from server
+    async function fetchServerBannerSlides() {
+      try {
+        const res = await fetch('/api/spots', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.bannerSlides) && data.bannerSlides.length > 0) {
+            setBannerSlides(data.bannerSlides);
+            try {
+              localStorage.setItem('ru_main_banner_slides_v1', JSON.stringify(data.bannerSlides));
+            } catch (e) {}
+          }
+        }
+      } catch (e) {}
+    }
+    fetchServerBannerSlides();
   }, []);
 
   const saveBannerSlidesState = (updated: any[]) => {
@@ -119,6 +134,13 @@ export default function AdminMapPhotoManager() {
     try {
       localStorage.setItem('ru_main_banner_slides_v1', JSON.stringify(updated));
       window.dispatchEvent(new Event('ru_banner_slides_updated'));
+
+      const pin = localStorage.getItem('ru_insiders_admin_pin') || '1953';
+      fetch('/api/spots', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-pin': pin },
+        body: JSON.stringify({ action: 'save_banner_slides', bannerSlides: updated })
+      }).catch(() => {});
     } catch (e) {}
   };
 
@@ -223,7 +245,7 @@ export default function AdminMapPhotoManager() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
 
-  // Load saved photos from localStorage
+  // Load saved photos from localStorage & server
   useEffect(() => {
     try {
       const saved = localStorage.getItem('unseen_ru_custom_photos_v1');
@@ -231,6 +253,23 @@ export default function AdminMapPhotoManager() {
         setCustomPhotos(JSON.parse(saved));
       }
     } catch (e) {}
+
+    // Fetch live map photos from server
+    async function fetchServerMapPhotos() {
+      try {
+        const res = await fetch('/api/spots', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.customMapPhotos && Object.keys(data.customMapPhotos).length > 0) {
+            setCustomPhotos(data.customMapPhotos);
+            try {
+              localStorage.setItem('unseen_ru_custom_photos_v1', JSON.stringify(data.customMapPhotos));
+            } catch (e) {}
+          }
+        }
+      } catch (e) {}
+    }
+    fetchServerMapPhotos();
   }, []);
 
   const savePhotosState = (updated: { [key: string]: { url: string; credit: string }[] }) => {
@@ -238,6 +277,13 @@ export default function AdminMapPhotoManager() {
     try {
       localStorage.setItem('unseen_ru_custom_photos_v1', JSON.stringify(updated));
       window.dispatchEvent(new Event('storage'));
+
+      const pin = localStorage.getItem('ru_insiders_admin_pin') || '1953';
+      fetch('/api/spots', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-pin': pin },
+        body: JSON.stringify({ action: 'save_map_photos', customMapPhotos: updated })
+      }).catch(() => {});
     } catch (e) {}
   };
 

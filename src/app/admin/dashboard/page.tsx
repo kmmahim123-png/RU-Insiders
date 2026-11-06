@@ -17,6 +17,7 @@ import {
   Phone, 
   Send, 
   Sparkles, 
+  Star,
   ArrowUp, 
   ArrowDown, 
   Trash2, 
@@ -100,7 +101,8 @@ export default function AdminDashboardPage() {
   const [newProductRegularPrice, setNewProductRegularPrice] = useState<number | undefined>(1400);
   const [newProductCost, setNewProductCost] = useState(650);
   const [newProductStock, setNewProductStock] = useState(30);
-  const [newProductImages, setNewProductImages] = useState<string[]>(['', '', '', '']);
+  const [newProductImages, setNewProductImages] = useState<string[]>(['', '', '', '', '']);
+  const [newProductFrontIdx, setNewProductFrontIdx] = useState<number>(0);
   const [newProductVideo, setNewProductVideo] = useState('');
   const [newProductDesc, setNewProductDesc] = useState('');
   // New Product Color & Size State
@@ -128,20 +130,22 @@ export default function AdminDashboardPage() {
   const [isAddingNewCategory, setIsAddingNewCategory] = useState(false);
   const [customCategoryInput, setCustomCategoryInput] = useState('');
 
-  // 4 Images & Video Upload State (Add Product)
+  // 5 Images & Video Upload State (Add Product)
   const [uploadingSlot, setUploadingSlot] = useState<number | null>(null);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const slotInputRef0 = useRef<HTMLInputElement>(null);
   const slotInputRef1 = useRef<HTMLInputElement>(null);
   const slotInputRef2 = useRef<HTMLInputElement>(null);
   const slotInputRef3 = useRef<HTMLInputElement>(null);
+  const slotInputRef4 = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
   // Product Edit State
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [savingOrderEdit, setSavingOrderEdit] = useState(false);
-  const [editImages, setEditImages] = useState<string[]>(['', '', '', '']);
+  const [editImages, setEditImages] = useState<string[]>(['', '', '', '', '']);
+  const [editFrontIdx, setEditFrontIdx] = useState<number>(0);
   const [editVideo, setEditVideo] = useState('');
   const [editEnableColors, setEditEnableColors] = useState(true);
   const [editColors, setEditColors] = useState<{ name: string; hex: string }[]>([]);
@@ -157,6 +161,7 @@ export default function AdminDashboardPage() {
   const editSlotInputRef1 = useRef<HTMLInputElement>(null);
   const editSlotInputRef2 = useRef<HTMLInputElement>(null);
   const editSlotInputRef3 = useRef<HTMLInputElement>(null);
+  const editSlotInputRef4 = useRef<HTMLInputElement>(null);
   const editVideoInputRef = useRef<HTMLInputElement>(null);
 
   // Supabase Cloud Status & Backup State
@@ -301,13 +306,14 @@ export default function AdminDashboardPage() {
   // Edit Handlers
   const startEditingProduct = (p: Product) => {
     setEditingProduct({ ...p });
-    const imgSlots = ['', '', '', ''];
+    const imgSlots = ['', '', '', '', ''];
     if (p.images) {
       p.images.forEach((img, idx) => {
-        if (idx < 4) imgSlots[idx] = img;
+        if (idx < 5) imgSlots[idx] = img;
       });
     }
     setEditImages(imgSlots);
+    setEditFrontIdx(0);
     setEditVideo(p.video || '');
     
     const hasColors = Array.isArray(p.colors) && p.colors.length > 0;
@@ -436,7 +442,14 @@ export default function AdminDashboardPage() {
     setUpdatingProduct(true);
     const pin = getAdminPin();
 
-    const finalImages = editImages.map((s) => s.trim()).filter(Boolean);
+    // Reorder so that selected front image is at index 0 (Primary)
+    let orderedImages = [...editImages];
+    if (editFrontIdx > 0 && editImages[editFrontIdx]?.trim()) {
+      const frontImg = editImages[editFrontIdx].trim();
+      const otherImgs = editImages.filter((_, idx) => idx !== editFrontIdx);
+      orderedImages = [frontImg, ...otherImgs];
+    }
+    const finalImages = orderedImages.map((s) => s.trim()).filter(Boolean);
     if (finalImages.length === 0) {
       finalImages.push('/mockups/hoodie-front.jpg');
     }
@@ -629,7 +642,14 @@ export default function AdminDashboardPage() {
     setSubmittingProduct(true);
     const pin = getAdminPin();
 
-    const finalImages = newProductImages.map((s) => s.trim()).filter(Boolean);
+    // Reorder so that selected front image is at index 0 (Primary)
+    let orderedImages = [...newProductImages];
+    if (newProductFrontIdx > 0 && newProductImages[newProductFrontIdx]?.trim()) {
+      const frontImg = newProductImages[newProductFrontIdx].trim();
+      const otherImgs = newProductImages.filter((_, idx) => idx !== newProductFrontIdx);
+      orderedImages = [frontImg, ...otherImgs];
+    }
+    const finalImages = orderedImages.map((s) => s.trim()).filter(Boolean);
     if (finalImages.length === 0) {
       finalImages.push('/mockups/hoodie-front.jpg');
     }
@@ -668,7 +688,8 @@ export default function AdminDashboardPage() {
       setNewProductName('');
       setNewProductNameBn('');
       setNewProductDesc('');
-      setNewProductImages(['', '', '', '']);
+      setNewProductImages(['', '', '', '', '']);
+      setNewProductFrontIdx(0);
       setNewProductVideo('');
       setNewProductStoryHighlight(false);
       setNewProductColors([
@@ -1419,32 +1440,47 @@ export default function AdminDashboardPage() {
                 )}
               </div>
 
-              {/* 4 Photo Upload Slots + Product Video */}
+              {/* 5 Photo Upload Slots with Front Cover Selection + Product Video */}
               <div className="space-y-4 pt-2 border-t border-slate-200">
                 <div>
-                  <label className="text-slate-900 font-bold text-xs flex items-center gap-1.5">
-                    <ImageIcon className="h-4 w-4 text-blue-600" />
-                    <span>Product Photo Gallery (৪টি ছবি আপলোড করুন)</span>
-                  </label>
-                  <p className="text-[11px] text-slate-500 font-bengali">
-                    ১ নম্বর ছবিটি মূল কভার হিসেবে হোমপেজে শো করবে। বাকি ছবিগুলো বিস্তারিত পেজে দেখা যাবে।
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                    <label className="text-slate-900 font-bold text-xs flex items-center gap-1.5">
+                      <ImageIcon className="h-4 w-4 text-blue-600" />
+                      <span>Product Photo Gallery (সর্বোচ্চ ৫টি ছবি যুক্ত করুন)</span>
+                    </label>
+                    <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 self-start sm:self-auto">
+                      <Star className="h-3 w-3 fill-emerald-600 text-emerald-600" />
+                      <span>মূল কভার: ছবি #{newProductFrontIdx + 1}</span>
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 font-bengali mt-0.5">
+                    যেকোনো ছবিকে মূল ছবি (Front Cover) বানাতে ছবির নিচে <span className="font-bold text-emerald-700">"মূল কভার করুন"</span> বাটনে ক্লিক করুন। মূল ছবিটি হোমপেজ ও শপের মেইন কভার হিসেবে শো করবে।
                   </p>
                 </div>
 
-                {/* 4 Image Slots Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {/* 5 Image Slots Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
                   {[
-                    { slotIdx: 0, label: '১. মূল কভার (Main)', hint: 'হোমপেজ ও কার্ড ভিউ' },
-                    { slotIdx: 1, label: '২. সাইড / অ্যাঙ্গেল', hint: 'ডিটেইল ভিউ ২' },
-                    { slotIdx: 2, label: '৩. ফেব্রিক / ব্যাক', hint: 'ক্লোজ-আপ ভিউ ৩' },
-                    { slotIdx: 3, label: '৪. মডেল লুক', hint: 'মডেল শট ৪' },
+                    { slotIdx: 0, label: '১. ছবি ১', hint: 'ফ্রন্ট ভিউ' },
+                    { slotIdx: 1, label: '২. ছবি ২', hint: 'সাইড ভিউ' },
+                    { slotIdx: 2, label: '৩. ছবি ৩', hint: 'ব্যাক ভিউ' },
+                    { slotIdx: 3, label: '৪. ছবি ৪', hint: 'মডেল ভিউ' },
+                    { slotIdx: 4, label: '৫. ছবি ৫', hint: 'ক্লোজ-আপ ভিউ' },
                   ].map(({ slotIdx, label, hint }) => {
                     const currentImg = newProductImages[slotIdx];
                     const isUploading = uploadingSlot === slotIdx;
-                    const ref = [slotInputRef0, slotInputRef1, slotInputRef2, slotInputRef3][slotIdx];
+                    const isFront = newProductFrontIdx === slotIdx;
+                    const ref = [slotInputRef0, slotInputRef1, slotInputRef2, slotInputRef3, slotInputRef4][slotIdx];
 
                     return (
-                      <div key={slotIdx} className="p-2 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between space-y-2">
+                      <div
+                        key={slotIdx}
+                        className={`p-2 rounded-2xl border flex flex-col justify-between space-y-2 transition-all ${
+                          isFront && currentImg
+                            ? 'bg-emerald-50/70 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs'
+                            : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
                         <input
                           type="file"
                           ref={ref}
@@ -1456,8 +1492,11 @@ export default function AdminDashboardPage() {
                         <div>
                           <div className="flex items-center justify-between mb-0.5">
                             <span className="text-[10px] font-bold text-slate-800 line-clamp-1">{label}</span>
-                            {slotIdx === 0 && (
-                              <span className="text-[8px] bg-blue-600 text-white font-mono px-1 rounded">PRIMARY</span>
+                            {isFront && currentImg && (
+                              <span className="text-[8px] bg-emerald-600 text-white font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 shadow-xs">
+                                <Star className="h-2 w-2 fill-white" />
+                                <span>FRONT</span>
+                              </span>
                             )}
                           </div>
                           <p className="text-[9px] text-slate-500 line-clamp-1">{hint}</p>
@@ -1481,12 +1520,33 @@ export default function AdminDashboardPage() {
                                     updated[slotIdx] = '';
                                     return updated;
                                   });
+                                  if (newProductFrontIdx === slotIdx) {
+                                    setNewProductFrontIdx(0);
+                                  }
                                 }}
-                                className="absolute top-1 right-1 p-1 rounded-full bg-black/70 text-white hover:bg-rose-600 transition-colors"
-                                title="Remove"
+                                className="absolute top-1 right-1 p-1 rounded-full bg-black/70 text-white hover:bg-rose-600 transition-colors z-10"
+                                title="Remove photo"
                               >
                                 <X className="h-3 w-3" />
                               </button>
+
+                              {/* Front Cover Selector Toggle */}
+                              {!isFront ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setNewProductFrontIdx(slotIdx)}
+                                  className="absolute bottom-1 left-1 right-1 py-1 px-1 rounded-lg bg-black/75 hover:bg-emerald-600 text-white text-[9px] font-bold backdrop-blur-xs flex items-center justify-center gap-1 transition-all z-10 shadow-sm"
+                                  title="এই ছবিটিকে মূল ছবি (Front Cover) হিসেবে সেট করুন"
+                                >
+                                  <Star className="h-2.5 w-2.5" />
+                                  <span>মূল কভার করুন</span>
+                                </button>
+                              ) : (
+                                <div className="absolute bottom-1 left-1 right-1 py-0.5 px-1 rounded-md bg-emerald-700/90 text-white text-[8px] font-bold backdrop-blur-xs flex items-center justify-center gap-1 z-10">
+                                  <Star className="h-2 w-2 fill-white" />
+                                  <span>★ মূল ছবি (Front)</span>
+                                </div>
+                              )}
                             </>
                           ) : (
                             <div
@@ -1498,7 +1558,7 @@ export default function AdminDashboardPage() {
                               ) : (
                                 <>
                                   <Camera className="h-5 w-5" />
-                                  <span className="text-[9px] font-bold">+ ছবি দিন</span>
+                                  <span className="text-[9px] font-bold">+ ছবি #{slotIdx + 1}</span>
                                 </>
                               )}
                             </div>
@@ -2654,21 +2714,38 @@ export default function AdminDashboardPage() {
                 )}
               </div>
 
-              {/* Edit 4 Photo Slots */}
+              {/* Edit 5 Photo Slots with Front Cover Selection */}
               <div className="space-y-3 pt-2 border-t border-slate-200">
-                <label className="text-slate-900 font-bold text-xs flex items-center gap-1.5">
-                  <ImageIcon className="h-4 w-4 text-blue-600" />
-                  <span>Product Photos (৪টি ছবি এডিট করুন)</span>
-                </label>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <label className="text-slate-900 font-bold text-xs flex items-center gap-1.5">
+                    <ImageIcon className="h-4 w-4 text-blue-600" />
+                    <span>Product Photos (সর্বোচ্চ ৫টি ছবি এডিট করুন)</span>
+                  </label>
+                  <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 self-start sm:self-auto">
+                    <Star className="h-3 w-3 fill-emerald-600 text-emerald-600" />
+                    <span>মূল কভার: ছবি #{editFrontIdx + 1}</span>
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 font-bengali">
+                  যেকোনো ছবির নিচে <span className="font-bold text-emerald-700">"মূল কভার করুন"</span> বাটনে চাপ দিলে সেটি ফ্রন্ট কভার ছবি হিসেবে সেভ হবে।
+                </p>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  {[0, 1, 2, 3].map((slotIdx) => {
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                  {[0, 1, 2, 3, 4].map((slotIdx) => {
                     const currentImg = editImages[slotIdx];
                     const isUploading = editUploadingSlot === slotIdx;
-                    const ref = [editSlotInputRef0, editSlotInputRef1, editSlotInputRef2, editSlotInputRef3][slotIdx];
+                    const isFront = editFrontIdx === slotIdx;
+                    const ref = [editSlotInputRef0, editSlotInputRef1, editSlotInputRef2, editSlotInputRef3, editSlotInputRef4][slotIdx];
 
                     return (
-                      <div key={slotIdx} className="p-2 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                      <div
+                        key={slotIdx}
+                        className={`p-2 rounded-2xl border flex flex-col justify-between space-y-1.5 transition-all ${
+                          isFront && currentImg
+                            ? 'bg-emerald-50/70 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs'
+                            : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
                         <input
                           type="file"
                           ref={ref}
@@ -2677,10 +2754,16 @@ export default function AdminDashboardPage() {
                           className="hidden"
                         />
                         <div className="flex justify-between items-center text-[10px] font-bold">
-                          <span>#{slotIdx + 1} {slotIdx === 0 ? 'Main' : ''}</span>
+                          <span>#{slotIdx + 1} {slotIdx === 0 ? '(ডিফল্ট)' : ''}</span>
+                          {isFront && currentImg && (
+                            <span className="text-[8px] bg-emerald-600 text-white font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                              <Star className="h-2 w-2 fill-white" />
+                              <span>FRONT</span>
+                            </span>
+                          )}
                         </div>
 
-                        <div className="relative aspect-square rounded-xl overflow-hidden bg-white border border-slate-200 flex items-center justify-center">
+                        <div className="relative aspect-square rounded-xl overflow-hidden bg-white border border-slate-200 flex items-center justify-center group">
                           {currentImg ? (
                             <>
                               <img
@@ -2697,32 +2780,85 @@ export default function AdminDashboardPage() {
                                     updated[slotIdx] = '';
                                     return updated;
                                   });
+                                  if (editFrontIdx === slotIdx) {
+                                    setEditFrontIdx(0);
+                                  }
                                 }}
-                                className="absolute top-1 right-1 p-1 rounded-full bg-black/70 text-white hover:bg-rose-600"
+                                className="absolute top-1 right-1 p-1 rounded-full bg-black/70 text-white hover:bg-rose-600 z-10"
+                                title="Remove photo"
                               >
                                 <X className="h-3 w-3" />
                               </button>
+
+                              {/* Front Cover Selector Toggle */}
+                              {!isFront ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setEditFrontIdx(slotIdx)}
+                                  className="absolute bottom-1 left-1 right-1 py-1 px-1 rounded-lg bg-black/75 hover:bg-emerald-600 text-white text-[9px] font-bold backdrop-blur-xs flex items-center justify-center gap-1 transition-all z-10 shadow-sm"
+                                  title="এই ছবিটিকে মূল ছবি (Front Cover) হিসেবে সেট করুন"
+                                >
+                                  <Star className="h-2.5 w-2.5" />
+                                  <span>মূল কভার করুন</span>
+                                </button>
+                              ) : (
+                                <div className="absolute bottom-1 left-1 right-1 py-0.5 px-1 rounded-md bg-emerald-700/90 text-white text-[8px] font-bold backdrop-blur-xs flex items-center justify-center gap-1 z-10">
+                                  <Star className="h-2 w-2 fill-white" />
+                                  <span>★ মূল ছবি (Front)</span>
+                                </div>
+                              )}
                             </>
                           ) : (
                             <div
                               onClick={() => ref.current?.click()}
-                              className="w-full h-full flex flex-col items-center justify-center cursor-pointer text-slate-400 hover:text-blue-600"
+                              className="w-full h-full flex flex-col items-center justify-center cursor-pointer text-slate-400 hover:text-blue-600 p-2 text-center"
                             >
-                              <Camera className="h-5 w-5" />
-                              <span className="text-[9px] font-bold">+ ছবি দিন</span>
+                              {isUploading ? (
+                                <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                              ) : (
+                                <>
+                                  <Camera className="h-5 w-5" />
+                                  <span className="text-[9px] font-bold">+ ছবি #{slotIdx + 1}</span>
+                                </>
+                              )}
                             </div>
                           )}
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => ref.current?.click()}
-                          disabled={isUploading}
-                          className="w-full py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[10px] flex items-center justify-center gap-1"
-                        >
-                          {isUploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <UploadCloud className="h-3 w-3" />}
-                          <span>{currentImg ? 'পরিবর্তন' : 'আপলোড'}</span>
-                        </button>
+                        {/* Front Cover Indicator if active */}
+                        {currentImg && isFront && (
+                          <div className="py-0.5 px-1 bg-emerald-100/80 border border-emerald-300 text-emerald-800 text-[9px] font-bold rounded-md text-center flex items-center justify-center gap-1">
+                            <Star className="h-2.5 w-2.5 fill-emerald-700 text-emerald-700" />
+                            <span>★ এটিই মূল কভার ছবি</span>
+                          </div>
+                        )}
+
+                        <div className="space-y-1">
+                          <button
+                            type="button"
+                            onClick={() => ref.current?.click()}
+                            disabled={isUploading}
+                            className="w-full py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[10px] flex items-center justify-center gap-1"
+                          >
+                            {isUploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <UploadCloud className="h-3 w-3" />}
+                            <span>{currentImg ? 'পরিবর্তন' : 'আপলোড'}</span>
+                          </button>
+
+                          <input
+                            type="text"
+                            placeholder="বা ছবির লিংক"
+                            value={currentImg}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditImages((prev) => {
+                                const updated = [...prev];
+                                updated[slotIdx] = val;
+                                return updated;
+                              });
+                            }}
+                            className="w-full px-2 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 text-[9px] font-mono focus:outline-none focus:border-blue-600"
+                          />
+                        </div>
                       </div>
                     );
                   })}

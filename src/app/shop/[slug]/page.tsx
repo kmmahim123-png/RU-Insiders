@@ -199,7 +199,7 @@ export default function ProductDetailPage({ params }: Props) {
             )}
           </div>
 
-          {/* Thumbnails (Supports up to 4 Images + Video) */}
+          {/* Thumbnails (Supports up to 5 Images + Video) */}
           <div className="flex flex-wrap items-center gap-3">
             {product.images.map((img, idx) => (
               <button

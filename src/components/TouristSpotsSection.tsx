@@ -35,6 +35,26 @@ export default function TouristSpotsSection() {
 
   useEffect(() => {
     setAllSpots(getStoredTouristSpots());
+
+    // Sync with server for multi-device cross-platform persistence
+    async function syncWithServer() {
+      try {
+        const res = await fetch('/api/spots', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.customTouristSpots) && data.customTouristSpots.length > 0) {
+            try {
+              localStorage.setItem('ru_custom_tourist_spots_v1', JSON.stringify(data.customTouristSpots));
+            } catch (e) {}
+            setAllSpots(getStoredTouristSpots());
+          }
+        }
+      } catch (e) {
+        console.warn('Server spots sync:', e);
+      }
+    }
+    syncWithServer();
+
     const handleUpdate = () => {
       setAllSpots(getStoredTouristSpots());
     };

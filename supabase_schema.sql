@@ -99,11 +99,28 @@ INSERT INTO public.steadfast_config (id, api_key, secret_key, base_url, is_activ
 VALUES ('primary', '', '', 'https://portal.steadfast.com.bd/api/v1', false)
 ON CONFLICT (id) DO NOTHING;
 
--- 5. ENABLE ROW LEVEL SECURITY (RLS) & PUBLIC READ ACCESS
+-- 5. TOURIST SPOTS & LANDMARKS TABLE
+CREATE TABLE IF NOT EXISTS public.tourist_spots (
+  id TEXT PRIMARY KEY,
+  name_bn TEXT NOT NULL,
+  name_en TEXT DEFAULT '',
+  district_id TEXT NOT NULL,
+  district_bn TEXT DEFAULT '',
+  description_bn TEXT DEFAULT '',
+  image_url TEXT DEFAULT '',
+  images JSONB DEFAULT '[]'::jsonb,
+  location_bn TEXT DEFAULT '',
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_tourist_spots_district ON public.tourist_spots (district_id);
+
+-- 6. ENABLE ROW LEVEL SECURITY (RLS) & PUBLIC READ ACCESS
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.print_jobs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.steadfast_config ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tourist_spots ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read access to products
 DROP POLICY IF EXISTS "Public read products" ON public.products;
@@ -122,7 +139,10 @@ CREATE POLICY "Full access print_jobs for API" ON public.print_jobs FOR ALL USIN
 DROP POLICY IF EXISTS "Full access steadfast for API" ON public.steadfast_config;
 CREATE POLICY "Full access steadfast for API" ON public.steadfast_config FOR ALL USING (true) WITH CHECK (true);
 
--- 6. STORAGE BUCKETS SETUP
+DROP POLICY IF EXISTS "Full access tourist_spots for API" ON public.tourist_spots;
+CREATE POLICY "Full access tourist_spots for API" ON public.tourist_spots FOR ALL USING (true) WITH CHECK (true);
+
+-- 7. STORAGE BUCKETS SETUP
 -- Insert public buckets for uploaded photos, videos, and PDFs
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('ru-uploads', 'ru-uploads', true)
