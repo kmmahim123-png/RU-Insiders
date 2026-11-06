@@ -32,8 +32,8 @@ export default function MapPage() {
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse"></span>
             <h1 className="text-sm sm:text-base font-black text-slate-900 tracking-tight flex items-center gap-1.5">
-              <span>Unseen RU</span>
-              <span className="text-emerald-700 font-bold">• মতিহার ইন্টারঅ্যাক্টিভ ম্যাপ</span>
+              <span>Unseen RU & Rajshahi</span>
+              <span className="text-emerald-700 font-bold">• রাবি ও অদেখা রাজশাহী ম্যাপ</span>
             </h1>
           </div>
         </div>

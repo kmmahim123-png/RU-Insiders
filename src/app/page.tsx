@@ -181,19 +181,19 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 2. Unseen RU Interactive Map Section (Google Argon Model Map) */}
+      {/* 2. Unseen RU & Unseen Rajshahi Interactive Map Section */}
       <section id="campus-map" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
         <div className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-950 rounded-3xl p-5 sm:p-7 text-white shadow-xl border border-emerald-800/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1.5 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-400/30">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Unseen RU • ৪২টি সীমানা অঞ্চল ও রুট ম্যাপ</span>
+              <span>Unseen RU & Rajshahi • রাবি ক্যাম্পাস (৪২), সিটি (২৪) ও জেলা (২৭) ম্যাপ</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-              আনসিন রাজশাহী বিশ্ববিদ্যালয় — ইন্টারঅ্যাক্টিভ সীমানা ম্যাপ
+              আনসিন রাবি ও রাজশাহী — ইন্টারঅ্যাক্টিভ সীমানা ম্যাপ ও গাইড
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 font-bengali leading-relaxed">
-              ম্যাপে ক্লিক করে আপনি যে যে এলাকা ঘুরে দেখেছেন সেগুলো সবুজ করুন, লাইভ পারসেন্টেজ দেখুন এবং আপনার অর্জনের পোস্টার ডাউনলোড করে বন্ধুদের সাথে শেয়ার করুন!
+              ম্যাপে ক্লিক করে রাবি ক্যাম্পাস, রাজশাহী সিটি বা জেলার যে যে স্থান ঘুরেছেন সেগুলো সবুজ করুন, লাইভ রুট ও দূরত্ব দেখুন, এবং দর্শনীয় স্থানের ছবি ও কাস্টম পোস্টার ডাউনলোড করুন!
             </p>
           </div>
 
