@@ -40,7 +40,8 @@ import {
   Database,
   Copy,
   Download,
-  CheckCheck
+  CheckCheck,
+  Clock
 } from 'lucide-react';
 import RevenueCharts from '@/components/RevenueCharts';
 import PrintDesk from '@/components/PrintDesk';
@@ -138,6 +139,8 @@ export default function AdminDashboardPage() {
 
   // Product Edit State
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [savingOrderEdit, setSavingOrderEdit] = useState(false);
   const [editImages, setEditImages] = useState<string[]>(['', '', '', '']);
   const [editVideo, setEditVideo] = useState('');
   const [editEnableColors, setEditEnableColors] = useState(true);
@@ -273,16 +276,7 @@ export default function AdminDashboardPage() {
         }
       }
 
-      // 2. Serverless 4.5MB limitation warning
-      if (sizeMb > 4.5) {
-        showNotification(
-          `ভিডিও সাইজ (${sizeMb.toFixed(1)}MB) Vercel লিমিটের (৪.৫MB) বেশি। ক্লাউড আপলোডের জন্য Supabase যুক্ত করুন অথবা নিচে ভিডিও URL লিঙ্ক দিন।`,
-          'error'
-        );
-        return;
-      }
-
-      // 3. Fallback to /api/upload
+      // 2. Direct upload via /api/upload
       const formData = new FormData();
       formData.append('file', file);
       const res = await fetch('/api/upload', {
@@ -416,14 +410,6 @@ export default function AdminDashboardPage() {
         }
       }
 
-      if (sizeMb > 4.5) {
-        showNotification(
-          `ভিডিও সাইজ (${sizeMb.toFixed(1)}MB) Vercel লিমিটের (৪.৫MB) বেশি। ক্লাউড আপলোডের জন্য Supabase যুক্ত করুন অথবা নিচে ভিডিও URL লিঙ্ক দিন।`,
-          'error'
-        );
-        return;
-      }
-
       const formData = new FormData();
       formData.append('file', file);
       const res = await fetch('/api/upload', {
@@ -536,14 +522,47 @@ export default function AdminDashboardPage() {
         if (printData.success) setPrintJobs(printData.jobs);
       }
 
-      // 4. Fetch Steadfast Config
+      // 4. Fetch Steadfast Config with Persistent Storage Sync
+      try {
+        const localSaved = localStorage.getItem('ru_steadfast_saved_config_v2');
+        if (localSaved) {
+          const parsed = JSON.parse(localSaved);
+          if (parsed?.apiKey && !parsed.apiKey.startsWith('DEMO_')) {
+            setSteadfastConfig(parsed);
+          }
+        }
+      } catch (e) {}
+
       const sfRes = await fetch('/api/admin/steadfast', {
         headers: { 'x-admin-pin': pin },
         credentials: 'include',
       });
       if (sfRes.ok) {
         const sfData = await sfRes.json();
-        if (sfData.success && sfData.config) setSteadfastConfig(sfData.config);
+        if (sfData.success && sfData.config) {
+          if (sfData.config.apiKey && !sfData.config.apiKey.startsWith('DEMO_')) {
+            setSteadfastConfig(sfData.config);
+            try {
+              localStorage.setItem('ru_steadfast_saved_config_v2', JSON.stringify(sfData.config));
+            } catch (e) {}
+          } else {
+            // Check if local has real key to sync to server
+            try {
+              const localSaved = localStorage.getItem('ru_steadfast_saved_config_v2');
+              if (localSaved) {
+                const parsed = JSON.parse(localSaved);
+                if (parsed?.apiKey && !parsed.apiKey.startsWith('DEMO_')) {
+                  fetch('/api/admin/steadfast', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-admin-pin': pin },
+                    credentials: 'include',
+                    body: JSON.stringify({ action: 'save_config', config: parsed }),
+                  }).catch(() => {});
+                }
+              }
+            } catch (e) {}
+          }
+        }
       }
 
       // 5. Fetch Supabase Cloud Status
@@ -834,6 +853,75 @@ export default function AdminDashboardPage() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  // Full Order Edit & Rewrite Handler
+  const handleSaveOrderEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingOrder) return;
+    setSavingOrderEdit(true);
+    try {
+      const pin = getAdminPin();
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': pin,
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          action: 'edit_order',
+          id: editingOrder.id,
+          updates: {
+            customerName: editingOrder.customerName,
+            customerPhone: editingOrder.customerPhone,
+            customerAddress: editingOrder.customerAddress,
+            deliveryMethod: editingOrder.deliveryMethod,
+            adminNotes: editingOrder.adminNotes,
+            total: Number(editingOrder.total),
+            deliveryFee: Number(editingOrder.deliveryFee),
+            status: editingOrder.status,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showNotification(`অর্ডার #${editingOrder.orderNumber} সফলভাবে এডিট ও আপডেট হয়েছে!`);
+        setOrders((prev) => prev.map((o) => (o.id === editingOrder.id ? { ...o, ...editingOrder } : o)));
+        setEditingOrder(null);
+      } else {
+        throw new Error(data.message || 'Failed to update order');
+      }
+    } catch (err: any) {
+      showNotification(err.message || 'অর্ডার আপডেট করতে সমস্যা হয়েছে', 'error');
+    } finally {
+      setSavingOrderEdit(false);
+    }
+  };
+
+  // Delete & Clear Steadfast Keys
+  const handleClearSteadfastKeys = async () => {
+    if (!confirm('আপনি কি স্টেডফাস্ট API Key এবং Secret Key সম্পূর্ণ মুছে ফেলতে চান?')) return;
+    const emptyConfig = {
+      apiKey: '',
+      secretKey: '',
+      baseUrl: 'https://portal.packzy.com/api/v1',
+      isEnabled: false,
+    };
+    setSteadfastConfig(emptyConfig);
+    try {
+      localStorage.removeItem('ru_steadfast_saved_config_v2');
+      const pin = getAdminPin();
+      await fetch('/api/admin/steadfast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-pin': pin },
+        credentials: 'include',
+        body: JSON.stringify({ action: 'save_config', config: emptyConfig }),
+      });
+      showNotification('স্টেডফাস্ট API কী সম্পূর্ণ মুছে ফেলা হয়েছে।');
+    } catch (e) {
+      showNotification('API কী মুছতে সমস্যা হয়েছে', 'error');
     }
   };
 
@@ -1821,12 +1909,23 @@ export default function AdminDashboardPage() {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <span className="text-xs text-slate-500 font-mono">{formatDate(order.createdAt)}</span>
+                      
+                      <button
+                        type="button"
+                        onClick={() => setEditingOrder({ ...order })}
+                        className="px-2.5 py-1 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-bold flex items-center gap-1 transition shadow-xs"
+                        title="অর্ডার কাস্টমার ডিটেইলস ও আইটেম এডিট করুন"
+                      >
+                        <Edit3 className="h-3.5 w-3.5" />
+                        <span>এডিট / রি-রাইট</span>
+                      </button>
+
                       <button
                         onClick={() => handleDeleteOrder(order.id, order.orderNumber)}
-                        className="text-slate-400 hover:text-rose-600 transition-colors"
-                        title="Delete order"
+                        className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                        title="অর্ডার মুছে ফেলুন"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -1929,12 +2028,25 @@ export default function AdminDashboardPage() {
                         </button>
                       )}
 
-                      {/* 4. Delivered Stage Badge */}
+                      {/* 4. Delivered Stage Badge with 7-Day Auto Cleanup Indicator */}
                       {order.status === 'delivered' && (
-                        <span className="px-3.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center gap-1.5">
-                          <Check className="h-4 w-4 text-emerald-600" />
-                          <span>সফলভাবে ডেলিভারি সম্পন্ন</span>
-                        </span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="px-3.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center gap-1.5">
+                            <Check className="h-4 w-4 text-emerald-600" />
+                            <span>সফলভাবে ডেলিভারি সম্পন্ন</span>
+                          </span>
+                          {(() => {
+                            const delTime = new Date(order.deliveredAt || order.updatedAt || order.createdAt).getTime();
+                            const elapsedDays = Math.floor((Date.now() - delTime) / (1000 * 60 * 60 * 24));
+                            const remainingDays = Math.max(0, 7 - elapsedDays);
+                            return (
+                              <span className="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
+                                <Clock className="h-3.5 w-3.5 text-amber-600" />
+                                <span>৭ দিনে অটো-ডিলিট হবে (বাকি {remainingDays} দিন)</span>
+                              </span>
+                            );
+                          })()}
+                        </div>
                       )}
 
                       {/* 5. Cancel Action Available at Any Step */}
@@ -2095,7 +2207,7 @@ export default function AdminDashboardPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
               <button
                 type="button"
                 disabled={testingSteadfast}
@@ -2161,8 +2273,11 @@ export default function AdminDashboardPage() {
                     });
                     const data = await res.json();
                     if (res.ok && data.success) {
-                      showNotification('স্টেডফাস্ট সেটিংস সফলভাবে ডাটাবেজে সেভ হয়েছে!');
+                      showNotification('স্টেডফাস্ট সেটিংস সফলভাবে ডাটাবেজে স্থায়ীভাবে সেভ হয়েছে!');
                       if (data.config) setSteadfastConfig(data.config);
+                      try {
+                        localStorage.setItem('ru_steadfast_saved_config_v2', JSON.stringify(data.config || steadfastConfig));
+                      } catch (e) {}
                     } else {
                       showNotification(data.message || 'সেটিংস সেভ করতে সমস্যা হয়েছে', 'error');
                     }
@@ -2174,6 +2289,16 @@ export default function AdminDashboardPage() {
               >
                 <Truck className="h-4 w-4" />
                 <span>সেটিংস সেভ করুন</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleClearSteadfastKeys}
+                className="py-3 px-4 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs uppercase tracking-wider transition-all border border-rose-200 flex items-center justify-center gap-2"
+                title="API কী ডাটাবেজ ও ব্রাউজার থেকে মুছে ফেলুন"
+              >
+                <Trash2 className="h-4 w-4 text-rose-600" />
+                <span>কী মুছে ফেলুন</span>
               </button>
             </div>
           </div>
@@ -2689,6 +2814,176 @@ export default function AdminDashboardPage() {
                 >
                   {updatingProduct ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                   <span>আপডেট ও সেভ করুন (Save Changes)</span>
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* EDIT / RE-WRITE ORDER MODAL */}
+      {editingOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 space-y-5 shadow-2xl border border-slate-200">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Edit3 className="h-5 w-5 text-blue-600" />
+                  <span>অর্ডার এডিট ও রি-রাইট: {editingOrder.orderNumber}</span>
+                </h3>
+                <p className="text-xs text-slate-500 font-bengali">
+                  কাস্টমারের নাম, ফোন নম্বর, ডেলিভারি ঠিকানা ও অর্ডার তথ্য সংশোধন করুন।
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingOrder(null)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveOrderEdit} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 mb-1 font-semibold">গ্রাহকের নাম (Customer Name)</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingOrder.customerName}
+                    onChange={(e) => setEditingOrder({ ...editingOrder, customerName: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:outline-none focus:border-blue-600 focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 mb-1 font-semibold">ফোন নম্বর (Phone Number)</label>
+                  <input
+                    type="tel"
+                    required
+                    value={editingOrder.customerPhone}
+                    onChange={(e) => setEditingOrder({ ...editingOrder, customerPhone: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-mono font-medium focus:outline-none focus:border-blue-600 focus:bg-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 mb-1 font-semibold">ডেলিভারি ঠিকানা (Shipping Address)</label>
+                <textarea
+                  rows={2}
+                  required
+                  value={editingOrder.customerAddress}
+                  onChange={(e) => setEditingOrder({ ...editingOrder, customerAddress: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:outline-none focus:border-blue-600 focus:bg-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-slate-700 mb-1 font-semibold">ডেলিভারি মেথড</label>
+                  <select
+                    value={editingOrder.deliveryMethod}
+                    onChange={(e) => setEditingOrder({ ...editingOrder, deliveryMethod: e.target.value as any })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:outline-none focus:border-blue-600 focus:bg-white"
+                  >
+                    <option value="ru_campus_pickup">রাবি ক্যাম্পাস পিকআপ (RU Campus)</option>
+                    <option value="rajshahi_city">রাজশাহী সিটি হোম ডেলিভারি</option>
+                    <option value="steadfast_courier">স্টেডফাস্ট কুরিয়ার (সারা দেশ)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 mb-1 font-semibold">ডেলিভারি চার্জ (৳)</label>
+                  <input
+                    type="number"
+                    value={editingOrder.deliveryFee}
+                    onChange={(e) => {
+                      const fee = Number(e.target.value);
+                      const subtotal = editingOrder.subtotal || 0;
+                      setEditingOrder({ ...editingOrder, deliveryFee: fee, total: subtotal + fee });
+                    }}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-mono font-bold focus:outline-none focus:border-blue-600 focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 mb-1 font-semibold">মোট প্রদেয় (Total ৳)</label>
+                  <input
+                    type="number"
+                    value={editingOrder.total}
+                    onChange={(e) => setEditingOrder({ ...editingOrder, total: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-emerald-700 font-mono font-bold focus:outline-none focus:border-blue-600 focus:bg-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 mb-1 font-semibold">অর্ডার স্ট্যাটাস (Order Status)</label>
+                <select
+                  value={editingOrder.status}
+                  onChange={(e) => setEditingOrder({ ...editingOrder, status: e.target.value as any })}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:outline-none focus:border-blue-600 focus:bg-white"
+                >
+                  <option value="pending">১. Pending (পেন্ডিং)</option>
+                  <option value="ready_for_pickup">২. Ready for Pickup (পিকআপ প্রস্তুত)</option>
+                  <option value="rider">৩. Rider / On The Way (রাইডারের কাছে)</option>
+                  <option value="delivered">৪. Delivered (ডেলিভার্ড - ৭ দিনে অটো ডিলিট)</option>
+                  <option value="cancelled">৫. Cancelled (বাতিলকৃত)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 mb-1 font-semibold">অ্যাডমিন নোট / বিশেষ নির্দেশনা (Admin Notes)</label>
+                <textarea
+                  rows={2}
+                  placeholder="যেমন: বিশেষ কাস্টম সাইজ অথবা প্যারিস রোডে বিকাল ৪টায় হ্যান্ডওভার..."
+                  value={editingOrder.adminNotes || ''}
+                  onChange={(e) => setEditingOrder({ ...editingOrder, adminNotes: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-blue-600 focus:bg-white"
+                />
+              </div>
+
+              {/* Items List Preview */}
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <span className="font-bold text-slate-800 text-xs block">অর্ডারের আইটেমসমূহ:</span>
+                <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                  {editingOrder.items.map((it, idx) => (
+                    <div key={idx} className="p-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        {it.image && (
+                          <img src={it.image} alt={it.name} className="w-8 h-8 rounded-lg object-cover bg-white border" />
+                        )}
+                        <div>
+                          <p className="font-bold text-slate-900">{it.name}</p>
+                          <p className="text-[10px] text-slate-500">সাইজ: {it.size} • রং: {it.color} • পরিমাণ: {it.quantity}</p>
+                        </div>
+                      </div>
+                      <span className="font-mono font-bold text-slate-900">{formatBDT(it.price * it.quantity)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setEditingOrder(null)}
+                  className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs"
+                >
+                  বাতিল
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={savingOrderEdit}
+                  className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md"
+                >
+                  {savingOrderEdit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  <span>পরিবর্তন সংরক্ষণ করুন (Save Order)</span>
                 </button>
               </div>
             </form>

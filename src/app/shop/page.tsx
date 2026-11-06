@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/ProductCard';
 import FilterModal, { FilterState } from '@/components/FilterModal';
+import TopStoryHighlights from '@/components/TopStoryHighlights';
 import { Product } from '@/lib/types';
 import { INITIAL_PRODUCTS } from '@/lib/store';
 import { Search, SlidersHorizontal, Loader2, X, Tag } from 'lucide-react';
@@ -115,18 +116,8 @@ function ShopContent() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6 sm:space-y-8">
       
-      {/* Page Header */}
-      <div className="space-y-1 sm:space-y-2">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold">
-          <span>Official RU Merch Catalog</span>
-        </div>
-        <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-          RU Insiders Apparel & Merchandise
-        </h1>
-        <p className="text-xs sm:text-sm text-slate-500 font-bengali">
-          রাজশাহী বিশ্ববিদ্যালয়ের থিমে তৈরি অফিসিয়াল হুডি, ড্রপ শোল্ডার, গেঞ্জি ও এক্সক্লুসিভ ক্যাম্পাস কালেকশন।
-        </p>
-      </div>
+      {/* Top Story Highlights (কালেকশন - গোল আইকন) */}
+      <TopStoryHighlights products={products} showViewAllButton={false} title="কালেকশন" />
 
       {/* Toolbar */}
       <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">

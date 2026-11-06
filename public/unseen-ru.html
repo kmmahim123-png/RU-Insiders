@@ -252,11 +252,16 @@
       <!-- Right Controls: Live % Badge, Route, Share, Antigravity Physics & Admin -->
       <div class="flex items-center gap-1.5 sm:gap-2">
         
-        <!-- Live Explored Percentage Pill (Clickable to Share) -->
-        <button onclick="openShareModal()" class="hidden sm:flex px-3 py-1.5 rounded-full bg-[#eaf3ed] hover:bg-[#d8eadf] border border-emerald-800/15 text-[#1f7a44] items-center gap-1.5 transition shadow-sm" title="আপনার অগ্রগতি শেয়ার করুন">
-          <span class="w-2 h-2 rounded-full bg-[#1f7a44] animate-pulse"></span>
-          <span id="header-pct-badge" class="font-bold text-xs">৭% ঘোরা হয়েছে</span>
-        </button>
+        <!-- Live Explored Percentage Pill (Clickable to Share) & Reset Option -->
+        <div class="hidden sm:flex items-center gap-1 bg-[#eaf3ed] p-0.5 pr-2 rounded-full border border-emerald-800/15 shadow-sm">
+          <button onclick="openShareModal()" class="px-2.5 py-1 rounded-full text-[#1f7a44] flex items-center gap-1.5 hover:bg-[#d8eadf] transition" title="আপনার অগ্রগতি শেয়ার করুন">
+            <span class="w-2 h-2 rounded-full bg-[#1f7a44] animate-pulse"></span>
+            <span id="header-pct-badge" class="font-bold text-xs">০% ঘোরা হয়েছে</span>
+          </button>
+          <button onclick="resetAllVisitedProgress()" class="text-[10px] text-gray-500 hover:text-red-600 font-bold px-1.5 py-0.5 rounded-full hover:bg-white transition" title="সব মুছে ০% রিসেট করুন">
+            রিসেট
+          </button>
+        </div>
 
         <!-- Quick Route Finder Button (Mobile/Tablet) -->
         <button onclick="toggleRoutePlannerBar(true)" class="xl:hidden px-2.5 sm:px-3 py-1.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-sm flex items-center gap-1 transition" title="এক জায়গা থেকে আরেক জায়গায় যাওয়ার রুট দেখুন">
@@ -2409,27 +2414,45 @@
     let initialPinchDist = null;
     let initialPinchScale = 1;
 
-    // ================= LOAD / SAVE & ADMIN PERSISTENCE =================
+    // ================= LOAD / SAVE & LOCAL PERSISTENCE =================
     function loadSavedProgress() {
       try {
         const savedRU = localStorage.getItem('unseen_ru_visited_v2');
         if (savedRU) visitedPlaces = new Set(JSON.parse(savedRU));
-        else visitedPlaces = new Set(['main_gate', 'paris_road', 'rabindra_bldg']);
+        else visitedPlaces = new Set(); // Default 0% fresh for new visitors
 
         const savedRCC = localStorage.getItem('unseen_rcc_visited_v1');
         if (savedRCC) visitedRccPlaces = new Set(JSON.parse(savedRCC));
-        else visitedRccPlaces = new Set(['rcc_padma_garden_borokuthi', 'rcc_tbandh_lalon', 'rcc_varendra_museum']);
+        else visitedRccPlaces = new Set();
 
         const savedRJ = localStorage.getItem('unseen_rajshahi_visited_v1');
         if (savedRJ) visitedRajshahiPlaces = new Set(JSON.parse(savedRJ));
-        else visitedRajshahiPlaces = new Set(['rj_padma_garden', 'rj_puthia', 'rj_bagha_mosque']);
+        else visitedRajshahiPlaces = new Set();
 
         const savedPhotos = localStorage.getItem('unseen_ru_custom_photos_v1');
         if (savedPhotos) customPlacePhotos = JSON.parse(savedPhotos);
       } catch (e) {
-        visitedPlaces = new Set(['main_gate', 'paris_road', 'rabindra_bldg']);
-        visitedRccPlaces = new Set(['rcc_padma_garden_borokuthi', 'rcc_tbandh_lalon']);
-        visitedRajshahiPlaces = new Set(['rj_padma_garden', 'rj_puthia']);
+        visitedPlaces = new Set();
+        visitedRccPlaces = new Set();
+        visitedRajshahiPlaces = new Set();
+      }
+    }
+
+    function resetAllVisitedProgress() {
+      if (!confirm('আপনি কি আপনার সব চিহ্নিত করা স্থান মুছে ০% এ রিসেট করতে চান?')) return;
+      visitedPlaces = new Set();
+      visitedRccPlaces = new Set();
+      visitedRajshahiPlaces = new Set();
+      try {
+        localStorage.removeItem('unseen_ru_visited_v2');
+        localStorage.removeItem('unseen_rcc_visited_v1');
+        localStorage.removeItem('unseen_rajshahi_visited_v1');
+      } catch (e) {}
+      updateProgressUI();
+      renderContiguousMap();
+      renderSidebarPlaces();
+      if (document.getElementById('header-pct-badge')) {
+        document.getElementById('header-pct-badge').textContent = '০% ঘোরা হয়েছে';
       }
     }
 

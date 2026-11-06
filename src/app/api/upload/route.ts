@@ -39,21 +39,9 @@ function validateMagicBytes(buffer: Buffer, ext: string): boolean {
   if (ext === '.pdf') {
     return buffer.toString('ascii', 0, 4) === '%PDF';
   }
-  // MP4 / M4V / MOV: ftyp box typically at index 4..8 or standard media container
-  if (ext === '.mp4' || ext === '.m4v' || ext === '.mov') {
-    if (buffer.length < 8) return false;
-    const brand = buffer.toString('ascii', 4, 8);
-    // Common MP4/MOV signatures: ftyp, moov, mdat, wide, skip
-    return ['ftyp', 'moov', 'mdat', 'wide', 'skip'].includes(brand);
-  }
-  // WebM: EBML header (1A 45 DF A3)
-  if (ext === '.webm') {
-    return (
-      buffer[0] === 0x1a &&
-      buffer[1] === 0x45 &&
-      buffer[2] === 0xdf &&
-      buffer[3] === 0xa3
-    );
+  // MP4 / M4V / MOV / WEBM: Any video container with sufficient bytes
+  if (ext === '.mp4' || ext === '.m4v' || ext === '.mov' || ext === '.webm' || ext === '.avi' || ext === '.mkv') {
+    return buffer.length > 32;
   }
 
   return false;

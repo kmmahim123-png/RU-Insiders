@@ -120,6 +120,9 @@ function mapOrderFromRow(row: any): Order {
     riderName: row.rider_name || '',
     steadfastConsignmentId: row.steadfast_consignment_id || undefined,
     steadfastTrackingCode: row.steadfast_tracking_code || undefined,
+    deliveredAt: row.delivered_at || undefined,
+    adminNotes: row.admin_notes || undefined,
+    updatedAt: row.updated_at || undefined,
     createdAt: row.created_at || new Date().toISOString(),
   };
 }
@@ -144,8 +147,10 @@ function mapOrderToRow(o: Order) {
     rider_name: o.riderName || '',
     steadfast_consignment_id: o.steadfastConsignmentId || '',
     steadfast_tracking_code: o.steadfastTrackingCode || '',
+    delivered_at: o.deliveredAt || null,
+    admin_notes: o.adminNotes || null,
     created_at: o.createdAt || new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    updated_at: o.updatedAt || new Date().toISOString(),
   };
 }
 
@@ -437,7 +442,42 @@ export async function moveProductPosition(id: string, direction: 'up' | 'down'):
 }
 
 // ---------------- ORDERS API ----------------
+// Automatically delete orders that have been marked delivered for more than 7 days
+export async function pruneDeliveredOrdersOlderThan7Days(): Promise<number> {
+  const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  let deletedCount = 0;
+
+  try {
+    const db = await readDb();
+    const expiredIds: string[] = [];
+
+    for (const order of db.orders) {
+      if (order.status === 'delivered') {
+        const timestamp = new Date(order.deliveredAt || order.updatedAt || order.createdAt).getTime();
+        if (now - timestamp > SEVEN_DAYS_MS) {
+          expiredIds.push(order.id);
+        }
+      }
+    }
+
+    if (expiredIds.length > 0) {
+      for (const id of expiredIds) {
+        await deleteOrder(id);
+        deletedCount++;
+      }
+    }
+  } catch (err) {
+    console.warn('Auto prune delivered orders error:', err);
+  }
+
+  return deletedCount;
+}
+
 export async function getOrders(): Promise<Order[]> {
+  // Run automatic cleanup of delivered orders older than 7 days
+  await pruneDeliveredOrdersOlderThan7Days();
+
   const supabase = getSupabaseClient();
   if (supabase) {
     try {
@@ -487,6 +527,9 @@ export async function updateOrderStatus(
   riderName?: string
 ): Promise<Order | null> {
   return runAtomic(async () => {
+    const isDelivered = status === 'delivered';
+    const deliveredAt = isDelivered ? new Date().toISOString() : undefined;
+
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
@@ -494,6 +537,7 @@ export async function updateOrderStatus(
           status,
           updated_at: new Date().toISOString(),
         };
+        if (isDelivered) payload.delivered_at = deliveredAt;
         if (steadfastTrackingCode) payload.steadfast_tracking_code = steadfastTrackingCode;
         if (steadfastConsignmentId) payload.steadfast_consignment_id = steadfastConsignmentId;
         if (cancelledFrom) payload.cancelled_from = cancelledFrom;
@@ -519,10 +563,70 @@ export async function updateOrderStatus(
     if (index === -1) return null;
 
     db.orders[index].status = status;
+    db.orders[index].updatedAt = new Date().toISOString();
+    if (isDelivered) db.orders[index].deliveredAt = deliveredAt;
     if (steadfastTrackingCode) db.orders[index].steadfastTrackingCode = steadfastTrackingCode;
     if (steadfastConsignmentId) db.orders[index].steadfastConsignmentId = steadfastConsignmentId;
     if (cancelledFrom) db.orders[index].cancelledFrom = cancelledFrom;
     if (riderName) db.orders[index].riderName = riderName;
+
+    await writeDb(db);
+    return db.orders[index];
+  });
+}
+
+// Full admin edit & rewrite order details
+export async function updateOrder(id: string, updates: Partial<Order>): Promise<Order | null> {
+  return runAtomic(async () => {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        const payload: Record<string, any> = {
+          updated_at: new Date().toISOString(),
+        };
+        if (updates.customerName !== undefined) payload.customer_name = updates.customerName;
+        if (updates.customerPhone !== undefined) payload.customer_phone = updates.customerPhone;
+        if (updates.customerAddress !== undefined) payload.customer_address = updates.customerAddress;
+        if (updates.deliveryMethod !== undefined) payload.delivery_method = updates.deliveryMethod;
+        if (updates.paymentMethod !== undefined) payload.payment_method = updates.paymentMethod;
+        if (updates.items !== undefined) payload.items = updates.items;
+        if (updates.subtotal !== undefined) payload.subtotal = updates.subtotal;
+        if (updates.deliveryFee !== undefined) payload.delivery_fee = updates.deliveryFee;
+        if (updates.total !== undefined) payload.total = updates.total;
+        if (updates.status !== undefined) {
+          payload.status = updates.status;
+          if (updates.status === 'delivered') payload.delivered_at = new Date().toISOString();
+        }
+        if (updates.adminNotes !== undefined) payload.admin_notes = updates.adminNotes;
+        if (updates.riderName !== undefined) payload.rider_name = updates.riderName;
+
+        const { data, error } = await supabase
+          .from('orders')
+          .update(payload)
+          .eq('id', id)
+          .select()
+          .single();
+
+        if (!error && data) {
+          return mapOrderFromRow(data);
+        }
+      } catch (err) {
+        console.warn('Supabase updateOrder fallback:', err);
+      }
+    }
+
+    const db = await readDb();
+    const index = db.orders.findIndex((o) => o.id === id);
+    if (index === -1) return null;
+
+    db.orders[index] = {
+      ...db.orders[index],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+    if (updates.status === 'delivered' && !db.orders[index].deliveredAt) {
+      db.orders[index].deliveredAt = new Date().toISOString();
+    }
 
     await writeDb(db);
     return db.orders[index];

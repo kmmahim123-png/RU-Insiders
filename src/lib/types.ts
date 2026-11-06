@@ -89,6 +89,9 @@ export interface Order {
   riderName?: string;
   steadfastConsignmentId?: string;
   steadfastTrackingCode?: string;
+  deliveredAt?: string;
+  adminNotes?: string;
+  updatedAt?: string;
   createdAt: string;
 }
 

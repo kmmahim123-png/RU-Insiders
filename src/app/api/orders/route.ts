@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOrders, addOrder, updateOrderStatus, deleteOrder, getProducts } from '@/lib/db';
+import { getOrders, addOrder, updateOrderStatus, updateOrder, deleteOrder, getProducts } from '@/lib/db';
 import { Order, CartItem } from '@/lib/types';
 import { generateToken } from '@/lib/utils';
 import { verifyAdminAuth } from '@/lib/auth';
@@ -194,6 +194,28 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
+
+    // 1. Full Order Edit & Rewrite
+    if (body.action === 'edit_order') {
+      const { id, updates } = body;
+      if (!id || !updates) {
+        return NextResponse.json(
+          { success: false, message: 'Order ID and updates payload are required.' },
+          { status: 400 }
+        );
+      }
+      const updated = await updateOrder(id, updates);
+      if (!updated) {
+        return NextResponse.json({ success: false, message: 'Order not found.' }, { status: 404 });
+      }
+      return NextResponse.json({
+        success: true,
+        message: 'Order details updated and rewritten successfully.',
+        order: updated,
+      });
+    }
+
+    // 2. Status & Dispatch Update
     const { id, status, steadfastTrackingCode, steadfastConsignmentId, cancelledFrom, riderName } = body;
 
     if (!id || !status) {

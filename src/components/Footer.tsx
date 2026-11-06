@@ -197,8 +197,12 @@ export default function Footer() {
           <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-5 sm:p-7 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-5 border border-slate-700/80">
             <div className="flex items-center gap-4 text-center md:text-left flex-col md:flex-row">
               <div className="relative">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-amber-400 flex items-center justify-center font-black text-white text-2xl shadow-lg border-2 border-white/20 shrink-0">
-                  👨‍💻
+                <div className="w-14 h-14 rounded-2xl overflow-hidden bg-gradient-to-tr from-blue-600 via-indigo-600 to-amber-400 flex items-center justify-center font-black text-white text-2xl shadow-lg border-2 border-white/20 shrink-0">
+                  <img
+                    src="/developer/mahim.jpg"
+                    alt="K M Mahim"
+                    className="w-full h-full object-cover object-top"
+                  />
                 </div>
                 <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 ring-2 ring-slate-900 absolute -bottom-0.5 -right-0.5 animate-pulse"></span>
               </div>
@@ -295,8 +299,12 @@ export default function Footer() {
               
               {/* Profile Card */}
               <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 rounded-2xl p-4 sm:p-5 border border-slate-700/80 flex flex-col sm:flex-row items-center sm:items-start gap-4">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-amber-400 flex items-center justify-center text-3xl font-black shadow-lg border-2 border-white/20 shrink-0">
-                  KM
+                <div className="w-24 h-24 rounded-2xl overflow-hidden bg-gradient-to-tr from-blue-600 via-indigo-500 to-amber-400 flex items-center justify-center shadow-xl border-2 border-white/20 shrink-0">
+                  <img
+                    src="/developer/mahim.jpg"
+                    alt="K M Mahim"
+                    className="w-full h-full object-cover object-top"
+                  />
                 </div>
 
                 <div className="space-y-1.5 text-center sm:text-left flex-1">
