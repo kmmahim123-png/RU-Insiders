@@ -166,7 +166,7 @@
     }
   </style>
 </head>
-<body class="h-[100dvh] flex flex-col overflow-hidden">
+<body class="min-h-screen md:h-[100dvh] flex flex-col overflow-x-hidden overflow-y-auto bg-[#f6f4ec]">
 
   <!-- =================================================================== -->
   <!-- SIGNATURE UNSEEN BANGLADESH FLOATING BLACK PILL TOOLTIP             -->
@@ -243,15 +243,12 @@
         </div>
       </div>
 
-      <!-- Right Link to Homepage -->
-      <div class="hidden xl:flex items-center gap-2 shrink-0">
-        <a href="/" class="px-3.5 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center gap-1.5">
-          <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
-          <span>হোমপেজ</span>
+      <!-- Right Link to Homepage (Exit) - Always visible on Mobile & Desktop -->
+      <div class="flex items-center gap-1.5 shrink-0">
+        <a href="/" target="_top" class="px-3.5 py-1.5 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-black text-xs transition flex items-center gap-1 shadow-sm" title="মেইন পেজে ফিরুন (Exit)">
+          <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+          <span>Exit</span>
         </a>
-        <button onclick="openAdminModal()" class="p-2 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 transition" title="অ্যাডমিন ও ছবি আপলোড">
-          <i data-lucide="settings" class="w-4 h-4"></i>
-        </button>
       </div>
 
     </div>
@@ -261,7 +258,7 @@
   <!-- MAIN WORKSPACE (Unseen Bangladesh Split View on Desktop,            -->
   <!-- Tabbed Full-Height View on Mobile)                                  -->
   <!-- =================================================================== -->
-  <main class="flex-1 max-w-[1460px] w-full mx-auto px-2.5 sm:px-6 pb-2 sm:pb-3 flex flex-col md:flex-row gap-3.5 overflow-hidden relative">
+  <main class="flex-1 max-w-[1460px] w-full mx-auto px-2.5 sm:px-6 pb-2 sm:pb-3 flex flex-col md:flex-row gap-3.5 overflow-y-auto md:overflow-hidden relative">
 
     <!-- =============================================================== -->
     <!-- LEFT PANEL: UNSEEN BANGLADESH STYLE CATEGORY & PILL SELECTOR    -->
@@ -386,44 +383,11 @@
     </aside>
 
     <!-- =============================================================== -->
-    <!-- RIGHT PANEL: IMPROVED SEPARATION MAP + ROUTE NAVIGATOR          -->
+    <!-- RIGHT PANEL: 100% CLEAN UNOBSTRUCTED MAP CANVAS                  -->
     <!-- =============================================================== -->
     <section id="map-panel" class="flex-1 bg-[#f4f1e6] rounded-2xl border border-gray-200/80 shadow-inner relative overflow-hidden flex flex-col h-full">
 
-      <!-- Top Floating Map Controls Bar (Responsive for Mobile & Desktop) -->
-      <div class="px-2.5 pt-2 pb-1 z-20 flex flex-wrap items-center justify-between gap-1.5 bg-[#f4f1e6]/90 backdrop-blur-sm border-b border-stone-200/70 shrink-0">
-        
-        <!-- Left Group: Map Style & Boundary Toggles -->
-        <div class="flex flex-wrap items-center gap-1 bg-white p-1 rounded-xl shadow-sm border border-gray-200/80">
-          <button onclick="setMapStyle('unseen')" id="style-unseen" class="px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold bg-[#1f7a44] text-white shadow-sm transition flex items-center gap-1">
-            <span>দাগ ও সীমানা ম্যাপ</span>
-          </button>
-          <button onclick="setMapStyle('roadmap')" id="style-roadmap" class="px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-gray-700 hover:bg-gray-100 transition flex items-center gap-1">
-            <span>রোড ও জিওকোড ম্যাপ</span>
-          </button>
-        </div>
-
-        <!-- Right Group: Tourist Attractions + Region Toggle -->
-        <div class="flex items-center gap-1.5 bg-white p-1 rounded-xl shadow-sm border border-gray-200/80">
-          <button onclick="openTouristShowcaseView()" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-700 hover:bg-emerald-800 text-white flex items-center gap-1 transition shadow-sm">
-            <span>📸 দর্শনীয় স্থানসমূহ</span>
-          </button>
-          <button onclick="toggleOtherMapRegion()" id="floating-adjacent-map-btn" class="hidden sm:flex px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 items-center gap-1 transition">
-            <span>🏙️ রাজশাহী সিটি →</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Bottom-Right Zoom & Reset Floating Buttons -->
-      <div id="svg-zoom-controls" class="absolute bottom-14 right-3 z-20 flex flex-col gap-1.5 bg-white/95 backdrop-blur-md p-1.5 rounded-xl shadow-md border border-gray-200/80">
-        <button onclick="zoomMap(1.25)" title="বড় করুন (Zoom In)" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg hover:bg-emerald-50 active:bg-emerald-100 text-gray-800 flex items-center justify-center font-bold text-lg transition">+</button>
-        <button onclick="zoomMap(0.8)" title="ছোট করুন (Zoom Out)" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg hover:bg-emerald-50 active:bg-emerald-100 text-gray-800 flex items-center justify-center font-bold text-lg transition">−</button>
-        <button onclick="resetMapView()" title="ম্যাপ রিসেট করুন" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg hover:bg-emerald-50 active:bg-emerald-100 text-gray-700 flex items-center justify-center transition">
-          <i data-lucide="maximize-2" class="w-4 h-4"></i>
-        </button>
-      </div>
-
-      <!-- LIVE INTERACTIVE GOOGLE MAPS VIEW CONTAINER (Toggled via 🛰️ Google Map লাইভ) -->
+      <!-- LIVE INTERACTIVE GOOGLE MAPS VIEW CONTAINER -->
       <div id="google-map-live-container" class="hidden flex-1 w-full h-full relative bg-stone-200">
         <iframe
           id="google-map-iframe"
@@ -444,8 +408,8 @@
         </div>
       </div>
 
-      <!-- INTERACTIVE SVG VIEWPORT (100% Unobstructed Canvas!) -->
-      <div id="map-viewport" class="flex-1 w-full flex items-center justify-center overflow-hidden cursor-default relative touch-none">
+      <!-- INTERACTIVE SVG VIEWPORT (100% Unobstructed Clean Canvas, No Side Clutter!) -->
+      <div id="map-viewport" class="flex-1 w-full flex items-center justify-center overflow-hidden cursor-default relative touch-pan-y">
         
         <svg id="ru-svg-map" viewBox="0 0 1200 750" class="w-full h-full max-h-full select-none transition-transform duration-150 ease-out">
           <defs>
@@ -4107,11 +4071,13 @@
       applyMapTransform();
     }
 
-    // Mouse Wheel Zoom
+    // Mouse Wheel Zoom: only zoom if Ctrl or Meta key is pressed, otherwise allow smooth page scrolling!
     mapViewport.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      const factor = e.deltaY < 0 ? 1.15 : 0.87;
-      zoomMap(factor);
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.15 : 0.87;
+        zoomMap(factor);
+      }
     }, { passive: false });
 
     // Safe Pointer Drag Pan (ONLY active when zoomed in > 1x AND primary button held)

@@ -72,30 +72,10 @@ export default function EntranceSplash() {
           <div className="absolute inset-0 rounded-full border border-amber-400/40 animate-ping pointer-events-none" style={{ animationDuration: '3s' }} />
         </div>
 
-        {/* Brand Text */}
-        <div className="space-y-1.5">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[11px] font-bold tracking-wide">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>মতিহারের সবুজ চত্বর • RU Insiders</span>
-          </div>
-
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            RU Insiders
-          </h1>
-
-          <p className="text-xs sm:text-sm text-slate-600 font-bengali font-medium">
-            রাজশাহী বিশ্ববিদ্যালয় স্টোর ও প্রিন্ট স্টেশন
-          </p>
-        </div>
-
-        {/* Loading Progress Bar */}
-        <div className="w-44 h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/80">
-          <div className="h-full bg-gradient-to-r from-blue-600 via-amber-400 to-rose-600 rounded-full animate-pulse" />
-        </div>
-
-        <p className="text-[10px] text-slate-400 tracking-wider uppercase font-mono">
-          Loading Campus Experience...
-        </p>
+        {/* Brand Text: Only RU Insiders */}
+        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          RU Insiders
+        </h1>
       </div>
     </div>
   );
