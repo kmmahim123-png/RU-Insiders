@@ -17,6 +17,7 @@ function ShopContent() {
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   // Filter State
@@ -114,70 +115,157 @@ function ShopContent() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6 sm:space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-4 sm:space-y-6">
       
-      {/* Top Story Highlights (কালেকশন - গোল আইকন) */}
-      <TopStoryHighlights products={products} showViewAllButton={false} title="কালেকশন" />
+      {/* 1. Top Story Highlights (কালেকশন - গোল আইকন) with Compact Icon-Based Find & Filter */}
+      <div className="-mx-4 sm:mx-0">
+        <TopStoryHighlights
+          products={products}
+          showViewAllButton={false}
+          title="কালেকশন"
+          containerClassName="w-full px-0 py-0"
+          cardClassName="bg-gradient-to-r from-slate-50 via-white to-slate-50 rounded-none sm:rounded-3xl p-3.5 sm:p-5 border-y sm:border border-slate-200/90 shadow-xs sm:shadow-sm space-y-3"
+          headerRight={
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Small Find / Search Icon Button */}
+            <button
+              type="button"
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              className={`p-2 sm:px-3 sm:py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs ${
+                isSearchOpen || searchQuery
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-500/20'
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+              }`}
+              title="পণ্য খুঁজুন (Search Products)"
+            >
+              <Search className="h-4 w-4" />
+              <span className="hidden sm:inline">খুঁজুন</span>
+            </button>
 
-      {/* Toolbar */}
-      <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
-        
-        {/* Search Input */}
-        <div className="relative w-full sm:flex-1">
-          <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="পণ্য খুঁজুন (যেমন হুডি, ড্রপ শোল্ডার, গেঞ্জি, এক্সেসরিজ)..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs sm:text-sm placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white transition-all font-medium"
-          />
-        </div>
+            {/* Small Filter Icon Button with Active Badge */}
+            <button
+              type="button"
+              onClick={() => setIsFilterModalOpen(true)}
+              className={`p-2 sm:px-3 sm:py-1.5 rounded-xl border text-xs font-bold transition-all relative flex items-center gap-1.5 shadow-xs ${
+                activeFiltersCount > 0
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-500/20'
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+              }`}
+              title="ফিল্টার (Filters)"
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              <span className="hidden sm:inline">ফিল্টার</span>
+              {activeFiltersCount > 0 && (
+                <span className="bg-rose-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </button>
 
-        {/* Filter Trigger Button */}
-        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
-          <button
-            onClick={() => setIsFilterModalOpen(true)}
-            className={`w-full sm:w-auto px-4 py-2.5 rounded-xl border text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all ${
-              activeFiltersCount > 0
-                ? 'bg-blue-600 border-blue-600 text-white shadow-md'
-                : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
-            }`}
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-            <span>Filters (ফিল্টার)</span>
-            {activeFiltersCount > 0 && (
-              <span className="bg-white text-blue-700 text-[11px] font-black w-5 h-5 rounded-full flex items-center justify-center">
-                {activeFiltersCount}
-              </span>
+            {/* Product Count Pill */}
+            <span className="text-[11px] font-bold text-slate-600 bg-white border border-slate-200 px-2.5 py-1.5 rounded-xl whitespace-nowrap shadow-xs hidden xs:inline">
+              {filteredProducts.length}টি পণ্য
+            </span>
+          </div>
+        }
+      >
+        {/* Expandable Compact Search Input (Only shows when search icon is clicked or query exists) */}
+        {(isSearchOpen || searchQuery) && (
+          <div className="relative w-full pt-1 transition-all">
+            <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-blue-600" />
+            <input
+              type="text"
+              autoFocus
+              placeholder="পণ্য খুঁজুন (যেমন হুডি, ড্রপ শোল্ডার, গেঞ্জি, এক্সেসরিজ)..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-9 py-2 sm:py-2.5 rounded-2xl bg-white border-2 border-blue-500 text-slate-900 text-xs sm:text-sm placeholder:text-slate-400 focus:outline-none shadow-sm font-medium"
+            />
+            {searchQuery ? (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-3 sm:top-3.5 text-slate-400 hover:text-rose-600"
+                title="ক্লিয়ার করুন"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsSearchOpen(false)}
+                className="absolute right-3 top-3 sm:top-3.5 text-slate-400 hover:text-slate-700"
+                title="বন্ধ করুন"
+              >
+                <X className="h-4 w-4" />
+              </button>
             )}
-          </button>
+          </div>
+        )}
+      </TopStoryHighlights>
+      </div>
 
-          <span className="text-xs text-slate-500 font-medium whitespace-nowrap hidden sm:inline">
-            {filteredProducts.length} টি পণ্য
+      {/* 2. Structured Category Selection Box (ক্যাটাগরি বক্স - এক সারিতে না থেকে সুন্দর বক্সে) */}
+      <div className="bg-white rounded-3xl border border-slate-200 p-3 sm:p-5 shadow-sm space-y-2.5">
+        <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <Tag className="h-4 w-4 text-blue-600" />
+            <h3 className="text-xs sm:text-sm font-black text-slate-900 font-bengali">
+              ক্যাটাগরি নির্বাচন করুন (Categories)
+            </h3>
+          </div>
+          <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+            বর্তমানে সক্রিয়: {availableCategories.find((c) => c.id === filters.category)?.bn || 'সব পণ্য'}
           </span>
         </div>
 
-      </div>
+        {/* Structured Grid Box for Categories */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-2.5 pt-0.5">
+          {availableCategories.map((cat) => {
+            const isActive = filters.category === cat.id;
+            const count =
+              cat.id === 'all'
+                ? products.length
+                : products.filter((p) => p.category === cat.id).length;
 
-      {/* Quick Category Switcher Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-        {availableCategories.map((cat) => {
-          const isActive = filters.category === cat.id;
-          return (
-            <button
-              key={cat.id}
-              onClick={() => setFilters({ ...filters, category: cat.id })}
-              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${
-                isActive
-                  ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-              }`}
-            >
-              {cat.bn} ({cat.label})
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setFilters({ ...filters, category: cat.id })}
+                className={`p-2.5 sm:p-3 rounded-2xl text-left transition-all border flex flex-col justify-between gap-1.5 group ${
+                  isActive
+                    ? 'bg-blue-600 text-white border-blue-700 shadow-md ring-2 ring-blue-500/30 scale-[1.02] font-bold'
+                    : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span
+                    className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md ${
+                      isActive ? 'bg-white/20 text-white' : 'bg-white text-slate-500 border border-slate-200'
+                    }`}
+                  >
+                    {count}টি
+                  </span>
+                  {isActive && <span className="text-xs text-white font-bold">✓</span>}
+                </div>
+
+                <div>
+                  <div className="text-xs sm:text-sm font-bold font-bengali tracking-tight line-clamp-1">
+                    {cat.bn}
+                  </div>
+                  <div
+                    className={`text-[10px] font-medium truncate ${
+                      isActive ? 'text-blue-100' : 'text-slate-400'
+                    }`}
+                  >
+                    {cat.label}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Active Filter Badges Bar */}

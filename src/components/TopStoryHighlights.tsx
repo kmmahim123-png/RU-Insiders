@@ -11,12 +11,20 @@ interface TopStoryHighlightsProps {
   products: Product[];
   showViewAllButton?: boolean;
   title?: string;
+  headerRight?: React.ReactNode;
+  children?: React.ReactNode;
+  containerClassName?: string;
+  cardClassName?: string;
 }
 
 export default function TopStoryHighlights({
   products,
   showViewAllButton = true,
-  title = 'কালেকশন'
+  title = 'কালেকশন',
+  headerRight,
+  children,
+  containerClassName,
+  cardClassName,
 }: TopStoryHighlightsProps) {
   // Select products marked as story highlights or featured, falling back to top products if none marked
   const highlightProducts = React.useMemo(() => {
@@ -30,28 +38,34 @@ export default function TopStoryHighlights({
   if (!products || products.length === 0) return null;
 
   return (
-    <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-      <div className="bg-gradient-to-r from-slate-50 via-white to-slate-50 rounded-3xl p-3.5 sm:p-5 border border-slate-200/90 shadow-sm space-y-3">
+    <section className={containerClassName || "w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3"}>
+      <div className={cardClassName || "bg-gradient-to-r from-slate-50 via-white to-slate-50 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border border-slate-200/90 shadow-sm space-y-3"}>
         
-        {/* Header: "কালেকশন" + Optional "সবগুলো পণ্য একসাথে দেখুন" */}
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
+        {/* Header: "কালেকশন" + Custom Actions or View All */}
+        <div className="flex items-center justify-between px-1 gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse"></span>
             <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight font-bengali">
               {title}
             </h2>
           </div>
 
-          {showViewAllButton && (
-            <Link
-              href="/shop"
-              className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-blue-500/25 hover:shadow-lg transition-all flex items-center gap-1.5 group"
-            >
-              <span>সবগুলো পণ্য একসাথে দেখুন</span>
-              <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          )}
+          <div className="flex items-center gap-2">
+            {headerRight}
+
+            {showViewAllButton && (
+              <Link
+                href="/shop"
+                className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-blue-500/25 hover:shadow-lg transition-all flex items-center gap-1.5 group"
+              >
+                <span>সবগুলো পণ্য একসাথে দেখুন</span>
+                <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            )}
+          </div>
         </div>
+
+        {children}
 
         {/* Horizontal Scrolling Circles with Story-Ring Glow */}
         <div className="flex items-start gap-3 sm:gap-5 overflow-x-auto pb-2 pt-1 no-scrollbar select-none">
