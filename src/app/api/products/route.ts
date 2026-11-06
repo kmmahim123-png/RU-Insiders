@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
       stock: Number(body.stock || 25),
       salesCount: 0,
       isCustomizable: Boolean(body.isCustomizable),
+      isStoryHighlight: Boolean(body.isStoryHighlight ?? body.featured),
       featured: Boolean(body.featured ?? true),
       badge: body.badge || 'New Arrival',
       orderIndex: 0,

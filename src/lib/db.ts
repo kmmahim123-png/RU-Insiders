@@ -68,6 +68,7 @@ function mapProductFromRow(row: any): Product {
     stock: Number(row.stock || 0),
     salesCount: Number(row.sales_count || 0),
     isCustomizable: Boolean(row.customizable ?? row.is_customizable),
+    isStoryHighlight: Boolean(row.is_story_highlight ?? row.isStoryHighlight ?? row.featured),
     orderIndex: Number(row.order_index ?? 0),
     video: row.video || '',
     badge: row.badge || undefined,
@@ -91,6 +92,7 @@ function mapProductToRow(p: Product) {
     stock: p.stock || 0,
     sales_count: p.salesCount || 0,
     customizable: Boolean(p.isCustomizable),
+    is_story_highlight: Boolean(p.isStoryHighlight ?? p.featured),
     order_index: p.orderIndex ?? 0,
     video: p.video || '',
     badge: p.badge || '',
@@ -346,6 +348,7 @@ export async function updateProduct(id: string, updates: Partial<Product>): Prom
         if (updates.sizes !== undefined) updatePayload.sizes = updates.sizes;
         if (updates.stock !== undefined) updatePayload.stock = updates.stock;
         if (updates.isCustomizable !== undefined) updatePayload.customizable = updates.isCustomizable;
+        if (updates.isStoryHighlight !== undefined) updatePayload.is_story_highlight = updates.isStoryHighlight;
         if (updates.video !== undefined) updatePayload.video = updates.video;
         if (updates.badge !== undefined) updatePayload.badge = updates.badge;
 

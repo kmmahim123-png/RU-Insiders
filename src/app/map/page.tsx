@@ -1,8 +1,24 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Maximize2, Minimize2, ExternalLink, Share2, Compass } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { ArrowLeft, Maximize2, Minimize2, ExternalLink, Loader2 } from 'lucide-react';
+
+function MapFrame() {
+  const searchParams = useSearchParams();
+  const queryStr = searchParams?.toString();
+  const iframeSrc = queryStr ? `/unseen-ru.html?${queryStr}` : '/unseen-ru.html';
+
+  return (
+    <iframe
+      src={iframeSrc}
+      title="Unseen Rajshahi University & Rajshahi Interactive Map"
+      className="w-full h-full border-0 select-none"
+      allow="clipboard-write; fullscreen; web-share"
+    />
+  );
+}
 
 export default function MapPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -61,14 +77,18 @@ export default function MapPage() {
         </div>
       </header>
 
-      {/* Main Interactive Map Application Frame */}
+      {/* Main Interactive Map Application Frame with Suspense */}
       <main className="flex-1 w-full h-full relative overflow-hidden">
-        <iframe
-          src="/unseen-ru.html"
-          title="Unseen Rajshahi University Interactive Map"
-          className="w-full h-full border-0 select-none"
-          allow="clipboard-write; fullscreen; web-share"
-        />
+        <Suspense
+          fallback={
+            <div className="w-full h-full flex items-center justify-center bg-[#f6f4ec] text-slate-500 gap-2">
+              <Loader2 className="h-6 w-6 animate-spin text-emerald-600" />
+              <span className="text-xs font-bold font-bengali">ম্যাপ লোড হচ্ছে...</span>
+            </div>
+          }
+        >
+          <MapFrame />
+        </Suspense>
       </main>
 
     </div>

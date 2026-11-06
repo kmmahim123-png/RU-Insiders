@@ -4651,6 +4651,28 @@
       loadSavedProgress();
       renderSidebar();
       renderContiguousMap();
+
+      // Check for URL query params: ?place=... & ?region=...
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const qRegion = urlParams.get('region');
+        const qPlace = urlParams.get('place');
+        if (qRegion && (qRegion === 'ru' || qRegion === 'rcc' || qRegion === 'rajshahi')) {
+          switchMapRegion(qRegion);
+        }
+        if (qPlace) {
+          const place = findPlaceById(qPlace);
+          if (place) {
+            if (RU_PLACES.some(p => p.id === qPlace)) switchMapRegion('ru');
+            else if (RCC_PLACES.some(p => p.id === qPlace)) switchMapRegion('rcc');
+            else if (RAJSHAHI_PLACES.some(p => p.id === qPlace)) switchMapRegion('rajshahi');
+            activeDetailPlaceId = qPlace;
+            renderContiguousMap();
+            showDetailCard(qPlace);
+          }
+        }
+      } catch (e) {}
+
       if (window.lucide) {
         lucide.createIcons();
       }

@@ -24,6 +24,7 @@ export interface Product {
   salesCount: number;
   isCustomizable: boolean;
   featured?: boolean;
+  isStoryHighlight?: boolean;
   badge?: string;
   orderIndex?: number;
   video?: string;
