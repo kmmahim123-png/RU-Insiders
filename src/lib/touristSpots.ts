@@ -8,6 +8,7 @@ export interface TouristSpot {
   locationBn: string;
   descriptionBn: string;
   imageUrl: string;
+  images?: string[];
   mapPlaceId?: string;
   mapRegion?: 'ru' | 'rcc' | 'rajshahi';
   portalUrl?: string;
@@ -1632,7 +1633,21 @@ export function getStoredTouristSpots(): TouristSpot[] {
     // Merge custom overrides with default list
     return DIVISION_ALL_95_SPOTS.map(def => {
       const found = customList.find((c: TouristSpot) => c.id === def.id);
-      return found ? { ...def, ...found } : def;
+      if (found) {
+        const mergedImages = Array.isArray(found.images) && found.images.length > 0
+          ? found.images
+          : (found.imageUrl ? [found.imageUrl] : [def.imageUrl]);
+        return {
+          ...def,
+          ...found,
+          imageUrl: found.imageUrl || mergedImages[0] || def.imageUrl,
+          images: mergedImages
+        };
+      }
+      return {
+        ...def,
+        images: def.images && def.images.length > 0 ? def.images : [def.imageUrl]
+      };
     });
   } catch (e) {
     console.error('Failed to load custom tourist spots:', e);

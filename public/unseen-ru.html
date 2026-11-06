@@ -210,81 +210,48 @@
           </div>
         </div>
 
-        <!-- PRIMARY 4-WAY REGION & TOURIST SHOWCASE SWITCHER -->
-        <div class="bg-[#eff5f1] p-1 rounded-full border border-emerald-900/10 flex items-center gap-1 shadow-inner overflow-x-auto max-w-[66vw] sm:max-w-none">
-          <button onclick="switchMapRegion('ru')" id="region-btn-ru" class="px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-[#1f7a44] text-white shadow-sm transition flex items-center gap-1 shrink-0">
+        <!-- TOP NAVIGATION: REGIONS, EXPLORE RAJSHAHI, CHECKLIST, SHARE & RESET -->
+        <div class="bg-[#eff5f1] p-1 rounded-full border border-emerald-900/10 flex items-center gap-1 shadow-inner overflow-x-auto max-w-[92vw] sm:max-w-none">
+          <button onclick="closeTouristShowcaseView(); switchMapRegion('ru')" id="region-btn-ru" class="px-3 py-1.5 rounded-full text-xs font-bold bg-[#1f7a44] text-white shadow-sm transition flex items-center gap-1 shrink-0">
             <span>🎓 রাবি ক্যাম্পাস</span>
-            <span class="hidden lg:inline text-[10px] opacity-90">(৪২)</span>
+            <span class="text-[10px] opacity-90">(৪২)</span>
           </button>
-          <button onclick="switchMapRegion('rcc')" id="region-btn-rcc" class="px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold text-gray-700 hover:text-[#1f7a44] hover:bg-white/70 transition flex items-center gap-1 shrink-0">
+
+          <button onclick="closeTouristShowcaseView(); switchMapRegion('rcc')" id="region-btn-rcc" class="px-3 py-1.5 rounded-full text-xs font-bold text-gray-700 hover:text-[#1f7a44] hover:bg-white/70 transition flex items-center gap-1 shrink-0">
             <span>🏙️ রাজশাহী সিটি</span>
-            <span class="hidden lg:inline text-[10px] opacity-75">(২৪)</span>
+            <span class="text-[10px] opacity-75">(২৪)</span>
           </button>
-          <button onclick="switchMapRegion('rajshahi')" id="region-btn-rajshahi" class="px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold text-gray-700 hover:text-[#1f7a44] hover:bg-white/70 transition flex items-center gap-1 shrink-0">
-            <span>🥭 রাজশাহী জেলা</span>
-            <span class="hidden lg:inline text-[10px] opacity-75">(২৭)</span>
+
+          <button onclick="openTouristShowcaseView()" id="region-btn-spots" class="px-3.5 py-1.5 rounded-full text-xs font-bold text-amber-950 bg-amber-200/90 hover:bg-amber-300 transition flex items-center gap-1.5 shrink-0 shadow-sm">
+            <i data-lucide="compass" class="w-3.5 h-3.5 text-amber-900"></i>
+            <span>🧭 এক্সপ্লোর রাজশাহী</span>
           </button>
-          <button onclick="openTouristShowcaseView()" id="region-btn-spots" class="px-2.5 sm:px-3.5 py-1 rounded-full text-[11px] sm:text-xs font-bold text-amber-900 bg-amber-100/90 hover:bg-amber-200 transition flex items-center gap-1 shrink-0">
-            <span>📸 দর্শনীয় স্থান (ছবিসহ)</span>
+
+          <button onclick="toggleMobileChecklist()" id="nav-checklist-btn" class="px-3 py-1.5 rounded-full text-xs font-bold text-slate-700 hover:bg-white/70 transition flex items-center gap-1 shrink-0">
+            <i data-lucide="check-square" class="w-3.5 h-3.5 text-[#1f7a44]"></i>
+            <span>তালিকা (<span id="header-list-count">০/৪২</span>)</span>
+          </button>
+
+          <button onclick="openShareModal()" class="px-3.5 py-1.5 rounded-full bg-[#1f7a44] hover:bg-[#166534] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition shrink-0">
+            <i data-lucide="download" class="w-3.5 h-3.5 text-amber-300"></i>
+            <span>পোস্টার ও শেয়ার (<span id="header-pct-text">০%</span>)</span>
+          </button>
+
+          <button onclick="resetAllVisitedProgress()" class="px-2.5 py-1 rounded-full text-[11px] text-gray-500 hover:text-red-600 font-bold hover:bg-white transition shrink-0" title="সব মুছে ০% রিসেট করুন">
+            রিসেট
           </button>
         </div>
       </div>
 
-      <!-- Center Navigation Pill Group (Desktop) -->
-      <nav class="hidden 2xl:flex items-center bg-[#eff5f1] p-1 rounded-full border border-emerald-900/5 gap-1">
-        <button onclick="closeTouristShowcaseView(); setMapStyle('unseen')" id="nav-unseen" class="px-3 py-1.5 rounded-full text-xs font-bold bg-white text-[#1f7a44] shadow-sm flex items-center gap-1 transition">
-          <span>সীমানা ম্যাপ</span>
-        </button>
-        <button onclick="closeTouristShowcaseView(); toggleRoutePlannerBar(true)" class="px-3 py-1.5 rounded-full text-xs font-bold text-amber-900 bg-amber-100/90 hover:bg-amber-200/90 flex items-center gap-1 transition">
-          <i data-lucide="navigation" class="w-3.5 h-3.5 text-amber-700"></i>
-          <span>পথনির্দেশক</span>
-        </button>
-        <button onclick="openTouristShowcaseView()" class="px-3 py-1.5 rounded-full text-xs font-bold text-emerald-900 hover:bg-white/70 flex items-center gap-1 transition">
-          <i data-lucide="compass" class="w-3.5 h-3.5 text-emerald-700"></i>
-          <span>সরকারি পর্যটন তালিকা</span>
-        </button>
-        <button onclick="openAdminModal()" class="px-3 py-1.5 rounded-full text-xs font-bold text-emerald-900 bg-emerald-100/80 hover:bg-emerald-200/80 flex items-center gap-1 transition">
-          <i data-lucide="settings" class="w-3.5 h-3.5 text-emerald-800"></i>
-          <span>ছবি আপলোড</span>
-        </button>
-      </nav>
-
-      <!-- Right Controls: Live % Badge, Route, Share, Antigravity Physics & Admin -->
-      <div class="flex items-center gap-1.5 sm:gap-2">
-        
-        <!-- Live Explored Percentage Pill (Clickable to Share) & Reset Option -->
-        <div class="hidden sm:flex items-center gap-1 bg-[#eaf3ed] p-0.5 pr-2 rounded-full border border-emerald-800/15 shadow-sm">
-          <button onclick="openShareModal()" class="px-2.5 py-1 rounded-full text-[#1f7a44] flex items-center gap-1.5 hover:bg-[#d8eadf] transition" title="আপনার অগ্রগতি শেয়ার করুন">
-            <span class="w-2 h-2 rounded-full bg-[#1f7a44] animate-pulse"></span>
-            <span id="header-pct-badge" class="font-bold text-xs">০% ঘোরা হয়েছে</span>
-          </button>
-          <button onclick="resetAllVisitedProgress()" class="text-[10px] text-gray-500 hover:text-red-600 font-bold px-1.5 py-0.5 rounded-full hover:bg-white transition" title="সব মুছে ০% রিসেট করুন">
-            রিসেট
-          </button>
-        </div>
-
-        <!-- Quick Route Finder Button (Mobile/Tablet) -->
-        <button onclick="toggleRoutePlannerBar(true)" class="xl:hidden px-2.5 sm:px-3 py-1.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-sm flex items-center gap-1 transition" title="এক জায়গা থেকে আরেক জায়গায় যাওয়ার রুট দেখুন">
-          <i data-lucide="navigation" class="w-3.5 h-3.5"></i>
-          <span class="hidden sm:inline">পথনির্দেশক</span>
-        </button>
-
-        <!-- Primary Share Progress Button -->
-        <button onclick="openShareModal()" class="px-2.5 sm:px-3.5 py-1.5 rounded-full bg-[#1f7a44] hover:bg-[#166534] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition">
-          <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
-          <span class="hidden sm:inline">শেয়ার</span>
-        </button>
-
-        <!-- Admin Panel Quick Button (Mobile + Tablet visible) -->
-        <button onclick="openAdminModal()" class="xl:hidden p-2 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 transition" title="অ্যাডমিন প্যানেল ও ছবি আপলোড">
+      <!-- Right Link to Homepage -->
+      <div class="hidden xl:flex items-center gap-2 shrink-0">
+        <a href="/" class="px-3.5 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center gap-1.5">
+          <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+          <span>হোমপেজ</span>
+        </a>
+        <button onclick="openAdminModal()" class="p-2 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 transition" title="অ্যাডমিন ও ছবি আপলোড">
           <i data-lucide="settings" class="w-4 h-4"></i>
         </button>
-
-        <!-- Language Switch (বাং | EN) -->
-        <div class="hidden sm:flex bg-[#eff5f1] p-0.5 rounded-full items-center text-[11px] font-bold border border-emerald-900/10">
-          <button id="lang-bn" onclick="setLanguage('bn')" class="px-2 py-1 rounded-full bg-white text-emerald-950 shadow-sm transition">বাং</button>
-          <button id="lang-en" onclick="setLanguage('en')" class="px-2 py-1 rounded-full text-gray-600 hover:text-gray-900 transition">EN</button>
-        </div>
       </div>
 
     </div>
@@ -294,7 +261,7 @@
   <!-- MAIN WORKSPACE (Unseen Bangladesh Split View on Desktop,            -->
   <!-- Tabbed Full-Height View on Mobile)                                  -->
   <!-- =================================================================== -->
-  <main class="flex-1 max-w-[1460px] w-full mx-auto px-2.5 sm:px-6 pb-16 md:pb-3 flex flex-col md:flex-row gap-3.5 overflow-hidden relative">
+  <main class="flex-1 max-w-[1460px] w-full mx-auto px-2.5 sm:px-6 pb-2 sm:pb-3 flex flex-col md:flex-row gap-3.5 overflow-hidden relative">
 
     <!-- =============================================================== -->
     <!-- LEFT PANEL: UNSEEN BANGLADESH STYLE CATEGORY & PILL SELECTOR    -->
@@ -348,10 +315,6 @@
           <div class="flex items-center justify-between text-[11px] mb-1.5">
             <span id="explorer-rank-label" class="font-bold text-emerald-900">🚶 প্যারিস রোড পথিক</span>
             <div class="flex items-center gap-2">
-              <button onclick="toggleRoutePlannerBar(true)" class="text-amber-700 font-bold hover:underline flex items-center gap-0.5">
-                <span>🧭 রুট খুঁজুন</span>
-              </button>
-              <span class="text-gray-300">•</span>
               <button onclick="openShareModal()" class="text-[#1f7a44] font-bold hover:underline flex items-center gap-0.5">
                 <span>শেয়ার কার্ড →</span>
               </button>
@@ -400,21 +363,17 @@
 
           <p id="detail-desc" class="text-[11px] text-gray-600 leading-relaxed line-clamp-2"></p>
 
-          <!-- Quick Route & Action Buttons inside Docked Card -->
+          <!-- Quick Action Buttons inside Docked Card -->
           <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
             <button id="detail-toggle-btn" onclick="toggleCurrentDetailPlace()" class="flex-1 py-1.5 px-2.5 rounded-lg font-bold text-[11px] bg-[#1f7a44] text-white hover:bg-[#166534] transition flex items-center justify-center gap-1">
               <span>✓ ঘুরে দেখেছি</span>
             </button>
-            <button onclick="setPlaceAsRoutePoint('to')" class="py-1.5 px-2.5 rounded-lg font-bold text-[11px] bg-amber-500 hover:bg-amber-600 text-white transition flex items-center gap-1" title="এখানে কীভাবে যাবেন তা ম্যাপে দেখুন">
-              <i data-lucide="navigation" class="w-3 h-3"></i>
-              <span>এখানে যাওয়ার রুট</span>
-            </button>
             <button onclick="openAdminForCurrentPlace()" class="py-1.5 px-2 rounded-lg font-bold text-[10px] bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 transition" title="ছবি আপলোড করুন">
-              +📷
+              +📷 ছবি যোগ
             </button>
             <a id="detail-gmap-link" href="https://www.google.com/maps/search/Rajshahi+University" target="_blank" rel="noopener noreferrer" class="py-1.5 px-2 rounded-lg font-semibold text-[10px] bg-gray-100 text-gray-700 hover:bg-gray-200 transition flex items-center gap-0.5" title="Google Map-এ দেখুন">
               <i data-lucide="map-pin" class="w-3 h-3 text-red-600"></i>
-              <span>Map</span>
+              <span>Google Maps</span>
             </a>
           </div>
         </div>
@@ -430,48 +389,6 @@
     <!-- RIGHT PANEL: IMPROVED SEPARATION MAP + ROUTE NAVIGATOR          -->
     <!-- =============================================================== -->
     <section id="map-panel" class="flex-1 bg-[#f4f1e6] rounded-2xl border border-gray-200/80 shadow-inner relative overflow-hidden flex flex-col h-full">
-
-      <!-- ============================================================= -->
-      <!-- COLLAPSIBLE ROUTE & DIRECTION FINDER BAR (Top of Map Panel)   -->
-      <!-- Lets user pick From -> To and see path + vehicle rules!       -->
-      <!-- ============================================================= -->
-      <div id="route-planner-bar" class="hidden z-30 bg-white/98 backdrop-blur-md border-b border-amber-300/80 px-3 py-2.5 shadow-md shrink-0">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
-          
-          <!-- From & To Selectors -->
-          <div class="flex flex-wrap sm:flex-nowrap items-center gap-1.5 flex-1">
-            <span class="px-2 py-1 rounded-lg bg-amber-100 text-amber-900 font-bold text-[11px] flex items-center gap-1 shrink-0">
-              <i data-lucide="compass" class="w-3.5 h-3.5 text-amber-700"></i>
-              <span>পথনির্দেশক:</span>
-            </span>
-
-            <select id="route-from-select" onchange="calculateAndRenderRoute()" class="flex-1 min-w-[130px] px-2.5 py-1.5 rounded-xl border border-gray-300 text-xs font-bold bg-[#f8faf9] text-gray-800 focus:outline-none focus:border-emerald-600">
-            </select>
-
-            <button onclick="swapRouteEndpoints()" class="p-1.5 rounded-lg bg-gray-100 hover:bg-emerald-50 text-gray-700 font-bold text-xs shrink-0 transition" title="শুরু ও গন্তব্য অদলবদল করুন">
-              ⇄
-            </button>
-
-            <select id="route-to-select" onchange="calculateAndRenderRoute()" class="flex-1 min-w-[130px] px-2.5 py-1.5 rounded-xl border border-gray-300 text-xs font-bold bg-[#f8faf9] text-gray-800 focus:outline-none focus:border-emerald-600">
-            </select>
-          </div>
-
-          <!-- Route Summary Metrics & Close Button -->
-          <div class="flex items-center justify-between lg:justify-end gap-2">
-            <div id="route-metrics-badges" class="flex flex-wrap items-center gap-1.5 text-[11px]">
-              <!-- Populated dynamically: Distance, Walk time, Rickshaw fare & Road rule -->
-            </div>
-            <button onclick="clearRouteAndCloseBar()" class="px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 font-bold text-[11px] shrink-0 transition">
-              ✕ রুট বন্ধ করুন
-            </button>
-          </div>
-        </div>
-
-        <!-- Step-by-Step Direction Instruction Strip -->
-        <div id="route-steps-strip" class="mt-1.5 pt-1.5 border-t border-gray-100 text-[11px] text-gray-700 flex items-center gap-2 overflow-x-auto whitespace-nowrap">
-          <!-- Populated dynamically -->
-        </div>
-      </div>
 
       <!-- Top Floating Map Controls Bar (Responsive for Mobile & Desktop) -->
       <div class="px-2.5 pt-2 pb-1 z-20 flex flex-wrap items-center justify-between gap-1.5 bg-[#f4f1e6]/90 backdrop-blur-sm border-b border-stone-200/70 shrink-0">
@@ -609,14 +526,7 @@
         </div>
 
         <div class="flex items-center gap-1.5 shrink-0">
-          <button onclick="setPlaceAsRoutePoint('from')" class="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 font-bold text-[11px] transition">
-            এখান থেকে যাত্রা
-          </button>
-          <button onclick="setPlaceAsRoutePoint('to')" class="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] flex items-center gap-1 shadow-sm transition">
-            <i data-lucide="navigation" class="w-3 h-3"></i>
-            <span>এখানে কীভাবে যাবো?</span>
-          </button>
-          <button id="slim-bar-toggle-btn" onclick="toggleCurrentDetailPlace()" class="px-2.5 py-1.5 rounded-lg bg-[#1f7a44] hover:bg-[#166534] text-white font-bold text-[11px] transition">
+          <button id="slim-bar-toggle-btn" onclick="toggleCurrentDetailPlace()" class="px-3 py-1.5 rounded-lg bg-[#1f7a44] hover:bg-[#166534] text-white font-bold text-xs transition">
             ✓ বাছাই
           </button>
           <button onclick="closeDetailCard()" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500">
@@ -648,13 +558,17 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-2 shrink-0">
-            <button onclick="openAdminModal()" class="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-gray-950 font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
+            <button onclick="openShareModal()" class="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-gray-950 font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>📥 ভ্রমণ পোস্টার ডাউনলোড</span>
+            </button>
+            <button onclick="openAdminModal()" class="px-3.5 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
               <i data-lucide="upload" class="w-4 h-4"></i>
-              <span>+ নতুন ছবি আপলোড করুন</span>
+              <span>+ ছবি আপলোড</span>
             </button>
             <button onclick="closeTouristShowcaseView()" class="px-3.5 py-2 rounded-xl bg-white text-[#1f7a44] hover:bg-emerald-50 font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
               <i data-lucide="map" class="w-4 h-4"></i>
-              <span>← ইন্টারঅ্যাক্টিভ ম্যাপে ফিরুন</span>
+              <span>← ম্যাপে ফিরুন</span>
             </button>
           </div>
         </div>
@@ -695,32 +609,6 @@
     </section>
 
   </main>
-
-  <!-- =================================================================== -->
-  <!-- MOBILE BOTTOM NAVIGATION BAR (< 768px)                              -->
-  <!-- =================================================================== -->
-  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 px-1.5 py-1.5 flex items-center justify-around shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
-    <button onclick="closeTouristShowcaseView(); switchMobileTab('map')" id="mob-tab-map" class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-[#1f7a44] font-bold text-[10px]">
-      <i data-lucide="map" class="w-4 h-4"></i>
-      <span>ম্যাপ</span>
-    </button>
-    <button onclick="closeTouristShowcaseView(); switchMobileTab('list')" id="mob-tab-list" class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-gray-600 font-semibold text-[10px]">
-      <i data-lucide="check-square" class="w-4 h-4"></i>
-      <span>তালিকা (<span id="mob-list-count">৩/৪২</span>)</span>
-    </button>
-    <button onclick="openTouristShowcaseView()" id="mob-tab-spots" class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-emerald-800 font-bold text-[10px]">
-      <i data-lucide="images" class="w-4 h-4 text-emerald-700"></i>
-      <span>দর্শনীয় স্থান</span>
-    </button>
-    <button onclick="closeTouristShowcaseView(); switchMobileTab('map'); toggleRoutePlannerBar(true);" class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-amber-700 font-bold text-[10px]">
-      <i data-lucide="navigation" class="w-4 h-4"></i>
-      <span>রুট</span>
-    </button>
-    <button onclick="openShareModal()" id="mob-tab-share" class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-gray-600 font-semibold text-[10px]">
-      <i data-lucide="share-2" class="w-4 h-4 text-emerald-700"></i>
-      <span>শেয়ার (<span id="mob-pct-text">৭%</span>)</span>
-    </button>
-  </nav>
 
   <!-- =================================================================== -->
   <!-- MODAL 1: SHARE PROGRESS POSTER & LINK                               -->
@@ -2501,6 +2389,12 @@
         headerBadge.textContent = currentLang === 'bn' ? `${pctTextBn} ঘোরা হয়েছে` : `${pct}% Explored`;
       }
 
+      const headerPctText = document.getElementById('header-pct-text');
+      if (headerPctText) headerPctText.textContent = pctTextBn;
+
+      const headerListCount = document.getElementById('header-list-count');
+      if (headerListCount) headerListCount.textContent = countTextBn;
+
       document.getElementById('sidebar-percent').textContent = currentLang === 'bn' ? pctTextBn : `${pct}%`;
       document.getElementById('sidebar-count').textContent = currentLang === 'bn' ? countTextBn : `${count}/${total}`;
       document.getElementById('explorer-rank-label').textContent = currentLang === 'bn' ? rank.bn : rank.en;
@@ -2512,59 +2406,67 @@
       if (mobPctText) mobPctText.textContent = pctTextBn;
     }
 
-    // ================= REGION SWITCHER (RU VS RCC CITY VS RAJSHAHI DISTRICT) =================
+    // ================= MOBILE CHECKLIST TOGGLER =================
+    function toggleMobileChecklist() {
+      closeTouristShowcaseView();
+      const sidebar = document.getElementById('sidebar-panel');
+      const mapPanel = document.getElementById('map-panel');
+      if (!sidebar) return;
+
+      if (window.innerWidth < 768) {
+        if (sidebar.classList.contains('hidden')) {
+          sidebar.classList.remove('hidden');
+          sidebar.classList.add('flex');
+          mapPanel.classList.add('hidden');
+        } else {
+          sidebar.classList.add('hidden');
+          sidebar.classList.remove('flex');
+          mapPanel.classList.remove('hidden');
+        }
+      } else {
+        sidebar.classList.toggle('hidden');
+        sidebar.classList.toggle('md:flex');
+      }
+    }
+
+    // ================= REGION SWITCHER (RU VS RCC CITY) =================
     function switchMapRegion(region) {
       if (antigravityActive) stopAntigravityPhysics();
       closeTouristShowcaseView();
-      currentMapRegion = region;
+      currentMapRegion = region === 'rcc' ? 'rcc' : 'ru';
       activeDetailPlaceId = null;
       closeDetailCard();
       resetMapView();
 
       const btnRU = document.getElementById('region-btn-ru');
       const btnRCC = document.getElementById('region-btn-rcc');
-      const btnRJ = document.getElementById('region-btn-rajshahi');
       const sideTitle = document.getElementById('sidebar-active-map-title');
       const sideSwitchBtn = document.getElementById('sidebar-switch-map-btn');
       const floatAdjBtn = document.getElementById('floating-adjacent-map-btn');
 
-      const activeCls = 'px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-[#1f7a44] text-white shadow-sm transition flex items-center gap-1 shrink-0';
-      const idleCls = 'px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold text-gray-700 hover:text-[#1f7a44] hover:bg-white/70 transition flex items-center gap-1 shrink-0';
+      const activeCls = 'px-3 py-1.5 rounded-full text-xs font-bold bg-[#1f7a44] text-white shadow-sm transition flex items-center gap-1 shrink-0';
+      const idleCls = 'px-3 py-1.5 rounded-full text-xs font-bold text-gray-700 hover:text-[#1f7a44] hover:bg-white/70 transition flex items-center gap-1 shrink-0';
 
-      btnRU.className = region === 'ru' ? activeCls : idleCls;
-      if (btnRCC) btnRCC.className = region === 'rcc' ? activeCls : idleCls;
-      btnRJ.className = region === 'rajshahi' ? activeCls : idleCls;
+      if (btnRU) btnRU.className = currentMapRegion === 'ru' ? activeCls : idleCls;
+      if (btnRCC) btnRCC.className = currentMapRegion === 'rcc' ? activeCls : idleCls;
 
       if (region === 'ru') {
         sideTitle.innerHTML = '<span>🎓 রাবি ক্যাম্পাস ম্যাপ (৪২)</span>';
         sideSwitchBtn.innerHTML = '<span>🏙️ রাজশাহী সিটি দেখুন →</span>';
         if (floatAdjBtn) floatAdjBtn.innerHTML = '<span>🏙️ রাজশাহী সিটি →</span>';
-        routeFromId = 'main_gate';
-        routeToId = 'rabindra_bldg';
-      } else if (region === 'rcc') {
-        sideTitle.innerHTML = '<span>🏙️ রাজশাহী সিটি কর্পোরেশন (২৪)</span>';
-        sideSwitchBtn.innerHTML = '<span>🥭 রাজশাহী জেলা দেখুন →</span>';
-        if (floatAdjBtn) floatAdjBtn.innerHTML = '<span>🥭 রাজশাহী জেলা →</span>';
-        routeFromId = 'rcc_padma_garden_borokuthi';
-        routeToId = 'rcc_varendra_museum';
       } else {
-        sideTitle.innerHTML = '<span>🥭 রাজশাহী জেলা ও ৯ উপজেলা (২৭)</span>';
+        sideTitle.innerHTML = '<span>🏙️ রাজশাহী সিটি কর্পোরেশন (২৪)</span>';
         sideSwitchBtn.innerHTML = '<span>🎓 রাবি ক্যাম্পাস দেখুন →</span>';
         if (floatAdjBtn) floatAdjBtn.innerHTML = '<span>🎓 রাবি ক্যাম্পাস →</span>';
-        routeFromId = 'rj_padma_garden';
-        routeToId = 'rj_puthia';
       }
 
-      populateRouteDropdowns();
       renderSidebar();
       renderContiguousMap();
       if (currentMapStyle === 'gmap') updateLiveGoogleMap();
-      if (routePlannerOpen) calculateAndRenderRoute();
     }
 
     function toggleOtherMapRegion() {
-      const order = ['ru', 'rcc', 'rajshahi'];
-      const next = order[(order.indexOf(currentMapRegion) + 1) % order.length];
+      const next = currentMapRegion === 'ru' ? 'rcc' : 'ru';
       switchMapRegion(next);
     }
 

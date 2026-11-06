@@ -74,17 +74,40 @@ const RU_SPOTS_SLIDES: CampusSpotSlide[] = [
 ];
 
 export default function CampusTourBanner() {
+  const [slides, setSlides] = useState<CampusSpotSlide[]>(RU_SPOTS_SLIDES);
   const [currentIdx, setCurrentIdx] = useState(0);
 
-  // Auto-rotate slides smoothly every 4 seconds
+  // Load custom slides configured in Admin Dashboard
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentIdx((prev) => (prev + 1) % RU_SPOTS_SLIDES.length);
-    }, 4200);
-    return () => clearInterval(timer);
+    const loadSlides = () => {
+      try {
+        const saved = localStorage.getItem('ru_main_banner_slides_v1');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setSlides(parsed);
+            return;
+          }
+        }
+      } catch (e) {}
+      setSlides(RU_SPOTS_SLIDES);
+    };
+
+    loadSlides();
+    window.addEventListener('ru_banner_slides_updated', loadSlides);
+    return () => window.removeEventListener('ru_banner_slides_updated', loadSlides);
   }, []);
 
-  const activeSpot = RU_SPOTS_SLIDES[currentIdx];
+  // Auto-rotate slides smoothly every 4.2 seconds
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentIdx((prev) => (prev + 1) % slides.length);
+    }, 4200);
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
+  const activeSpot = slides[currentIdx] || slides[0] || RU_SPOTS_SLIDES[0];
 
   return (
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
@@ -92,9 +115,9 @@ export default function CampusTourBanner() {
         
         {/* Dynamic Background Image Showcase (Auto-Rotating) */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {RU_SPOTS_SLIDES.map((slide, idx) => (
+          {slides.map((slide, idx) => (
             <div
-              key={slide.titleBn}
+              key={slide.titleBn + idx}
               className={`absolute inset-0 bg-cover bg-center transition-all duration-1000 ease-in-out filter brightness-[0.88] ${
                 idx === currentIdx ? 'opacity-80 scale-105' : 'opacity-0 scale-100'
               }`}
@@ -145,9 +168,9 @@ export default function CampusTourBanner() {
             {/* Slide Navigation Dots & Spot Name Selector */}
             <div className="pt-3 flex flex-wrap items-center gap-2">
               <span className="text-[11px] font-bold text-slate-300 mr-1">দর্শনীয় স্পট:</span>
-              {RU_SPOTS_SLIDES.map((slide, idx) => (
+              {slides.map((slide, idx) => (
                 <button
-                  key={slide.titleBn}
+                  key={slide.titleBn + idx}
                   type="button"
                   onClick={() => setCurrentIdx(idx)}
                   className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all ${

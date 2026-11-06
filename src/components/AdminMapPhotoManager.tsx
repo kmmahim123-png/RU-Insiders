@@ -30,8 +30,151 @@ import {
   resetStoredTouristSpots
 } from '@/lib/touristSpots';
 
+const DEFAULT_BANNER_SLIDES = [
+  {
+    titleBn: 'ঐতিহাসিক প্যারিস রোড',
+    titleEn: 'Historic Paris Road',
+    location: 'ক্যাম্পাস মূল সড়ক • প্রশাসন ভবন থেকে কাজলা',
+    image: '/campus/paris-road-rain.jpg',
+    desc: 'সুউচ্চ গগনশিরীষ বৃক্ষশোভিত মতিহারের সবচেয়ে নান্দনিক ও রূপময় রাস্তা।',
+    mapPlaceId: 'paris_road'
+  },
+  {
+    titleBn: 'সাবাস বাংলাদেশ ভাস্কর্য',
+    titleEn: 'Shabash Bangladesh Memorial',
+    location: 'সিনেট ভবন ও মেইন গেট সংলগ্ন উন্মুক্ত চত্বর',
+    image: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=80',
+    desc: 'শিল্পী নিতুন কুন্ডু নির্মিত মহান মুক্তিযুদ্ধের অমর স্মৃতিস্তম্ভ ও শিক্ষার্থীদের প্রিয় আড্ডাস্থল।',
+    mapPlaceId: 'shabash_bd'
+  },
+  {
+    titleBn: 'সৈয়দ নজরুল ইসলাম প্রশাসন ভবন ও গোল চত্বর',
+    titleEn: 'Administrative Building & Roundabout',
+    location: 'প্যারিস রোডের কেন্দ্রস্থল',
+    image: '/campus/ru-admin.jpg',
+    desc: 'বিশ্ববিদ্যালয়ের কেন্দ্রীয় প্রশাসনিক ভবন, সিনেট ভবন এবং সুদৃশ্য গোল চত্বর।',
+    mapPlaceId: 'admin_senate'
+  },
+  {
+    titleBn: 'বধ্যভূমি স্মৃতিস্তম্ভ',
+    titleEn: 'Boddhobhumi Memorial',
+    location: 'ক্যাম্পাসের উত্তর-পূর্ব প্রান্ত',
+    image: 'https://images.unsplash.com/photo-1518998053901-5348d3961a04?auto=format&fit=crop&w=1200&q=80',
+    desc: '১৯৭১ সালের মহান মুক্তিযুদ্ধে শহীদদের আত্মত্যাগের চিরন্তন স্মৃতিস্তম্ভ।',
+    mapPlaceId: 'boddhobhumi'
+  },
+  {
+    titleBn: 'শেখ কামাল স্টেডিয়াম',
+    titleEn: 'Sheikh Kamal Stadium',
+    location: 'কেন্দ্রীয় স্টেডিয়াম ও ইনডোর স্পোর্টস জোন',
+    image: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=1200&q=80',
+    desc: 'ক্যাম্পাসের হৃদপিণ্ডে অবস্থিত বিশাল সবুজ খেলার মাঠ ও বার্ষিক অ্যাথলেটিক্স ভেন্যু।',
+    mapPlaceId: 'stadium'
+  },
+  {
+    titleBn: 'শহীদ স্মৃতি সংগ্রহশালা',
+    titleEn: 'Shaheed Smriti Museum',
+    location: 'মেইন গেটের পূর্ব পাশে',
+    image: 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1200&q=80',
+    desc: 'বাংলাদেশের প্রথম স্থায়ী মুক্তিযুদ্ধ জাদুঘর যা মতিহার ক্যাম্পাসে অবস্থিত।',
+    mapPlaceId: 'smriti_museum'
+  },
+  {
+    titleBn: 'বোটানিক্যাল গার্ডেন',
+    titleEn: 'Botanical Garden',
+    location: 'উত্তর ক্যাম্পাস • রেললাইনের দক্ষিণ পাশে',
+    image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=1200&q=80',
+    desc: 'শত শত প্রজাতির দুর্লভ বৃক্ষ, শান্ত লেক ও সবুজ নিবিড় প্রাকৃতিক উদ্যান।',
+    mapPlaceId: 'botanical_garden'
+  }
+];
+
 export default function AdminMapPhotoManager() {
-  const [managerMode, setManagerMode] = useState<'tourist_spots' | 'map_places'>('tourist_spots');
+  const [managerMode, setManagerMode] = useState<'tourist_spots' | 'map_places' | 'banner_slides'>('tourist_spots');
+
+  // ================= 3. MAIN PAGE BANNER SLIDES STATE =================
+  const [bannerSlides, setBannerSlides] = useState<any[]>([]);
+  const [newSlideTitle, setNewSlideTitle] = useState('');
+  const [newSlideLocation, setNewSlideLocation] = useState('');
+  const [newSlideDesc, setNewSlideDesc] = useState('');
+  const [newSlideImage, setNewSlideImage] = useState('');
+  const [isUploadingBannerImg, setIsUploadingBannerImg] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('ru_main_banner_slides_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setBannerSlides(parsed);
+          return;
+        }
+      }
+    } catch (e) {}
+    setBannerSlides(DEFAULT_BANNER_SLIDES);
+  }, []);
+
+  const saveBannerSlidesState = (updated: any[]) => {
+    setBannerSlides(updated);
+    try {
+      localStorage.setItem('ru_main_banner_slides_v1', JSON.stringify(updated));
+      window.dispatchEvent(new Event('ru_banner_slides_updated'));
+    } catch (e) {}
+  };
+
+  const handleBannerImgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingBannerImg(true);
+    try {
+      const dataUrl = await compressImage(file);
+      setNewSlideImage(dataUrl);
+      showToast('✓ ব্যানারের নতুন ছবি কম্প্রেস ও যুক্ত হয়েছে!');
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsUploadingBannerImg(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleAddBannerSlide = () => {
+    if (!newSlideTitle.trim() || !newSlideImage.trim()) {
+      alert('স্লাইডের শিরোনাম ও ছবি দেওয়া আবশ্যক!');
+      return;
+    }
+    const newSlide = {
+      titleBn: newSlideTitle.trim(),
+      titleEn: newSlideTitle.trim(),
+      location: newSlideLocation.trim() || 'রাজশাহী বিশ্ববিদ্যালয় ক্যাম্পাস',
+      image: newSlideImage.trim(),
+      desc: newSlideDesc.trim() || 'মতিহারের সবুজ প্রাঙ্গণ ও নান্দনিক রূপ।',
+      mapPlaceId: 'ru'
+    };
+    const updated = [newSlide, ...bannerSlides];
+    saveBannerSlidesState(updated);
+    setNewSlideTitle('');
+    setNewSlideLocation('');
+    setNewSlideDesc('');
+    setNewSlideImage('');
+    showToast('✓ নতুন ব্যানার স্লাইড হোমপেজে সক্রিয় করা হয়েছে!');
+  };
+
+  const handleDeleteBannerSlide = (idx: number) => {
+    if (bannerSlides.length <= 1) {
+      alert('হোমপেজে কমপক্ষে একটি স্লাইড থাকা আবশ্যক!');
+      return;
+    }
+    const updated = bannerSlides.filter((_, i) => i !== idx);
+    saveBannerSlidesState(updated);
+    showToast('✓ ব্যানার স্লাইড তালিকা থেকে সরানো হয়েছে।');
+  };
+
+  const handleResetBannerSlides = () => {
+    if (!confirm('আপনি কি হোমপেজের ব্যানার ছবিগুলো ডিফল্টে রিসেট করতে চান?')) return;
+    saveBannerSlidesState(DEFAULT_BANNER_SLIDES);
+    showToast('✓ হোমপেজ ব্যানার ডিফল্টে রিসেট করা হয়েছে।');
+  };
 
   // ================= 1. TOURIST SPOTS (95 SPOTS) STATE =================
   const [selectedDistrictId, setSelectedDistrictId] = useState<string>('rajshahi');
@@ -39,6 +182,7 @@ export default function AdminMapPhotoManager() {
   const [selectedSpotId, setSelectedSpotId] = useState<string>('');
   const [editingSpot, setEditingSpot] = useState<TouristSpot | null>(null);
   const [isUploadingSpotImg, setIsUploadingSpotImg] = useState<boolean>(false);
+  const [newSpotImageUrl, setNewSpotImageUrl] = useState<string>('');
 
   // Load Tourist Spots
   useEffect(() => {
@@ -146,22 +290,76 @@ export default function AdminMapPhotoManager() {
   };
 
   const handleSpotImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !editingSpot) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0 || !editingSpot) return;
     setIsUploadingSpotImg(true);
     try {
-      const dataUrl = await compressImage(file);
+      const newUrls: string[] = [];
+      for (const file of files) {
+        const dataUrl = await compressImage(file);
+        newUrls.push(dataUrl);
+      }
+      const existingImages = Array.isArray(editingSpot.images) && editingSpot.images.length > 0
+        ? editingSpot.images
+        : (editingSpot.imageUrl ? [editingSpot.imageUrl] : []);
+      const updatedImages = [...newUrls, ...existingImages];
       setEditingSpot({
         ...editingSpot,
-        imageUrl: dataUrl
+        imageUrl: updatedImages[0] || editingSpot.imageUrl,
+        images: updatedImages
       });
-      showToast('✓ নতুন ছবি সিলেক্ট করা হয়েছে! "পরিবর্তন সংরক্ষণ করুন" বাটনে চাপুন।');
+      showToast(`✓ ${files.length}টি ছবি সফলভাবে যুক্ত হয়েছে! "পরিবর্তন সংরক্ষণ করুন" বাটনে চাপুন।`);
     } catch (err) {
       console.error('Image compression failed:', err);
     } finally {
       setIsUploadingSpotImg(false);
       e.target.value = '';
     }
+  };
+
+  const handleAddSpotImageUrl = () => {
+    if (!newSpotImageUrl.trim() || !editingSpot) return;
+    const existingImages = Array.isArray(editingSpot.images) && editingSpot.images.length > 0
+      ? editingSpot.images
+      : (editingSpot.imageUrl ? [editingSpot.imageUrl] : []);
+    const updatedImages = [newSpotImageUrl.trim(), ...existingImages];
+    setEditingSpot({
+      ...editingSpot,
+      imageUrl: updatedImages[0] || editingSpot.imageUrl,
+      images: updatedImages
+    });
+    setNewSpotImageUrl('');
+    showToast('✓ নতুন ছবির লিংক যুক্ত হয়েছে! "পরিবর্তন সংরক্ষণ করুন" বাটনে চাপুন।');
+  };
+
+  const handleDeleteSpotImage = (indexToDelete: number) => {
+    if (!editingSpot) return;
+    const currentImages = Array.isArray(editingSpot.images)
+      ? [...editingSpot.images]
+      : (editingSpot.imageUrl ? [editingSpot.imageUrl] : []);
+    const filtered = currentImages.filter((_, idx) => idx !== indexToDelete);
+    setEditingSpot({
+      ...editingSpot,
+      imageUrl: filtered[0] || '',
+      images: filtered
+    });
+    showToast('✓ ছবি তালিকা থেকে সরানো হয়েছে। সংরক্ষণ করতে বাটনে চাপুন।');
+  };
+
+  const handleSetPrimarySpotImage = (indexToPrimary: number) => {
+    if (!editingSpot) return;
+    const currentImages = Array.isArray(editingSpot.images)
+      ? [...editingSpot.images]
+      : (editingSpot.imageUrl ? [editingSpot.imageUrl] : []);
+    const selected = currentImages[indexToPrimary];
+    if (!selected) return;
+    const reordered = [selected, ...currentImages.filter((_, idx) => idx !== indexToPrimary)];
+    setEditingSpot({
+      ...editingSpot,
+      imageUrl: selected,
+      images: reordered
+    });
+    showToast('✓ প্রধান থাম্বনেইল ছবি হিসেবে সেট করা হয়েছে!');
   };
 
   const handleResetTouristSpots = () => {
@@ -299,6 +497,19 @@ export default function AdminMapPhotoManager() {
           >
             <Compass className="h-3.5 w-3.5" />
             <span>রাবি ও ম্যাপ টেরিটরি ফটো</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setManagerMode('banner_slides')}
+            className={`px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 ${
+              managerMode === 'banner_slides'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Camera className="h-3.5 w-3.5" />
+            <span>মেইন পেজ ব্যানার ছবি</span>
           </button>
         </div>
       </div>
@@ -476,41 +687,131 @@ export default function AdminMapPhotoManager() {
                       />
                     </div>
 
-                    {/* Image URL & File Upload */}
-                    <div className="md:col-span-2 space-y-3 pt-2 border-t border-slate-100">
+                    {/* Multi-Image Gallery & Upload Section */}
+                    <div className="md:col-span-2 space-y-4 pt-3 border-t border-slate-200">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-slate-700 block">
-                          দর্শনীয় স্থানের ছবি (ইমেজ আপলোড বা ওয়েব লিংক)
-                        </label>
+                        <div>
+                          <label className="text-xs font-bold text-slate-800 block">
+                            দর্শনীয় স্থানের ছবি গ্যালারি (একাধিক ছবি আপলোড করুন)
+                          </label>
+                          <p className="text-[11px] text-slate-500">
+                            একসাথে একাধিক ছবি সিলেক্ট করে আপলোড করতে পারবেন। প্রথম ছবিটি কার্ডের মূল কভার হিসেবে প্রদর্শিত হবে।
+                          </p>
+                        </div>
                         {isUploadingSpotImg && (
-                          <span className="text-[11px] font-bold text-blue-600 animate-pulse">
-                            ছবি প্রসেসিং হচ্ছে...
+                          <span className="text-[11px] font-bold text-blue-600 animate-pulse bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">
+                            ছবি প্রসেসিং ও কম্প্রেস হচ্ছে...
                           </span>
                         )}
                       </div>
 
-                      <div className="flex flex-col sm:flex-row items-center gap-3">
-                        <label className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition">
+                      {/* Upload & Link Controls */}
+                      <div className="flex flex-col sm:flex-row items-center gap-2.5">
+                        <label className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition shadow-sm shrink-0">
                           <UploadCloud className="h-4 w-4" />
-                          <span>কম্পিউটার থেকে ছবি আপলোড করুন</span>
+                          <span>কম্পিউটার থেকে একাধিক ছবি যোগ করুন</span>
                           <input
                             type="file"
+                            multiple
                             accept="image/*"
                             onChange={handleSpotImageUpload}
                             className="hidden"
                           />
                         </label>
 
-                        <span className="text-xs text-slate-400 font-bold">অথবা</span>
-
-                        <input
-                          type="url"
-                          placeholder="ইমেজ লিংক (https://...)"
-                          value={editingSpot.imageUrl}
-                          onChange={(e) => setEditingSpot({ ...editingSpot, imageUrl: e.target.value })}
-                          className="flex-1 w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs font-mono focus:outline-none focus:border-emerald-600 focus:bg-white"
-                        />
+                        <div className="flex items-center gap-1.5 w-full">
+                          <input
+                            type="url"
+                            placeholder="ছবির ওয়েব লিংক (https://...)"
+                            value={newSpotImageUrl}
+                            onChange={(e) => setNewSpotImageUrl(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddSpotImageUrl();
+                              }
+                            }}
+                            className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs font-mono focus:outline-none focus:border-emerald-600 focus:bg-white"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleAddSpotImageUrl}
+                            className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold shrink-0 transition"
+                          >
+                            + লিংক যোগ
+                          </button>
+                        </div>
                       </div>
+
+                      {/* Display Image Gallery Grid */}
+                      {(() => {
+                        const spotImages = Array.isArray(editingSpot.images) && editingSpot.images.length > 0
+                          ? editingSpot.images
+                          : (editingSpot.imageUrl ? [editingSpot.imageUrl] : []);
+
+                        return (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                              <span>সংযুক্ত ছবিসমূহ ({spotImages.length}টি ছবি):</span>
+                              <span className="text-[11px] text-slate-500 font-normal">
+                                যেকোনো ছবিতে ক্লিক করে প্রধান থাম্বনেইল হিসেবে সেট করুন
+                              </span>
+                            </div>
+
+                            {spotImages.length === 0 ? (
+                              <div className="p-4 rounded-xl border border-dashed border-slate-300 text-center text-xs text-slate-400">
+                                কোনো ছবি আপলোড করা নেই। উপরের বাটন দিয়ে ছবি যোগ করুন।
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                                {spotImages.map((imgUrl, imgIdx) => {
+                                  const isCover = imgIdx === 0 || imgUrl === editingSpot.imageUrl;
+                                  return (
+                                    <div
+                                      key={imgIdx}
+                                      className={`relative rounded-2xl overflow-hidden border-2 group aspect-video bg-slate-900 shadow-sm ${
+                                        isCover ? 'border-emerald-600 ring-2 ring-emerald-500/30' : 'border-slate-200 hover:border-slate-400'
+                                      }`}
+                                    >
+                                      <img
+                                        src={imgUrl}
+                                        alt={`Spot photo ${imgIdx + 1}`}
+                                        className="w-full h-full object-cover"
+                                      />
+                                      
+                                      {/* Primary Cover Badge */}
+                                      {isCover ? (
+                                        <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-emerald-600 text-white font-black text-[9px] shadow-sm">
+                                          ★ মূল কভার
+                                        </span>
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleSetPrimarySpotImage(imgIdx)}
+                                          className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-black/70 hover:bg-emerald-600 text-white font-bold text-[9px] opacity-0 group-hover:opacity-100 transition shadow-sm"
+                                        >
+                                          কভার করুন
+                                        </button>
+                                      )}
+
+                                      {/* Delete Button */}
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeleteSpotImage(imgIdx)}
+                                        className="absolute top-1.5 right-1.5 p-1 rounded-md bg-rose-600/90 hover:bg-rose-700 text-white shadow-sm opacity-0 group-hover:opacity-100 transition"
+                                        title="ছবি মুছুন"
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+
                     </div>
                   </div>
 
@@ -790,6 +1091,174 @@ export default function AdminMapPhotoManager() {
                   ))}
                 </div>
               )}
+            </div>
+
+          </div>
+
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SECTION 3: MAIN PAGE HERO BANNER SLIDES MANAGER */}
+      {/* ========================================================================= */}
+      {managerMode === 'banner_slides' && (
+        <div className="space-y-6">
+          
+          {/* Header Card */}
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-bold text-slate-900 font-bengali">
+                হোমপেজ ব্যানার স্লাইড ও ছবির তালিকা ({bannerSlides.length}টি সক্রিয় ছবি)
+              </h3>
+              <p className="text-xs text-slate-500 font-bengali">
+                হোমপেজের মূল ব্যানারে কোন কোন ছবি ও ক্যাম্পাসের স্থান রোটেট করবে তা এখান থেকে নিয়ন্ত্রণ ও আপলোড করুন।
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleResetBannerSlides}
+              className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 shrink-0"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span>ডিফল্টে রিসেট</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* Left: Add New Slide Form */}
+            <div className="lg:col-span-5 bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-4">
+              <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                <Plus className="h-4 w-4 text-emerald-600" />
+                <span>নতুন ব্যানার স্লাইড যুক্ত করুন</span>
+              </h4>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    স্থানের নাম (বাংলায়) *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="যেমন: মতিহারের প্যারিস রোড"
+                    value={newSlideTitle}
+                    onChange={(e) => setNewSlideTitle(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-emerald-600 focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    ক্যাম্পাস লোকেশন / সাব-টাইটেল
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="যেমন: প্রশাসন ভবন থেকে কাজলা গেইট"
+                    value={newSlideLocation}
+                    onChange={(e) => setNewSlideLocation(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-emerald-600 focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    সংক্ষিপ্ত বিবরণ
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="যেমন: সুউচ্চ গগনশিরীষ বৃক্ষশোভিত মতিহারের অন্যতম সুন্দর স্থান।"
+                    value={newSlideDesc}
+                    onChange={(e) => setNewSlideDesc(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-emerald-600 focus:bg-white"
+                  />
+                </div>
+
+                {/* Upload or Link Image */}
+                <div className="space-y-2 pt-2 border-t border-slate-100">
+                  <label className="text-xs font-bold text-slate-700 block">
+                    ব্যানারের ছবি *
+                  </label>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition">
+                      <UploadCloud className="h-4 w-4" />
+                      <span>{isUploadingBannerImg ? 'আপলোড হচ্ছে...' : 'কম্পিউটার থেকে ছবি দিন'}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleBannerImgUpload}
+                        className="hidden"
+                      />
+                    </label>
+
+                    <input
+                      type="url"
+                      placeholder="বা অনলাইন ছবির লিংক পেস্ট করুন..."
+                      value={newSlideImage}
+                      onChange={(e) => setNewSlideImage(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs font-mono focus:outline-none focus:border-emerald-600 focus:bg-white"
+                    />
+                  </div>
+
+                  {newSlideImage && (
+                    <div className="relative h-28 w-full rounded-xl overflow-hidden border border-slate-200 mt-2">
+                      <img src={newSlideImage} alt="Preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleAddBannerSlide}
+                  className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>হোমপেজ ব্যানারে স্লাইড যুক্ত করুন</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Right: Current Active Banner Slides */}
+            <div className="lg:col-span-7 bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-4">
+              <h4 className="text-sm font-black text-slate-900">
+                বর্তমানে প্রদর্শিত ব্যানার স্লাইডসমূহ ({bannerSlides.length}টি)
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto pr-1">
+                {bannerSlides.map((slide, sIdx) => (
+                  <div
+                    key={sIdx}
+                    className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 flex flex-col justify-end group shadow-sm aspect-video"
+                  >
+                    <img
+                      src={slide.image}
+                      alt={slide.titleBn}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-3 text-white flex flex-col justify-end">
+                      <span className="text-[10px] font-bold text-amber-300">
+                        স্লাইড #{sIdx + 1}
+                      </span>
+                      <h5 className="font-bold text-xs sm:text-sm truncate">
+                        {slide.titleBn}
+                      </h5>
+                      <p className="text-[10px] text-slate-300 truncate">
+                        {slide.location}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteBannerSlide(sIdx)}
+                      className="absolute top-2 right-2 p-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white shadow-md opacity-90 group-hover:opacity-100 transition"
+                      title="স্লাইড মুছে ফেলুন"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
 
           </div>
