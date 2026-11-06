@@ -1,27 +1,32 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { MapPin, Navigation, ExternalLink, Compass, Landmark, ArrowRight, ShieldCheck } from 'lucide-react';
 import {
   RAJSHAHI_DIVISION_DISTRICTS,
-  RAJSHAHI_OFFICIAL_9_SPOTS,
-  DIVISION_OTHER_DISTRICTS_HIGHLIGHTS,
-  TouristSpot
+  DIVISION_ALL_95_SPOTS,
+  TouristSpot,
+  getStoredTouristSpots
 } from '@/lib/touristSpots';
 
 export default function TouristSpotsSection() {
   const [selectedDistrict, setSelectedDistrict] = useState<string>('rajshahi');
+  const [allSpots, setAllSpots] = useState<TouristSpot[]>(DIVISION_ALL_95_SPOTS);
+
+  useEffect(() => {
+    setAllSpots(getStoredTouristSpots());
+    const handleUpdate = () => {
+      setAllSpots(getStoredTouristSpots());
+    };
+    window.addEventListener('ru_tourist_spots_updated', handleUpdate);
+    return () => window.removeEventListener('ru_tourist_spots_updated', handleUpdate);
+  }, []);
 
   const spotsToDisplay = React.useMemo(() => {
-    if (selectedDistrict === 'rajshahi') {
-      return RAJSHAHI_OFFICIAL_9_SPOTS;
-    }
-    return DIVISION_OTHER_DISTRICTS_HIGHLIGHTS.filter(
-      (s) => s.districtId === selectedDistrict
-    );
-  }, [selectedDistrict]);
+    return allSpots.filter((s) => s.districtId === selectedDistrict);
+  }, [allSpots, selectedDistrict]);
 
   const activeDistrictInfo = RAJSHAHI_DIVISION_DISTRICTS.find(
     (d) => d.id === selectedDistrict
@@ -30,43 +35,13 @@ export default function TouristSpotsSection() {
   return (
     <section id="tourist-attractions" className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       
-      {/* Section Header */}
-      <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-emerald-800/40 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-2 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-400/30">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-            <span>জাতীয় তথ্য বাতায়ন • rajshahidiv.gov.bd</span>
-            <span className="text-white/40">|</span>
-            <span className="text-amber-300 font-semibold">ঐতিহাসিক দর্শনীয় স্থান গাইড</span>
-          </div>
-
-          <h2 className="text-xl sm:text-3xl font-black text-white tracking-tight leading-snug font-bengali">
+      {/* Section Header: Just clean title */}
+      <div className="flex items-center justify-between pb-1 pt-2">
+        <div className="flex items-center gap-2.5">
+          <span className="w-3 h-3 rounded-full bg-emerald-600"></span>
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight font-bengali">
             রাজশাহী ও রাজশাহী বিভাগের ঐতিহ্যবাহী দর্শনীয় স্থান
           </h2>
-
-          <p className="text-xs sm:text-sm text-slate-300 font-bengali leading-relaxed">
-            সরকারি পোর্টালে তালিকাভুক্ত রাজশাহীর ৯টি প্রধান স্পট এবং রাজশাহী বিভাগের ৮ জেলার জনপ্রিয় পর্যটন কেন্দ্র। যেকোনো স্থানে ক্লিক করলেই সরাসরি আমাদের ইন্টারঅ্যাক্টিভ ম্যাপে চলে যাবেন!
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 shrink-0">
-          <Link
-            href="/map"
-            className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all"
-          >
-            <Compass className="h-4 w-4" />
-            <span>⛶ ইন্টারঅ্যাক্টিভ ম্যাপ খুলুন</span>
-          </Link>
-
-          <a
-            href="https://rajshahidiv.gov.bd/pages/tourist-spot"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full sm:w-auto px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition"
-          >
-            <ExternalLink className="h-3.5 w-3.5 text-amber-300" />
-            <span>বিভাগীয় সরকারি পোর্টাল</span>
-          </a>
         </div>
       </div>
 

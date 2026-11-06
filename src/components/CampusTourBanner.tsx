@@ -124,29 +124,21 @@ export default function CampusTourBanner() {
             {/* Core Question Headline */}
             <div className="space-y-2">
               <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-lg font-bengali">
-                আপনি কি রাজশাহী বিশ্ববিদ্যালয়ের সব জায়গা ঘুরেছেন?
+                দেখুন ভার্সিটির কতটুকু ঘোরা হলো
               </h2>
-              <p className="text-xs sm:text-sm text-slate-200 font-bengali font-medium leading-relaxed max-w-xl">
-                প্যারিস রোডের ছায়াবীথি থেকে সাবাস বাংলাদেশ ও বধ্যভূমি—ইন্টারঅ্যাক্টিভ ম্যাপে ঘুরে দেখা অঞ্চলগুলো সবুজ করুন, সড়ক রুট দেখুন এবং আপনার ভ্রমণ শতকরা (Percentage) পোস্টার ডাউনলোড করুন!
+              <p className="text-xs sm:text-sm text-emerald-100 font-bengali font-semibold leading-relaxed max-w-xl">
+                রাজশাহী বিশ্ববিদ্যালয়ের কোন কোন জায়গা ঘুরেছেন তা ইন্টারঅ্যাক্টিভ ম্যাপে চিহ্নিত করুন এবং আপনার ভ্রমণ শতকরা বের করুন।
               </p>
             </div>
 
             {/* CTA Button Group */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <Link
-                href="/map"
-                className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2.5 shadow-xl shadow-emerald-900/40 hover:scale-[1.02] active:scale-[0.98] transition-all group"
+                href="/map?region=ru"
+                className="px-6 py-3.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2.5 shadow-xl shadow-black/30 hover:scale-[1.02] active:scale-[0.98] transition-all group"
               >
-                <Compass className="h-4 w-4 sm:h-5 sm:w-5 group-hover:rotate-45 transition-transform" />
-                <span>Explore RU (এক্সপ্লোর আরইউ) →</span>
-              </Link>
-
-              <Link
-                href={`/map?place=${activeSpot.mapPlaceId}`}
-                className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white font-bold text-xs flex items-center gap-2 transition"
-              >
-                <Navigation className="h-3.5 w-3.5 text-amber-300" />
-                <span>ম্যাপে {activeSpot.titleBn} দেখুন</span>
+                <Compass className="h-4 w-4 sm:h-5 sm:w-5 group-hover:rotate-45 transition-transform text-slate-950" />
+                <span>রাজশাহী বিশ্ববিদ্যালয় (ম্যাপে দেখুন) →</span>
               </Link>
             </div>
 

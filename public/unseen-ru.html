@@ -185,8 +185,13 @@
   <header class="z-30 px-2.5 sm:px-6 pt-2 pb-1.5 shrink-0">
     <div class="max-w-[1460px] mx-auto bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-full px-3 sm:px-5 py-2 shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-emerald-900/10 flex items-center justify-between gap-2">
       
-      <!-- Brand Logo + Region Switcher -->
+      <!-- Exit Button & Brand Logo -->
       <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        <a href="/" target="_top" class="px-2.5 sm:px-3.5 py-1.5 rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition shrink-0" title="RU Insiders মূল ওয়েবসাইটে ফিরে যান">
+          <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+          <span>Exit / মূল পেজ</span>
+        </a>
+
         <div class="flex items-center gap-2 cursor-pointer" onclick="switchMobileTab('map')">
           <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#1f7a44] flex items-center justify-center text-white shadow-sm relative">
             <svg class="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -263,12 +268,6 @@
         <button onclick="openShareModal()" class="px-2.5 sm:px-3.5 py-1.5 rounded-full bg-[#1f7a44] hover:bg-[#166534] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition">
           <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
           <span class="hidden sm:inline">শেয়ার</span>
-        </button>
-
-        <!-- RESTORED ZERO-GRAVITY FLOATING ANTIGRAVITY BUTTON -->
-        <button id="antigravity-btn" onclick="toggleAntigravityPhysics()" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-sm flex items-center gap-1.5 transition cursor-pointer">
-          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-          <span id="antigravity-btn-text">Antigravity</span>
         </button>
 
         <!-- Admin Panel Quick Button (Mobile + Tablet visible) -->
@@ -480,23 +479,10 @@
           <button onclick="setMapStyle('roadmap')" id="style-roadmap" class="px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-gray-700 hover:bg-gray-100 transition flex items-center gap-1">
             <span>রোড ও জিওকোড ম্যাপ</span>
           </button>
-          <button onclick="setMapStyle('gmap')" id="style-gmap" class="px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition flex items-center gap-1">
-            <span>🛰️ Google Map লাইভ</span>
-          </button>
-          <button onclick="setMapStyle('master3d')" id="style-master3d" class="hidden sm:flex px-2.5 py-1 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 transition items-center gap-1">
-            <span>৩ডি ভিউ</span>
-          </button>
-          <button onclick="toggleLabelsMode()" id="toggle-labels-btn" class="px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition">
-            নাম: স্পষ্ট
-          </button>
         </div>
 
-        <!-- Right Group: Route Finder Toggle + Adjacent Map Switcher -->
+        <!-- Right Group: Tourist Attractions + Region Toggle -->
         <div class="flex items-center gap-1.5 bg-white p-1 rounded-xl shadow-sm border border-gray-200/80">
-          <button onclick="toggleRoutePlannerBar()" id="map-route-toggle-btn" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-1 transition shadow-sm">
-            <i data-lucide="navigation" class="w-3 h-3"></i>
-            <span>🧭 কীভাবে যাবেন</span>
-          </button>
           <button onclick="openTouristShowcaseView()" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-700 hover:bg-emerald-800 text-white flex items-center gap-1 transition shadow-sm">
             <span>📸 দর্শনীয় স্থানসমূহ</span>
           </button>
@@ -2897,9 +2883,11 @@
       labelsMode = modes[nextIdx];
 
       const btn = document.getElementById('toggle-labels-btn');
-      if (labelsMode === 'all') btn.textContent = 'নাম: স্পষ্ট';
-      else if (labelsMode === 'compact') btn.textContent = 'নাম: ছোট';
-      else btn.textContent = 'নাম: লুকানো';
+      if (btn) {
+        if (labelsMode === 'all') btn.textContent = 'নাম: স্পষ্ট';
+        else if (labelsMode === 'compact') btn.textContent = 'নাম: ছোট';
+        else btn.textContent = 'নাম: লুকানো';
+      }
 
       renderContiguousMap();
     }
@@ -3884,8 +3872,8 @@
 
       const btn = document.getElementById('antigravity-btn');
       const btnText = document.getElementById('antigravity-btn-text');
-      btn.classList.add('ag-active-btn', 'from-red-600', 'to-orange-600');
-      btnText.textContent = 'Antigravity থামান';
+      if (btn) btn.classList.add('ag-active-btn', 'from-red-600', 'to-orange-600');
+      if (btnText) btnText.textContent = 'Antigravity থামান';
 
       // 1. Float all SVG Map Territories & Labels
       const polyNodes = document.querySelectorAll('#contiguous-territories-layer .territory-group');
