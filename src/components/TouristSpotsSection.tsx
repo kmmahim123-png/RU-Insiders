@@ -25,6 +25,7 @@ import {
   TouristSpot,
   getStoredTouristSpots
 } from '@/lib/touristSpots';
+import RajshahiDivisionWaterMap from './RajshahiDivisionWaterMap';
 
 export default function TouristSpotsSection() {
   const [selectedDistrict, setSelectedDistrict] = useState<string>('rajshahi');
@@ -107,6 +108,13 @@ export default function TouristSpotsSection() {
           </h2>
         </div>
       </div>
+
+      {/* 1. Interactive Rajshahi Division Water-Fill Progress Map & Poster Share */}
+      <RajshahiDivisionWaterMap
+        visitedSpotIds={visitedSpotIds}
+        totalSpotsCount={allSpots.length || 95}
+        onSelectDistrict={(distId) => setSelectedDistrict(distId)}
+      />
 
       {/* District Selection Table (রাজশাহী বিভাগের ৮টি জেলা তালিকা টেবিল) */}
       <div className="bg-white rounded-3xl border border-slate-200 p-3 sm:p-5 shadow-sm space-y-2">

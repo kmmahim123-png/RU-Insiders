@@ -317,6 +317,17 @@ export async function getProducts(): Promise<Product[]> {
 
 export async function addProduct(product: Product): Promise<Product[]> {
   return runAtomic(async () => {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        const row = mapProductToRow(product);
+        await supabase.from('products').insert([row]);
+        return await getProducts();
+      } catch (err) {
+        console.warn('Supabase addProduct sync warning:', err);
+      }
+    }
+
     const db = await readDb();
     const updatedList = [
       { ...product, orderIndex: 0 },
@@ -325,30 +336,15 @@ export async function addProduct(product: Product): Promise<Product[]> {
     db.products = updatedList;
     await writeDb(db);
 
-    const supabase = getSupabaseClient();
-    if (supabase) {
-      try {
-        const row = mapProductToRow(product);
-        await supabase.from('products').insert([row]);
-      } catch (err) {
-        console.warn('Supabase addProduct sync warning:', err);
-      }
-    }
-
     return db.products;
   });
 }
 
 export async function updateProduct(id: string, updates: Partial<Product>): Promise<Product | null> {
   return runAtomic(async () => {
-    const db = await readDb();
-    const index = db.products.findIndex((p) => p.id === id);
-    if (index === -1) return null;
-
-    db.products[index] = { ...db.products[index], ...updates };
-    await writeDb(db);
-
+    let updatedProduct: Product | null = null;
     const supabase = getSupabaseClient();
+
     if (supabase) {
       try {
         const updatePayload: Record<string, any> = { updated_at: new Date().toISOString() };
@@ -368,39 +364,59 @@ export async function updateProduct(id: string, updates: Partial<Product>): Prom
         if (updates.video !== undefined) updatePayload.video = updates.video;
         if (updates.badge !== undefined) updatePayload.badge = updates.badge;
 
-        await supabase
+        const { data, error } = await supabase
           .from('products')
           .update(updatePayload)
-          .eq('id', id);
+          .eq('id', id)
+          .select();
+
+        if (!error && data && data.length > 0) {
+          updatedProduct = mapProductFromRow(data[0]);
+        }
       } catch (err) {
         console.warn('Supabase updateProduct sync warning:', err);
       }
     }
 
-    return db.products[index];
+    const db = await readDb();
+    const index = db.products.findIndex((p) => p.id === id);
+    if (index !== -1) {
+      db.products[index] = { ...db.products[index], ...updates };
+      await writeDb(db);
+      if (!updatedProduct) updatedProduct = db.products[index];
+    } else if (updatedProduct) {
+      db.products.push(updatedProduct);
+      await writeDb(db);
+    }
+
+    return updatedProduct;
   });
 }
 
 export async function deleteProduct(id: string): Promise<boolean> {
   return runAtomic(async () => {
-    const db = await readDb();
-    const initialLength = db.products.length;
-    db.products = db.products.filter((p) => p.id !== id);
-    if (db.products.length === initialLength) return false;
-
-    db.products = db.products.map((p, idx) => ({ ...p, orderIndex: idx }));
-    await writeDb(db);
-
+    let deleted = false;
     const supabase = getSupabaseClient();
+
     if (supabase) {
       try {
-        await supabase.from('products').delete().eq('id', id);
+        const { error } = await supabase.from('products').delete().eq('id', id);
+        if (!error) deleted = true;
       } catch (err) {
         console.warn('Supabase deleteProduct sync warning:', err);
       }
     }
 
-    return true;
+    const db = await readDb();
+    const beforeCount = db.products.length;
+    db.products = db.products.filter((p) => p.id !== id);
+    if (db.products.length !== beforeCount) {
+      deleted = true;
+      db.products = db.products.map((p, idx) => ({ ...p, orderIndex: idx }));
+      await writeDb(db);
+    }
+
+    return deleted;
   });
 }
 
