@@ -27,24 +27,21 @@ export default function TopStoryHighlights({ products }: TopStoryHighlightsProps
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
       <div className="bg-gradient-to-r from-slate-50 via-white to-slate-50 rounded-3xl p-3.5 sm:p-5 border border-slate-200/90 shadow-sm space-y-3">
         
-        {/* Subtle Header */}
+        {/* Header: Just "কালেকশন" + Highlighted "সবগুলো পণ্য একসাথে দেখুন" */}
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-            <span className="text-xs sm:text-sm font-black text-slate-900 tracking-tight flex items-center gap-1.5">
-              <span>টপ কালেকশন ও হট ড্রপস</span>
-              <span className="text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full border border-rose-200">
-                FEATURED
-              </span>
-            </span>
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse"></span>
+            <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight font-bengali">
+              কালেকশন
+            </h2>
           </div>
 
           <Link
             href="/shop"
-            className="text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1 group"
+            className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-blue-500/25 hover:shadow-lg transition-all flex items-center gap-1.5 group"
           >
-            <span>সব পণ্য একসাথে দেখুন</span>
-            <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+            <span>সবগুলো পণ্য একসাথে দেখুন</span>
+            <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
 
@@ -88,33 +85,6 @@ export default function TopStoryHighlights({ products }: TopStoryHighlightsProps
               </Link>
             );
           })}
-
-          {/* Dedicated "Shop More / সব পণ্য" Circular Card at the end */}
-          <Link
-            href="/shop"
-            className="group flex flex-col items-center gap-1.5 shrink-0 focus:outline-none"
-            title="সকল পণ্য একসাথে দেখুন (Shop All Products)"
-          >
-            <div className="p-[2.5px] rounded-full bg-gradient-to-tr from-slate-700 via-slate-800 to-blue-700 group-hover:scale-105 group-active:scale-95 transition-transform duration-300 shadow-md">
-              <div className="p-[2px] bg-white rounded-full">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-slate-900 to-blue-900 text-white flex flex-col items-center justify-center gap-1 group-hover:from-blue-600 group-hover:to-indigo-600 transition-colors">
-                  <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6 text-amber-300 group-hover:scale-110 transition-transform" />
-                  <span className="text-[9px] sm:text-[10px] font-black tracking-wider uppercase">
-                    সব পণ্য
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <span className="text-[11px] sm:text-xs font-bold text-blue-700 text-center max-w-[76px] sm:max-w-[84px] truncate flex items-center gap-0.5">
-              <span>Shop More</span>
-              <ArrowRight className="h-3 w-3" />
-            </span>
-
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-              {products.length}টি আইটেম
-            </span>
-          </Link>
         </div>
 
       </div>

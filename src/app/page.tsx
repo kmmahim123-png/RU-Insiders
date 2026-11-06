@@ -23,29 +23,11 @@ import { Product } from '@/lib/types';
 import { INITIAL_PRODUCTS } from '@/lib/store';
 import { formatBDT } from '@/lib/utils';
 
-const campusSlides = [
-  { src: '/campus/ru-admin.jpg', name: 'প্রশাসন ভবন ও গোল চত্বর' },
-  { src: '/campus/paris-road-rain.jpg', name: 'বৃষ্টিতে মতিহার ও প্যারিস রোড' },
-  { src: '/campus/ru-gate.jpg', name: 'বিশ্ববিদ্যালয় প্রধান ফটক' },
-  { src: '/campus/ru-spot.jpg', name: 'প্যারিস রোডের ছায়াবীথি' },
-  { src: '/campus/ru-roundabout.jpg', name: 'মতিহারের সবুজ প্রান্তর' },
-  { src: '/campus/ru-master-plan-3d.jpg', name: 'মতিহার ৩ডি মাস্টারপ্ল্যান' },
-];
-
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [activeSlide, setActiveSlide] = useState(0);
-
-  // Dynamic campus slideshow timer
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % campusSlides.length);
-    }, 4500);
-    return () => clearInterval(timer);
-  }, []);
 
   const [filters, setFilters] = useState<FilterState>({
     category: 'all',
@@ -126,73 +108,18 @@ export default function HomePage() {
   }, [filters]);
 
   return (
-    <div className="space-y-8 sm:space-y-12 pb-20 overflow-hidden bg-white">
+    <div className="space-y-6 sm:space-y-10 pb-20 overflow-hidden bg-white">
 
-      {/* 1. Minimalist Campus Hero with Dynamic Slideshow */}
-      <section className="relative overflow-hidden border-b border-slate-200/80 bg-slate-900 min-h-[300px] sm:min-h-[340px] flex items-center">
-        {/* Dynamic Campus Photos Slideshow - Vivid, clearly visible */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {campusSlides.map((slide, index) => (
-            <div
-              key={slide.src}
-              className={`absolute inset-0 bg-cover bg-center transition-all duration-1000 ease-in-out filter brightness-[0.92] ${
-                index === activeSlide ? 'opacity-85 scale-105' : 'opacity-0 scale-100'
-              }`}
-              style={{ backgroundImage: `url('${slide.src}')` }}
-            />
-          ))}
-          {/* Subtle gradient to keep left text ultra-readable while preserving full picture visibility */}
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/60 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/30" />
-        </div>
-
-        <div className="relative w-full max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-
-            <div className="max-w-2xl space-y-3 bg-slate-950/40 backdrop-blur-md p-5 sm:p-7 rounded-3xl border border-white/10 shadow-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white text-xs font-bold tracking-wide shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>RU Insiders • মতিহারের সবুজ চত্বর</span>
-                <span className="text-white/40">|</span>
-                <span className="text-amber-300 font-semibold text-[11px]">📍 {campusSlides[activeSlide].name}</span>
-              </div>
-              <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight leading-tight drop-shadow-md">
-                অফিশিয়াল রাজশাহী বিশ্ববিদ্যালয় মার্চেন্ডাইজ স্টোর
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-200 font-bengali font-medium leading-relaxed max-w-xl">
-                মতিহারের ভালোবাসায় তৈরি অফিসিয়াল হুডি, ওভারসাইজড ড্রপ শোল্ডার, কটন গেঞ্জি, এক্সেসরিজ ও ক্যাম্পাস কালেকশন। পছন্দমতো পণ্য নির্বাচন করে সহজেই অর্ডার করুন।
-              </p>
-
-              {/* Campus Photo Indicators */}
-              <div className="flex items-center gap-1.5 pt-1">
-                {campusSlides.map((slide, idx) => (
-                  <button
-                    key={slide.src}
-                    type="button"
-                    onClick={() => setActiveSlide(idx)}
-                    title={slide.name}
-                    className={`h-1.5 rounded-full transition-all ${
-                      idx === activeSlide ? 'w-7 bg-amber-400' : 'w-2 bg-white/40 hover:bg-white/70'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* 2. Top Circular Product Story Highlights (উপরে গোল গোল আইকন + Shop More) */}
+      {/* 1. Top Story Highlights (কালেকশন) */}
       <TopStoryHighlights products={products} />
 
-      {/* 3. Campus Tour Rotating Showcase Banner ("আপনি কি রাজশাহী বিশ্ববিদ্যালয়ের সব জায়গা ঘুরেছেন? Explore RU") */}
+      {/* 2. Campus Tour Rotating Showcase Banner ("আপনি কি রাজশাহী বিশ্ববিদ্যালয়ের সব জায়গা ঘুরেছেন? Explore RU") */}
       <CampusTourBanner />
 
-      {/* 4. Rajshahi & Division Tourist Attractions Guide (পাতা _ রাজশাহী বিভাগ.html অনুযায়ী দর্শনীয় স্থানসমূহ) */}
+      {/* 3. Rajshahi & Division Tourist Attractions Guide (পাতা _ রাজশাহী বিভাগ.html অনুযায়ী দর্শনীয় স্থানসমূহ) */}
       <TouristSpotsSection />
 
-      {/* 5. Storefront Search, Category Pills & Product Grid with Campus Backdrop Effect */}
+      {/* 4. Storefront Search, Category Pills & Product Grid with Campus Backdrop Effect */}
       <section id="catalog" className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
         
         {/* Ambient Campus Photo Background Effect behind the products */}

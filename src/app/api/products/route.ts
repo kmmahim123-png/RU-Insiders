@@ -75,8 +75,8 @@ export async function POST(request: NextRequest) {
       images: body.images && body.images.length > 0 ? body.images : [
         '/logo.png'
       ],
-      colors: body.colors || [{ name: 'Heritage Maroon', hex: '#881337' }, { name: 'Royal Blue', hex: '#1d4ed8' }],
-      sizes: body.sizes || ['M', 'L', 'XL', 'XXL'],
+      colors: Array.isArray(body.colors) ? body.colors : [],
+      sizes: Array.isArray(body.sizes) ? body.sizes : [],
       stock: Number(body.stock || 25),
       salesCount: 0,
       isCustomizable: Boolean(body.isCustomizable),

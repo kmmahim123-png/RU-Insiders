@@ -88,7 +88,7 @@ export default function CampusTourBanner() {
 
   return (
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-      <div className="relative overflow-hidden rounded-3xl bg-slate-950 border border-emerald-900/30 shadow-2xl min-h-[380px] sm:min-h-[420px] flex items-center">
+      <div className="relative overflow-hidden rounded-3xl bg-[#064e3b] border border-emerald-500/30 shadow-2xl min-h-[380px] sm:min-h-[420px] flex items-center">
         
         {/* Dynamic Background Image Showcase (Auto-Rotating) */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -102,9 +102,9 @@ export default function CampusTourBanner() {
             />
           ))}
 
-          {/* Gradients to guarantee text readability and visual depth */}
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/75 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-black/30" />
+          {/* Lush Green Gradients to guarantee text readability and vibrant campus identity */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#032e23] via-[#064e3b]/90 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#022119] via-[#064e3b]/50 to-transparent" />
         </div>
 
         {/* Content Overlay */}

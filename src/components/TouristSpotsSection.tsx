@@ -70,32 +70,55 @@ export default function TouristSpotsSection() {
         </div>
       </div>
 
-      {/* District Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 pt-1 no-scrollbar select-none">
-        {RAJSHAHI_DIVISION_DISTRICTS.map((dist) => {
-          const isActive = selectedDistrict === dist.id;
-          return (
-            <button
-              key={dist.id}
-              type="button"
-              onClick={() => setSelectedDistrict(dist.id)}
-              className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
-                isActive
-                  ? 'bg-emerald-700 text-white shadow-md font-black scale-102'
-                  : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'
-              }`}
-            >
-              <span>{dist.nameBn}</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full ${
-                  isActive ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'
+      {/* District Selection Table (রাজশাহী বিভাগের ৮টি জেলা তালিকা টেবিল) */}
+      <div className="bg-white rounded-3xl border border-slate-200 p-3 sm:p-5 shadow-sm space-y-2">
+        <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+            <Landmark className="h-4 w-4 text-emerald-600" />
+            <span>জেলা নির্বাচন করুন (রাজশাহী বিভাগের ৮টি জেলা)</span>
+          </div>
+          <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+            বর্তমানে সক্রিয়: {activeDistrictInfo.nameBn}
+          </span>
+        </div>
+
+        {/* Structured Table-like Grid for Districts (2 rows x 4 columns on desktop / 2-4 cols responsive) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 pt-1">
+          {RAJSHAHI_DIVISION_DISTRICTS.map((dist, idx) => {
+            const isActive = selectedDistrict === dist.id;
+            return (
+              <button
+                key={dist.id}
+                type="button"
+                onClick={() => setSelectedDistrict(dist.id)}
+                className={`p-3 rounded-2xl text-left transition-all border flex flex-col justify-between gap-1.5 group ${
+                  isActive
+                    ? 'bg-emerald-800 text-white border-emerald-900 shadow-md ring-2 ring-emerald-600/30 font-bold scale-[1.02]'
+                    : 'bg-slate-50/80 hover:bg-slate-100 text-slate-800 border-slate-200 hover:border-slate-300'
                 }`}
               >
-                {dist.spotCount}টি স্পট
-              </span>
-            </button>
-          );
-        })}
+                <div className="flex items-center justify-between w-full">
+                  <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md ${
+                    isActive ? 'bg-white/20 text-white' : 'bg-white text-slate-500 border border-slate-200'
+                  }`}>
+                    {String(idx + 1).padStart(2, '০')}
+                  </span>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      isActive ? 'bg-amber-400 text-slate-950 font-black' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                    }`}
+                  >
+                    {dist.spotCount}টি স্পট
+                  </span>
+                </div>
+
+                <div className="text-xs sm:text-sm font-bold tracking-tight truncate">
+                  {dist.nameBn}
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Tourist Spots Grid */}

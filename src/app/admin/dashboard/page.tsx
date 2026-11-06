@@ -32,6 +32,7 @@ import {
   X,
   Edit3,
   Palette,
+  Ruler,
   Bike,
   PackageCheck,
   Ban,
@@ -61,6 +62,9 @@ const PRESET_COLORS = [
   { name: 'Crimson Red', hex: '#dc2626' },
   { name: 'Campus Navy', hex: '#1e3a8a' },
 ];
+
+const PRESET_STANDARD_SIZES = ['S', 'M', 'L', 'XL', 'XXL', '3XL', 'Free Size'];
+const PRESET_DESCRIPTIVE_SIZES = ['ছোট (Small)', 'মাঝারি (Medium)', 'বড় (Large)'];
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -98,12 +102,18 @@ export default function AdminDashboardPage() {
   const [newProductImages, setNewProductImages] = useState<string[]>(['', '', '', '']);
   const [newProductVideo, setNewProductVideo] = useState('');
   const [newProductDesc, setNewProductDesc] = useState('');
+  // New Product Color & Size State
+  const [enableProductColors, setEnableProductColors] = useState(true);
   const [newProductColors, setNewProductColors] = useState<{ name: string; hex: string }[]>([
     { name: 'Heritage Maroon', hex: '#881337' },
     { name: 'Midnight Black', hex: '#0f172a' },
   ]);
   const [customColorName, setCustomColorName] = useState('');
   const [customColorHex, setCustomColorHex] = useState('#1d4ed8');
+
+  const [enableProductSizes, setEnableProductSizes] = useState(true);
+  const [newProductSizes, setNewProductSizes] = useState<string[]>(['M', 'L', 'XL', 'XXL']);
+  const [customSizeInput, setCustomSizeInput] = useState('');
   const [submittingProduct, setSubmittingProduct] = useState(false);
 
   // Dynamic Categories State
@@ -130,7 +140,13 @@ export default function AdminDashboardPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editImages, setEditImages] = useState<string[]>(['', '', '', '']);
   const [editVideo, setEditVideo] = useState('');
+  const [editEnableColors, setEditEnableColors] = useState(true);
   const [editColors, setEditColors] = useState<{ name: string; hex: string }[]>([]);
+  const [editCustomColorName, setEditCustomColorName] = useState('');
+  const [editCustomColorHex, setEditCustomColorHex] = useState('#1d4ed8');
+  const [editEnableSizes, setEditEnableSizes] = useState(true);
+  const [editSizes, setEditSizes] = useState<string[]>([]);
+  const [editCustomSizeInput, setEditCustomSizeInput] = useState('');
   const [updatingProduct, setUpdatingProduct] = useState(false);
   const [editUploadingSlot, setEditUploadingSlot] = useState<number | null>(null);
   const [editUploadingVideo, setEditUploadingVideo] = useState(false);
@@ -299,7 +315,16 @@ export default function AdminDashboardPage() {
     }
     setEditImages(imgSlots);
     setEditVideo(p.video || '');
-    setEditColors(p.colors && p.colors.length > 0 ? [...p.colors] : [...PRESET_COLORS.slice(0, 2)]);
+    
+    const hasColors = Array.isArray(p.colors) && p.colors.length > 0;
+    setEditEnableColors(hasColors);
+    setEditColors(hasColors ? [...p.colors] : []);
+    setEditCustomColorName('');
+
+    const hasSizes = Array.isArray(p.sizes) && p.sizes.length > 0;
+    setEditEnableSizes(hasSizes);
+    setEditSizes(hasSizes ? [...p.sizes] : ['M', 'L', 'XL', 'XXL']);
+    setEditCustomSizeInput('');
   };
 
   const handleEditSlotImageUpload = async (slotIdx: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -451,7 +476,8 @@ export default function AdminDashboardPage() {
             stock: Number(editingProduct.stock),
             images: finalImages,
             video: editVideo.trim() || undefined,
-            colors: editColors.length > 0 ? editColors : [{ name: 'Standard', hex: '#881337' }],
+            colors: editEnableColors && editColors.length > 0 ? editColors : [],
+            sizes: editEnableSizes && editSizes.length > 0 ? editSizes : [],
             description: editingProduct.description.trim(),
             isStoryHighlight: Boolean(editingProduct.isStoryHighlight),
           },
@@ -608,7 +634,8 @@ export default function AdminDashboardPage() {
           stock: newProductStock,
           images: finalImages,
           video: newProductVideo.trim() || undefined,
-          colors: newProductColors.length > 0 ? newProductColors : PRESET_COLORS.slice(0, 2),
+          colors: enableProductColors && newProductColors.length > 0 ? newProductColors : [],
+          sizes: enableProductSizes && newProductSizes.length > 0 ? newProductSizes : [],
           isStoryHighlight: newProductStoryHighlight,
         }),
       });
@@ -625,6 +652,14 @@ export default function AdminDashboardPage() {
       setNewProductImages(['', '', '', '']);
       setNewProductVideo('');
       setNewProductStoryHighlight(false);
+      setNewProductColors([
+        { name: 'Heritage Maroon', hex: '#881337' },
+        { name: 'Midnight Black', hex: '#0f172a' },
+      ]);
+      setEnableProductColors(true);
+      setNewProductSizes(['M', 'L', 'XL', 'XXL']);
+      setEnableProductSizes(true);
+      setCustomSizeInput('');
       setProducts(data.products || [data.product, ...products]);
       loadDatabaseState();
     } catch (err: any) {
@@ -1051,60 +1086,249 @@ export default function AdminDashboardPage() {
               </div>
 
               {/* Product Colors Manager */}
-              <div className="space-y-2 pt-1 border-t border-slate-100">
-                <label className="block text-slate-700 font-semibold text-xs flex items-center gap-1.5">
-                  <Palette className="h-3.5 w-3.5 text-blue-600" />
-                  <span>Available Colors (পণ্যের রং)</span>
-                </label>
-
-                {/* Selected Colors Chips */}
-                <div className="flex flex-wrap gap-1.5">
-                  {newProductColors.map((c, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2.5 py-1 rounded-xl bg-white border border-slate-200 text-[11px] font-bold text-slate-800 flex items-center gap-1.5 shadow-xs"
-                    >
-                      <span className="w-3 h-3 rounded-full border border-slate-300" style={{ backgroundColor: c.hex }} />
-                      <span>{c.name}</span>
-                      <button
-                        type="button"
-                        onClick={() => setNewProductColors(newProductColors.filter((_, i) => i !== idx))}
-                        className="text-slate-400 hover:text-rose-600 ml-0.5"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
+              <div className="space-y-2.5 pt-2 border-t border-slate-100">
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <label htmlFor="enableColorsCheck" className="text-xs font-bold text-slate-800 flex items-center gap-2 cursor-pointer">
+                    <input
+                      id="enableColorsCheck"
+                      type="checkbox"
+                      checked={enableProductColors}
+                      onChange={(e) => setEnableProductColors(e.target.checked)}
+                      className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer"
+                    />
+                    <Palette className="h-4 w-4 text-blue-600" />
+                    <span>এই পণ্যে কালার ভ্যারিয়েন্ট আছে (Enable Colors)</span>
+                  </label>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                    {enableProductColors ? `${newProductColors.length}টি রং নির্বাচিত` : 'রং প্রযোজ্য নয়'}
+                  </span>
                 </div>
 
-                {/* Preset Color Selection Buttons */}
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  <span className="text-[10px] text-slate-400 font-bold self-center">প্রিসেট:</span>
-                  {PRESET_COLORS.map((preset) => {
-                    const isSelected = newProductColors.some((c) => c.name === preset.name);
-                    return (
+                {enableProductColors && (
+                  <div className="p-3 bg-white rounded-2xl border border-slate-200 space-y-2.5">
+                    {/* Selected Colors Chips */}
+                    <div className="flex flex-wrap gap-1.5 min-h-[26px] items-center">
+                      {newProductColors.length === 0 && (
+                        <span className="text-[11px] text-slate-400 italic">নিচের কালার বাটনে ক্লিক করে নির্বাচন করুন...</span>
+                      )}
+                      {newProductColors.map((c, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-bold text-slate-800 flex items-center gap-1.5 shadow-xs"
+                        >
+                          <span className="w-3 h-3 rounded-full border border-slate-300 shadow-xs" style={{ backgroundColor: c.hex }} />
+                          <span>{c.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => setNewProductColors(newProductColors.filter((_, i) => i !== idx))}
+                            className="text-slate-400 hover:text-rose-600 ml-0.5"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Preset Color Selection Buttons */}
+                    <div className="space-y-1 pt-1">
+                      <span className="text-[10px] text-slate-400 font-bold block">প্রিসেট কালার (ক্লিক করে নির্বাচন করুন):</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {PRESET_COLORS.map((preset) => {
+                          const isSelected = newProductColors.some((c) => c.name === preset.name);
+                          return (
+                            <button
+                              key={preset.name}
+                              type="button"
+                              onClick={() => {
+                                if (isSelected) {
+                                  setNewProductColors(newProductColors.filter((c) => c.name !== preset.name));
+                                } else {
+                                  setNewProductColors([...newProductColors, preset]);
+                                }
+                              }}
+                              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1.5 border transition-all ${
+                                isSelected 
+                                  ? 'bg-blue-600 border-blue-600 text-white shadow-xs' 
+                                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                              }`}
+                            >
+                              <span className="w-2.5 h-2.5 rounded-full border border-white/50" style={{ backgroundColor: preset.hex }} />
+                              <span>{preset.name}</span>
+                              {isSelected && <span>✓</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Custom Color Input */}
+                    <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                      <input
+                        type="color"
+                        value={customColorHex}
+                        onChange={(e) => setCustomColorHex(e.target.value)}
+                        className="w-7 h-7 p-0 rounded-lg cursor-pointer border border-slate-300"
+                        title="পছন্দের রং পিক করুন"
+                      />
+                      <input
+                        type="text"
+                        placeholder="কাস্টম রঙের নাম (যেমন: Pastel Pink)"
+                        value={customColorName}
+                        onChange={(e) => setCustomColorName(e.target.value)}
+                        className="flex-1 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-xs"
+                      />
                       <button
-                        key={preset.name}
                         type="button"
                         onClick={() => {
-                          if (isSelected) {
-                            setNewProductColors(newProductColors.filter((c) => c.name !== preset.name));
-                          } else {
-                            setNewProductColors([...newProductColors, preset]);
+                          if (!customColorName.trim()) return;
+                          setNewProductColors([...newProductColors, { name: customColorName.trim(), hex: customColorHex }]);
+                          setCustomColorName('');
+                        }}
+                        className="px-3 py-1 rounded-lg bg-slate-800 text-white font-bold text-xs hover:bg-slate-900"
+                      >
+                        + যোগ করুন
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Product Sizes Manager */}
+              <div className="space-y-2.5 pt-2 border-t border-slate-100">
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <label htmlFor="enableSizesCheck" className="text-xs font-bold text-slate-800 flex items-center gap-2 cursor-pointer">
+                    <input
+                      id="enableSizesCheck"
+                      type="checkbox"
+                      checked={enableProductSizes}
+                      onChange={(e) => setEnableProductSizes(e.target.checked)}
+                      className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                    />
+                    <Ruler className="h-4 w-4 text-emerald-600" />
+                    <span>এই পণ্যে সাইজ ভ্যারিয়েন্ট আছে (Enable Sizes)</span>
+                  </label>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                    {enableProductSizes ? `${newProductSizes.length}টি সাইজ সক্রিয়` : 'সাইজ প্রযোজ্য নয়'}
+                  </span>
+                </div>
+
+                {enableProductSizes && (
+                  <div className="p-3 bg-white rounded-2xl border border-slate-200 space-y-2.5">
+                    {/* Selected Sizes Chips */}
+                    <div className="flex flex-wrap gap-1.5 min-h-[26px] items-center">
+                      {newProductSizes.length === 0 && (
+                        <span className="text-[11px] text-slate-400 italic">নিচের সাইজ বাটনে ক্লিক করুন বা কাস্টম সাইজ যোগ করুন...</span>
+                      )}
+                      {newProductSizes.map((sz, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-800 flex items-center gap-1 shadow-xs"
+                        >
+                          <span>{sz}</span>
+                          <button
+                            type="button"
+                            onClick={() => setNewProductSizes(newProductSizes.filter((_, i) => i !== idx))}
+                            className="text-emerald-500 hover:text-rose-600 ml-0.5"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Standard Apparel Sizes (S, M, L, XL, XXL, 3XL, Free Size) */}
+                    <div className="space-y-1 pt-1">
+                      <span className="text-[10px] text-slate-400 font-bold block">পোশাকের স্ট্যান্ডার্ড সাইজ:</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {PRESET_STANDARD_SIZES.map((sz) => {
+                          const isSelected = newProductSizes.includes(sz);
+                          return (
+                            <button
+                              key={sz}
+                              type="button"
+                              onClick={() => {
+                                if (isSelected) {
+                                  setNewProductSizes(newProductSizes.filter((s) => s !== sz));
+                                } else {
+                                  setNewProductSizes([...newProductSizes, sz]);
+                                }
+                              }}
+                              className={`px-3 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+                                isSelected
+                                  ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
+                                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                              }`}
+                            >
+                              {sz} {isSelected && '✓'}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Descriptive Bengali Sizes (ছোট, মাঝারি, বড়) */}
+                    <div className="space-y-1 pt-1">
+                      <span className="text-[10px] text-slate-400 font-bold block">বাংলা / বর্ণনামূলক সাইজ (ব্যাগ, মগ, উপহার ইত্যাদির জন্য):</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {PRESET_DESCRIPTIVE_SIZES.map((sz) => {
+                          const isSelected = newProductSizes.includes(sz);
+                          return (
+                            <button
+                              key={sz}
+                              type="button"
+                              onClick={() => {
+                                if (isSelected) {
+                                  setNewProductSizes(newProductSizes.filter((s) => s !== sz));
+                                } else {
+                                  setNewProductSizes([...newProductSizes, sz]);
+                                }
+                              }}
+                              className={`px-3 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+                                isSelected
+                                  ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
+                                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                              }`}
+                            >
+                              {sz} {isSelected && '✓'}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Manual Custom Size Input */}
+                    <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                      <input
+                        type="text"
+                        placeholder="কাস্টম সাইজ লিখুন (যেমন: 40, 42, 12oz, বা স্পেশাল)..."
+                        value={customSizeInput}
+                        onChange={(e) => setCustomSizeInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (customSizeInput.trim() && !newProductSizes.includes(customSizeInput.trim())) {
+                              setNewProductSizes([...newProductSizes, customSizeInput.trim()]);
+                              setCustomSizeInput('');
+                            }
                           }
                         }}
-                        className={`px-2 py-1 rounded-lg text-[10px] font-semibold flex items-center gap-1 border transition-all ${
-                          isSelected 
-                            ? 'bg-blue-50 border-blue-600 text-blue-900 ring-1 ring-blue-600' 
-                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                        }`}
+                        className="flex-1 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-emerald-600 focus:bg-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (customSizeInput.trim() && !newProductSizes.includes(customSizeInput.trim())) {
+                            setNewProductSizes([...newProductSizes, customSizeInput.trim()]);
+                            setCustomSizeInput('');
+                          }
+                        }}
+                        className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs"
                       >
-                        <span className="w-2.5 h-2.5 rounded-full border border-slate-300" style={{ backgroundColor: preset.hex }} />
-                        <span>{preset.name}</span>
+                        + সাইজ যোগ করুন
                       </button>
-                    );
-                  })}
-                </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* 4 Photo Upload Slots + Product Video */}
@@ -2062,51 +2286,247 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* Edit Colors */}
-              <div className="space-y-2 pt-2 border-t border-slate-200">
-                <label className="block text-slate-700 font-semibold text-xs flex items-center gap-1.5">
-                  <Palette className="h-3.5 w-3.5 text-blue-600" />
-                  <span>Available Colors (রং পরিবর্তন করুন)</span>
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {editColors.map((c, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-bold text-slate-800 flex items-center gap-1.5"
-                    >
-                      <span className="w-3 h-3 rounded-full border border-slate-300" style={{ backgroundColor: c.hex }} />
-                      <span>{c.name}</span>
-                      <button
-                        type="button"
-                        onClick={() => setEditColors(editColors.filter((_, i) => i !== idx))}
-                        className="text-slate-400 hover:text-rose-600"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
+              {/* Edit Colors Manager */}
+              <div className="space-y-2.5 pt-2 border-t border-slate-200">
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <label htmlFor="editEnableColorsCheck" className="text-xs font-bold text-slate-800 flex items-center gap-2 cursor-pointer">
+                    <input
+                      id="editEnableColorsCheck"
+                      type="checkbox"
+                      checked={editEnableColors}
+                      onChange={(e) => setEditEnableColors(e.target.checked)}
+                      className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer"
+                    />
+                    <Palette className="h-4 w-4 text-blue-600" />
+                    <span>এই পণ্যে কালার ভ্যারিয়েন্ট আছে (Enable Colors)</span>
+                  </label>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                    {editEnableColors ? `${editColors.length}টি রং` : 'রং প্রযোজ্য নয়'}
+                  </span>
                 </div>
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {PRESET_COLORS.map((preset) => {
-                    const isSelected = editColors.some((c) => c.name === preset.name);
-                    return (
+
+                {editEnableColors && (
+                  <div className="p-3 bg-white rounded-2xl border border-slate-200 space-y-2.5">
+                    {/* Selected Colors Chips */}
+                    <div className="flex flex-wrap gap-1.5 min-h-[26px] items-center">
+                      {editColors.length === 0 && (
+                        <span className="text-[11px] text-slate-400 italic">নিচের কালার বাটনে ক্লিক করে নির্বাচন করুন...</span>
+                      )}
+                      {editColors.map((c, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-bold text-slate-800 flex items-center gap-1.5"
+                        >
+                          <span className="w-3 h-3 rounded-full border border-slate-300" style={{ backgroundColor: c.hex }} />
+                          <span>{c.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => setEditColors(editColors.filter((_, i) => i !== idx))}
+                            className="text-slate-400 hover:text-rose-600 ml-0.5"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Preset Colors */}
+                    <div className="space-y-1 pt-1">
+                      <span className="text-[10px] text-slate-400 font-bold block">প্রিসেট কালার:</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {PRESET_COLORS.map((preset) => {
+                          const isSelected = editColors.some((c) => c.name === preset.name);
+                          return (
+                            <button
+                              key={preset.name}
+                              type="button"
+                              onClick={() => {
+                                if (isSelected) setEditColors(editColors.filter((c) => c.name !== preset.name));
+                                else setEditColors([...editColors, preset]);
+                              }}
+                              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1.5 border transition-all ${
+                                isSelected 
+                                  ? 'bg-blue-600 border-blue-600 text-white shadow-xs' 
+                                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                              }`}
+                            >
+                              <span className="w-2.5 h-2.5 rounded-full border border-white/50" style={{ backgroundColor: preset.hex }} />
+                              <span>{preset.name}</span>
+                              {isSelected && <span>✓</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Custom Color Input */}
+                    <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                      <input
+                        type="color"
+                        value={editCustomColorHex}
+                        onChange={(e) => setEditCustomColorHex(e.target.value)}
+                        className="w-7 h-7 p-0 rounded-lg cursor-pointer border border-slate-300"
+                        title="পছন্দের রং বাছুন"
+                      />
+                      <input
+                        type="text"
+                        placeholder="কাস্টম রঙের নাম (যেমন: Pastel Pink)"
+                        value={editCustomColorName}
+                        onChange={(e) => setEditCustomColorName(e.target.value)}
+                        className="flex-1 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-xs"
+                      />
                       <button
-                        key={preset.name}
                         type="button"
                         onClick={() => {
-                          if (isSelected) setEditColors(editColors.filter((c) => c.name !== preset.name));
-                          else setEditColors([...editColors, preset]);
+                          if (!editCustomColorName.trim()) return;
+                          setEditColors([...editColors, { name: editCustomColorName.trim(), hex: editCustomColorHex }]);
+                          setEditCustomColorName('');
                         }}
-                        className={`px-2 py-1 rounded-lg text-[10px] font-semibold flex items-center gap-1 border transition-all ${
-                          isSelected ? 'bg-blue-50 border-blue-600 text-blue-900 ring-1 ring-blue-600' : 'bg-slate-50 border-slate-200 text-slate-600'
-                        }`}
+                        className="px-3 py-1 rounded-lg bg-slate-800 text-white font-bold text-xs hover:bg-slate-900"
                       >
-                        <span className="w-2.5 h-2.5 rounded-full border border-slate-300" style={{ backgroundColor: preset.hex }} />
-                        <span>{preset.name}</span>
+                        + যোগ করুন
                       </button>
-                    );
-                  })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Edit Sizes Manager */}
+              <div className="space-y-2.5 pt-2 border-t border-slate-200">
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <label htmlFor="editEnableSizesCheck" className="text-xs font-bold text-slate-800 flex items-center gap-2 cursor-pointer">
+                    <input
+                      id="editEnableSizesCheck"
+                      type="checkbox"
+                      checked={editEnableSizes}
+                      onChange={(e) => setEditEnableSizes(e.target.checked)}
+                      className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                    />
+                    <Ruler className="h-4 w-4 text-emerald-600" />
+                    <span>এই পণ্যে সাইজ ভ্যারিয়েন্ট আছে (Enable Sizes)</span>
+                  </label>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                    {editEnableSizes ? `${editSizes.length}টি সাইজ সক্রিয়` : 'সাইজ প্রযোজ্য নয়'}
+                  </span>
                 </div>
+
+                {editEnableSizes && (
+                  <div className="p-3 bg-white rounded-2xl border border-slate-200 space-y-2.5">
+                    {/* Selected Sizes Chips */}
+                    <div className="flex flex-wrap gap-1.5 min-h-[26px] items-center">
+                      {editSizes.length === 0 && (
+                        <span className="text-[11px] text-slate-400 italic">নিচের সাইজ বাটনে ক্লিক করুন বা কাস্টম সাইজ যোগ করুন...</span>
+                      )}
+                      {editSizes.map((sz, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-800 flex items-center gap-1 shadow-xs"
+                        >
+                          <span>{sz}</span>
+                          <button
+                            type="button"
+                            onClick={() => setEditSizes(editSizes.filter((_, i) => i !== idx))}
+                            className="text-emerald-500 hover:text-rose-600 ml-0.5"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Standard Apparel Sizes */}
+                    <div className="space-y-1 pt-1">
+                      <span className="text-[10px] text-slate-400 font-bold block">পোশাকের স্ট্যান্ডার্ড সাইজ:</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {PRESET_STANDARD_SIZES.map((sz) => {
+                          const isSelected = editSizes.includes(sz);
+                          return (
+                            <button
+                              key={sz}
+                              type="button"
+                              onClick={() => {
+                                if (isSelected) {
+                                  setEditSizes(editSizes.filter((s) => s !== sz));
+                                } else {
+                                  setEditSizes([...editSizes, sz]);
+                                }
+                              }}
+                              className={`px-3 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+                                isSelected
+                                  ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
+                                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                              }`}
+                            >
+                              {sz} {isSelected && '✓'}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Descriptive Bengali Sizes */}
+                    <div className="space-y-1 pt-1">
+                      <span className="text-[10px] text-slate-400 font-bold block">বাংলা / বর্ণনামূলক সাইজ:</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {PRESET_DESCRIPTIVE_SIZES.map((sz) => {
+                          const isSelected = editSizes.includes(sz);
+                          return (
+                            <button
+                              key={sz}
+                              type="button"
+                              onClick={() => {
+                                if (isSelected) {
+                                  setEditSizes(editSizes.filter((s) => s !== sz));
+                                } else {
+                                  setEditSizes([...editSizes, sz]);
+                                }
+                              }}
+                              className={`px-3 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+                                isSelected
+                                  ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
+                                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                              }`}
+                            >
+                              {sz} {isSelected && '✓'}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Manual Custom Size Input */}
+                    <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                      <input
+                        type="text"
+                        placeholder="কাস্টম সাইজ লিখুন (যেমন: 40, 42, 12oz, বা স্পেশাল)..."
+                        value={editCustomSizeInput}
+                        onChange={(e) => setEditCustomSizeInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (editCustomSizeInput.trim() && !editSizes.includes(editCustomSizeInput.trim())) {
+                              setEditSizes([...editSizes, editCustomSizeInput.trim()]);
+                              setEditCustomSizeInput('');
+                            }
+                          }
+                        }}
+                        className="flex-1 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-emerald-600 focus:bg-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (editCustomSizeInput.trim() && !editSizes.includes(editCustomSizeInput.trim())) {
+                            setEditSizes([...editSizes, editCustomSizeInput.trim()]);
+                            setEditCustomSizeInput('');
+                          }
+                        }}
+                        className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs"
+                      >
+                        + সাইজ যোগ করুন
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Edit 4 Photo Slots */}

@@ -44,8 +44,8 @@ export default function ProductDetailPage({ params }: Props) {
             const found = data.products.find((p: Product) => p.slug === resolvedParams.slug);
             if (found) {
               setProduct(found);
-              setSelectedColor(found.colors[0]?.name || 'Standard');
-              setSelectedSize(found.sizes[0] || 'L');
+              setSelectedColor(found.colors?.[0]?.name || '');
+              setSelectedSize(found.sizes?.[0] || '');
               setActiveImage(found.images[0] || '/mockups/hoodie-front.jpg');
             }
           }
@@ -83,18 +83,21 @@ export default function ProductDetailPage({ params }: Props) {
 
   const handleAddToCart = () => {
     if (product.sizes && product.sizes.length > 0 && !selectedSize) {
-      alert('অনুগ্রহ করে একটি সাইজ (যেমন: M, L, XL, XXL) নির্বাচন করুন।');
+      alert('অনুগ্রহ করে একটি সাইজ নির্বাচন করুন।');
       return;
     }
 
+    const itemSize = selectedSize || 'Standard';
+    const itemColor = selectedColor || 'Standard';
+
     const item = {
-      id: `${product.id}-${selectedSize}-${selectedColor}-${Date.now()}`,
+      id: `${product.id}-${itemSize}-${itemColor}-${Date.now()}`,
       productId: product.id,
       name: product.name,
       price: product.price,
       image: activeImage,
-      size: selectedSize,
-      color: selectedColor,
+      size: itemSize,
+      color: itemColor,
       quantity,
     };
 
@@ -113,18 +116,21 @@ export default function ProductDetailPage({ params }: Props) {
 
   const handleBuyNow = () => {
     if (product.sizes && product.sizes.length > 0 && !selectedSize) {
-      alert('অনুগ্রহ করে একটি সাইজ (যেমন: M, L, XL, XXL) নির্বাচন করুন।');
+      alert('অনুগ্রহ করে একটি সাইজ নির্বাচন করুন।');
       return;
     }
 
+    const itemSize = selectedSize || 'Standard';
+    const itemColor = selectedColor || 'Standard';
+
     const item = {
-      id: `${product.id}-${selectedSize}-${selectedColor}-${Date.now()}`,
+      id: `${product.id}-${itemSize}-${itemColor}-${Date.now()}`,
       productId: product.id,
       name: product.name,
       price: product.price,
       image: activeImage,
-      size: selectedSize,
-      color: selectedColor,
+      size: itemSize,
+      color: itemColor,
       quantity,
     };
 
@@ -287,60 +293,64 @@ export default function ProductDetailPage({ params }: Props) {
           </div>
 
           {/* Color Selector (Interactive with Photo Switching) */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-700">
-                রং নির্বাচন করুন (Color): <strong className="text-slate-900">{selectedColor}</strong>
-              </label>
-              <span className="text-[11px] text-blue-600 font-medium">ক্লিক করলে ছবি পরিবর্তন হবে</span>
+          {product.colors && product.colors.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-slate-700">
+                  রং নির্বাচন করুন (Color): <strong className="text-slate-900">{selectedColor || product.colors[0]?.name}</strong>
+                </label>
+                <span className="text-[11px] text-blue-600 font-medium">ক্লিক করলে ছবি পরিবর্তন হবে</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {product.colors.map((c, idx) => (
+                  <button
+                    key={c.name}
+                    onClick={() => handleColorSelect(c.name, idx)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 border transition-all ${
+                      (selectedColor || product.colors[0]?.name) === c.name
+                        ? 'border-blue-600 bg-blue-50/50 text-blue-900 shadow-sm ring-1 ring-blue-600'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    <span
+                      className="w-3.5 h-3.5 rounded-full border border-slate-300 shadow-inner"
+                      style={{ backgroundColor: c.hex }}
+                    />
+                    <span>{c.name}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {product.colors.map((c, idx) => (
-                <button
-                  key={c.name}
-                  onClick={() => handleColorSelect(c.name, idx)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 border transition-all ${
-                    selectedColor === c.name
-                      ? 'border-blue-600 bg-blue-50/50 text-blue-900 shadow-sm ring-1 ring-blue-600'
-                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                  }`}
-                >
-                  <span
-                    className="w-3.5 h-3.5 rounded-full border border-slate-300 shadow-inner"
-                    style={{ backgroundColor: c.hex }}
-                  />
-                  <span>{c.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+          )}
 
           {/* Size Selector */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-700">
-                Size: <strong className="text-slate-900">{selectedSize}</strong>
-              </label>
-              <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                <Ruler className="h-3 w-3" /> Asian Regular Fit
-              </span>
+          {product.sizes && product.sizes.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-slate-700">
+                  Size / সাইজ: <strong className="text-slate-900">{selectedSize || product.sizes[0]}</strong>
+                </label>
+                <span className="text-[11px] text-slate-500 flex items-center gap-1">
+                  <Ruler className="h-3 w-3" /> সাইজ নির্বাচন করুন
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {product.sizes.map((sz) => (
+                  <button
+                    key={sz}
+                    onClick={() => setSelectedSize(sz)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                      (selectedSize || product.sizes[0]) === sz
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    {sz}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {product.sizes.map((sz) => (
-                <button
-                  key={sz}
-                  onClick={() => setSelectedSize(sz)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                    selectedSize === sz
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  {sz}
-                </button>
-              ))}
-            </div>
-          </div>
+          )}
 
           {/* Quantity Selector */}
           <div className="space-y-2">
