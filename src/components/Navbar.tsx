@@ -13,7 +13,10 @@ import {
   Facebook, 
   ShieldCheck, 
   Truck,
-  Compass
+  Compass,
+  GraduationCap,
+  Users,
+  BookOpen
 } from 'lucide-react';
 import AnimatedLogo from '@/components/AnimatedLogo';
 
@@ -48,10 +51,12 @@ export default function Navbar() {
   }, []);
 
   const navLinks = [
-    { label: 'Shop All Merch', href: '/shop', bn: 'সব পণ্য', icon: ShoppingBag },
-    { label: 'Campus & City Map', href: '/map', bn: 'রাবি ও রাজশাহী ম্যাপ', icon: Compass },
+    { label: 'Shop All Merch', href: '/shop', bn: 'শপ', icon: ShoppingBag },
+    { label: 'Inside RU News', href: '/#inside-ru', bn: 'ইনসাইড আরইউ', icon: BookOpen },
+    { label: 'Faculties & Careers', href: '/#departments', bn: 'বিভাগ ও ক্যারিয়ার', icon: GraduationCap },
+    { label: 'RU Clubs', href: '/#clubs', bn: 'ক্লাবসমূহ', icon: Users },
+    { label: 'Campus Map', href: '/map', bn: 'ক্যাম্পাস ম্যাপ', icon: Compass },
     { label: 'Track Order', href: '/track', bn: 'অর্ডার ট্র্যাকিং', icon: Truck },
-    { label: 'Admin Portal', href: '/admin', bn: 'অ্যাডমিন প্যানেল', icon: ShieldCheck },
   ];
 
   // If on admin routes, hide consumer navbar to avoid duplicate header bars (checked after all hooks)

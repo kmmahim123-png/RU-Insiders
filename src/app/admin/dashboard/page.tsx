@@ -43,13 +43,17 @@ import {
   Copy,
   Download,
   CheckCheck,
-  Clock
+  Clock,
+  Users,
+  GraduationCap
 } from 'lucide-react';
 import RevenueCharts from '@/components/RevenueCharts';
 import PrintDesk from '@/components/PrintDesk';
 import SteadfastModal from '@/components/SteadfastModal';
 import AdminMapPhotoManager from '@/components/AdminMapPhotoManager';
 import AdminCampusNewsManager from '@/components/AdminCampusNewsManager';
+import AdminClubsManager from '@/components/AdminClubsManager';
+import AdminAlumniManager from '@/components/AdminAlumniManager';
 import { Product, Order, PrintJob, SteadfastConfig, ProductCategory, RevenueSummary } from '@/lib/types';
 import { formatBDT, formatDate } from '@/lib/utils';
 import { INITIAL_STEADFAST_CONFIG, calculateRevenueSummary } from '@/lib/store';
@@ -72,7 +76,7 @@ const PRESET_DESCRIPTIVE_SIZES = ['ছোট (Small)', 'মাঝারি (Medi
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'analytics' | 'steadfast' | 'map_photos' | 'campus_news'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'analytics' | 'steadfast' | 'map_photos' | 'campus_news' | 'clubs' | 'alumni'>('products');
   const [newProductStoryHighlight, setNewProductStoryHighlight] = useState(false);
   
   // Real-time Database State
@@ -1049,6 +1053,8 @@ export default function AdminDashboardPage() {
           { id: 'steadfast', label: 'Steadfast Courier API', icon: Truck, count: null },
           { id: 'map_photos', label: '📸 ম্যাপ ফটো ম্যানেজার', icon: Camera, count: null },
           { id: 'campus_news', label: '📰 দৈনিক সংবাদ ও সাহিত্য কর্নার', icon: BookOpen, count: null },
+          { id: 'clubs', label: '🤝 ক্লাব ও মেম্বারশিপ আবেদন', icon: Users, count: null },
+          { id: 'alumni', label: '🎓 অ্যালামনাই ডিরেক্টরি', icon: GraduationCap, count: null },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -2389,6 +2395,16 @@ export default function AdminDashboardPage() {
       {/* TAB 6: DAILY CAMPUS NEWS & LITERATURE MANAGER */}
       {activeTab === 'campus_news' && (
         <AdminCampusNewsManager />
+      )}
+
+      {/* TAB 7: RU CLUBS & MEMBERSHIP APPLICATIONS */}
+      {activeTab === 'clubs' && (
+        <AdminClubsManager />
+      )}
+
+      {/* TAB 8: ALUMNI DIRECTORY */}
+      {activeTab === 'alumni' && (
+        <AdminAlumniManager />
       )}
 
       {/* Steadfast Dispatch Modal */}

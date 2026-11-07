@@ -4,9 +4,10 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
 import TopStoryHighlights from '@/components/TopStoryHighlights';
-import CampusTourBanner from '@/components/CampusTourBanner';
-import TouristSpotsSection from '@/components/TouristSpotsSection';
-import CampusNewsLiteratureSection from '@/components/CampusNewsLiteratureSection';
+import BreakingNewsTicker from '@/components/BreakingNewsTicker';
+import InsideRajshahiSection from '@/components/InsideRajshahiSection';
+import RuFacultiesSection from '@/components/RuFacultiesSection';
+import RuClubsSection from '@/components/RuClubsSection';
 import { Product } from '@/lib/types';
 import { INITIAL_PRODUCTS } from '@/lib/store';
 
@@ -37,24 +38,30 @@ export default function HomePage() {
   return (
     <div className="space-y-6 sm:space-y-8 pb-16 overflow-hidden bg-white">
 
-      {/* 1. Top Circular Story Highlights (কালেকশন গোল আইকন) */}
+      {/* 1. Top Circular Story Highlights (প্রোডাক্টস কালেকশন গোল আইকন) */}
       <TopStoryHighlights products={products} showViewAllButton={true} title="কালেকশন" />
 
-      {/* 2. Campus Tour Rotating Showcase Banner ("আপনি কি রাজশাহী বিশ্ববিদ্যালয়ের সব জায়গা ঘুরেছেন? Explore RU") */}
-      <CampusTourBanner />
+      {/* 2. Breaking News Live Ticker (ক্যাম্পাস ব্রেকিং নিউজ ও আপডেট) */}
+      <BreakingNewsTicker />
 
-      {/* 3. Rajshahi & Division Tourist Attractions Guide & Interactive Details View */}
-      <TouristSpotsSection />
+      {/* 3. Inside Rajshahi University (ইনসাইড রাজশাহী ইউনিভার্সিটি: ডেইলি নিউজ, গল্প, কবিতা ও সাহিত্য কর্নার) */}
+      <InsideRajshahiSection />
 
-      {/* 4. Quick Link to Full Shop Catalog */}
+      {/* 4. Rajshahi University Faculties, Departments, Seats & Career Paths (সকল বিভাগ ও ক্যারিয়ার গাইড) */}
+      <RuFacultiesSection />
+
+      {/* 5. Rajshahi University Clubs & Online Membership Portal (সকল ক্লাব ও সদস্য হওয়ার আবেদন) */}
+      <RuClubsSection />
+
+      {/* 6. Quick Link to Official Merch Store Catalog */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="p-4 sm:p-6 rounded-3xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+        <div className="p-4 sm:p-6 rounded-3xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left shadow-sm">
           <div className="space-y-1">
             <h3 className="text-sm sm:text-base font-black text-slate-900 font-bengali">
               অফিশিয়াল আরইউ মার্চেন্ডাইজ কালেকশন
             </h3>
             <p className="text-xs text-slate-500 font-bengali">
-              হুডি, ড্রপ-শোল্ডার, জার্সি ও কটন গেঞ্জির সব আইটেম সাইজ ও রঙসহ দেখতে আমাদের শপ পেজ ভিজিট করুন।
+              হুডি, ড্রপ-শোল্ডার, জার্সি ও কটন গেঞ্জির সব প্রিমিয়াম আইটেম সাইজ ও রঙসহ দেখতে আমাদের শপ পেজ ভিজিট করুন।
             </p>
           </div>
           <Link
@@ -67,9 +74,6 @@ export default function HomePage() {
           </Link>
         </div>
       </div>
-
-      {/* 5. Daily Campus News, Literature, Poetry & RU Talent Spotlight Section */}
-      <CampusNewsLiteratureSection />
 
     </div>
   );
