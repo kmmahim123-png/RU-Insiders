@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { RAJSHAHI_DIVISION_DISTRICTS, TouristSpot } from '@/lib/touristSpots';
 import { RAJSHAHI_DISTRICT_SVGS, RAJSHAHI_VIEWBOX, DistrictSvgData } from '@/lib/rajshahiDistrictsSvg';
+import { RAJSHAHI_DISTRICT_REGIONS, RAJSHAHI_DISTRICT_VIEWBOX, RajshahiRegionSvgData } from '@/lib/rajshahiDetailedSvg';
 
 interface RajshahiDivisionWaterMapProps {
   visitedSpotIds: string[];
@@ -44,6 +45,11 @@ export default function RajshahiDivisionWaterMap({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [hoveredDistrict, setHoveredDistrict] = useState<string | null>(null);
+  
+  // Interactive Region States for Rajshahi District Vector Map (Stage 2)
+  const [selectedRegionId, setSelectedRegionId] = useState<string | null>('rj_reg_22');
+  const [hoveredRegionId, setHoveredRegionId] = useState<string | null>(null);
+  const [highlightedSpotId, setHighlightedSpotId] = useState<string | null>(null);
   
   // 3 Hierarchical Map Modes:
   // 1. 'division' -> সমগ্র রাজশাহী বিভাগ (৮ জেলা)
@@ -250,27 +256,73 @@ export default function RajshahiDivisionWaterMap({
       ctx.fillStyle = '#fbbf24';
       ctx.font = 'bold 20px sans-serif';
       ctx.fillText(`রাবি ক্যাম্পাস ভ্রমণ রেকর্ড • RU Insiders Verified`, W / 2, mapCardY + 310);
-    } else if (mapViewMode === 'rajshahi_district' && detailedMapImgRef.current) {
-      // Draw the user-provided Rajshahi District Whole Map
-      const img = detailedMapImgRef.current;
-      const innerW = 400;
-      const innerH = 400;
-      const innerX = mapCardX + (mapCardW - innerW) / 2;
-      const innerY = mapCardY + 15;
+    } else if (mapViewMode === 'rajshahi_district') {
+      // Draw Vector SVG Rajshahi District Whole Map with Regions & Glowing Boundaries
+      const viewBoxMinX = 84;
+      const viewBoxMinY = 130;
+      const viewBoxW = 1761;
+      const viewBoxH = 1657;
+
+      const scale = Math.min((mapCardW - 40) / viewBoxW, (mapCardH - 40) / viewBoxH);
+      const mapOffsetX = mapCardX + (mapCardW - viewBoxW * scale) / 2;
+      const mapOffsetY = mapCardY + (mapCardH - viewBoxH * scale) / 2;
 
       ctx.save();
-      ctx.roundRect(innerX, innerY, innerW, innerH, 16);
-      ctx.clip();
-      ctx.drawImage(img, innerX, innerY, innerW, innerH);
+      ctx.translate(mapOffsetX, mapOffsetY);
+      ctx.scale(scale, scale);
+      ctx.translate(-viewBoxMinX, -viewBoxMinY);
 
-      // Liquid water fill overlay for Rajshahi
-      const rPct = rajshahiStats.pct;
-      if (rPct > 0) {
-        const fillHeight = (innerH * rPct) / 100;
-        const fillY = innerY + innerH - fillHeight;
-        ctx.fillStyle = 'rgba(16, 185, 129, 0.4)';
-        ctx.fillRect(innerX, fillY, innerW, fillHeight);
-      }
+      RAJSHAHI_DISTRICT_REGIONS.forEach((reg) => {
+        try {
+          const path = new Path2D(reg.d);
+          const isVisited = reg.spotId ? visitedSpotIds.includes(reg.spotId) : false;
+
+          // Base Land Fill
+          ctx.fillStyle = '#10522c';
+          ctx.fill(path);
+
+          // Liquid Water fill if visited
+          if (isVisited || rajshahiStats.pct > 0) {
+            ctx.save();
+            ctx.clip(path);
+            const fillPct = isVisited ? 100 : Math.min(rajshahiStats.pct, 30);
+            const fillH = (reg.bbox.h * fillPct) / 100;
+            const fillY = reg.bbox.maxY - fillH;
+            ctx.fillStyle = '#059669';
+            ctx.fillRect(reg.bbox.minX - 10, fillY, reg.bbox.w + 20, fillH + 10);
+            ctx.restore();
+          }
+
+          // Border Outline
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 3;
+          ctx.stroke(path);
+
+          // Pin
+          ctx.fillStyle = isVisited ? '#10b981' : '#ef4444';
+          ctx.beginPath();
+          ctx.arc(reg.center.x, reg.center.y, 14, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+
+          // Dot
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(reg.center.x, reg.center.y, 4, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Bengali Label
+          ctx.font = 'bold 22px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = '#062817';
+          ctx.lineWidth = 4.5;
+          ctx.strokeText(reg.nameBn, reg.center.x, reg.center.y - 18);
+          ctx.fillText(reg.nameBn, reg.center.x, reg.center.y - 18);
+        } catch (e) {}
+      });
       ctx.restore();
     } else {
       // Draw Complete 8-District Vector Map using Path2D
@@ -664,26 +716,189 @@ export default function RajshahiDivisionWaterMap({
 
             ) : mapViewMode === 'rajshahi_district' ? (
               /* ============================================================== */
-              /* STEP 2: RAJSHAHI DISTRICT WHOLE MAP (USER PROVIDED MAP)        */
-              /* (No ugly floating popups! Clean district map with water fill!) */
+              /* STEP 2: INTERACTIVE VECTOR SVG RAJSHAHI DISTRICT WATER MAP     */
+              /* (Glows on click, exact same glowing lines & water as division) */
               /* ============================================================== */
-              <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-2xl select-none">
-                {/* User-provided High-Res Rajshahi District Whole Map */}
-                <img
-                  src="/campus/rajshahi-district-detailed-map.jpg"
-                  alt="রাজশাহী জেলা সম্পূর্ণ ম্যাপ"
-                  className="w-full h-full object-contain filter contrast-105"
-                />
+              <div className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden rounded-2xl select-none">
+                
+                {/* SVG Vector Map of Rajshahi District with all 24 Upazilas & Thana Regions */}
+                <svg
+                  viewBox={RAJSHAHI_DISTRICT_VIEWBOX}
+                  className="w-full h-full object-contain select-none"
+                >
+                  <defs>
+                    {/* Glowing drop shadow filter for active selected region border */}
+                    <filter id="active-rajshahi-region-glow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="0" stdDeviation="12" floodColor="#facc15" floodOpacity="0.95" />
+                      <feDropShadow dx="0" dy="0" stdDeviation="24" floodColor="#10b981" floodOpacity="0.8" />
+                    </filter>
 
-                {/* Animated Rising Liquid Water Fill as spots in Rajshahi are visited */}
-                {rajshahiStats.pct > 0 && (
-                  <div
-                    className="absolute inset-x-0 bottom-0 pointer-events-none transition-all duration-700 bg-gradient-to-t from-emerald-500/50 via-teal-400/35 to-transparent"
-                    style={{ height: `${rajshahiStats.pct}%` }}
-                  >
-                    <div className="w-full h-2 bg-emerald-300/80 shadow-[0_0_14px_#34d399]" />
-                  </div>
-                )}
+                    {/* Dynamic water fill clips for each region in Rajshahi */}
+                    {RAJSHAHI_DISTRICT_REGIONS.map((reg) => {
+                      const isVisited = reg.spotId ? visitedSpotIds.includes(reg.spotId) : false;
+                      // Visited region gets 100% water; otherwise shows district progress
+                      const fillPct = isVisited ? 100 : Math.min(rajshahiStats.pct, 20);
+                      const waterHeight = (reg.bbox.h * fillPct) / 100;
+                      const waterY = reg.bbox.maxY - waterHeight;
+
+                      return (
+                        <clipPath key={`clip-${reg.id}`} id={`water-clip-${reg.id}`}>
+                          <rect
+                            x={reg.bbox.minX - 10}
+                            y={waterY}
+                            width={reg.bbox.w + 20}
+                            height={waterHeight + 20}
+                            className="transition-all duration-700 ease-out"
+                          />
+                        </clipPath>
+                      );
+                    })}
+                  </defs>
+
+                  {/* 1. Base Region Territories with Glowing Borders and Water */}
+                  {RAJSHAHI_DISTRICT_REGIONS.map((reg) => {
+                    const isSelected = selectedRegionId === reg.id;
+                    const isHovered = hoveredRegionId === reg.id;
+                    const isVisited = reg.spotId ? visitedSpotIds.includes(reg.spotId) : false;
+
+                    return (
+                      <g
+                        key={reg.id}
+                        onClick={() => {
+                          setSelectedRegionId(reg.id);
+                          if (reg.spotId) {
+                            setHighlightedSpotId(reg.spotId);
+                            const el = document.getElementById(reg.spotId);
+                            if (el) {
+                              el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            }
+                          }
+                        }}
+                        onMouseEnter={() => setHoveredRegionId(reg.id)}
+                        onMouseLeave={() => setHoveredRegionId(null)}
+                        className="cursor-pointer transition-transform duration-200"
+                      >
+                        {/* Land Silhouette */}
+                        <path
+                          d={reg.d}
+                          fill={isSelected ? '#0e4a2c' : isHovered ? '#125c37' : '#10522c'}
+                          stroke="#ffffff"
+                          strokeWidth="2.5"
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                        />
+
+                        {/* Rising Liquid Green Water Fill */}
+                        {(isVisited || rajshahiStats.pct > 0) && (
+                          <path
+                            d={reg.d}
+                            fill="#059669"
+                            clipPath={`url(#water-clip-${reg.id})`}
+                            opacity={isVisited ? "0.95" : "0.4"}
+                            className="transition-all duration-700 ease-out"
+                          />
+                        )}
+
+                        {/* Distinct Region Borders */}
+                        <path
+                          d={reg.d}
+                          fill="none"
+                          stroke={isSelected ? '#facc15' : isHovered ? '#6ee7b7' : '#ffffff'}
+                          strokeWidth={isSelected ? '5.5' : isHovered ? '3.5' : '2'}
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                        />
+
+                        {/* Glowing Golden Stroke for Active Region (PULSES & GLOWS ON CLICK / HOVER!) */}
+                        {(isSelected || isHovered) && (
+                          <path
+                            d={reg.d}
+                            fill="none"
+                            stroke="#fbbf24"
+                            strokeWidth={isSelected ? '6.5' : '4.5'}
+                            strokeLinejoin="round"
+                            strokeLinecap="round"
+                            filter="url(#active-rajshahi-region-glow)"
+                            className="animate-pulse"
+                          />
+                        )}
+
+                        {/* Ripple Line on top of water */}
+                        {isVisited && (
+                          <line
+                            x1={reg.bbox.minX}
+                            x2={reg.bbox.maxX}
+                            y1={reg.bbox.minY + 4}
+                            y2={reg.bbox.minY + 4}
+                            stroke="#a7f3d0"
+                            strokeWidth="3"
+                            strokeDasharray="6,6"
+                            clipPath={`url(#water-clip-${reg.id})`}
+                          />
+                        )}
+
+                        {/* Center Pin */}
+                        <circle
+                          cx={reg.center.x}
+                          cy={reg.center.y}
+                          r={isSelected ? '16' : '11'}
+                          fill={isVisited ? '#10b981' : '#ef4444'}
+                          stroke="#ffffff"
+                          strokeWidth="3"
+                          className="shadow"
+                        />
+                        <circle
+                          cx={reg.center.x}
+                          cy={reg.center.y}
+                          r="4"
+                          fill="#ffffff"
+                        />
+
+                        {/* Bengali Region Name Text */}
+                        <text
+                          x={reg.center.x}
+                          y={reg.center.y - 18}
+                          textAnchor="middle"
+                          fill="#ffffff"
+                          stroke="#062817"
+                          strokeWidth="5"
+                          paintOrder="stroke fill"
+                          fontSize="24"
+                          fontWeight="bold"
+                          fontFamily="sans-serif"
+                          className="pointer-events-none select-none tracking-tight font-bengali"
+                        >
+                          {reg.nameBn}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </svg>
+
+                {/* Top Active Region Info Pill */}
+                <div className="absolute top-3 inset-x-3 z-20 flex items-center justify-between gap-2 pointer-events-none">
+                  {(() => {
+                    const activeReg = RAJSHAHI_DISTRICT_REGIONS.find((r) => r.id === selectedRegionId);
+                    return activeReg ? (
+                      <div className="bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-full text-white text-xs font-bold font-bengali border border-emerald-400/50 shadow-lg flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                        <span>অঞ্চল: {activeReg.nameBn}</span>
+                      </div>
+                    ) : null;
+                  })()}
+
+                  {/* RU Campus quick jump if RU is selected */}
+                  {selectedRegionId === 'rj_reg_22' && (
+                    <button
+                      type="button"
+                      onClick={() => setMapViewMode('ru_campus')}
+                      className="pointer-events-auto bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 transition-all hover:scale-105"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 text-slate-950" />
+                      <span>রাবি ক্যাম্পাস ম্যাপ খুলুন ➔</span>
+                    </button>
+                  )}
+                </div>
 
                 {/* Clean Bottom Actions */}
                 <div className="absolute bottom-3 inset-x-3 z-20 flex items-center justify-between gap-2">
@@ -923,6 +1138,7 @@ export default function RajshahiDivisionWaterMap({
           <div className="space-y-3 max-h-[560px] overflow-y-auto pr-1 scrollbar-thin">
             {activeDistrictSpots.map((spot) => {
               const isVisited = visitedSpotIds.includes(spot.id);
+              const isHighlighted = highlightedSpotId === spot.id;
               const spotImages = Array.isArray(spot.images) && spot.images.length > 0
                 ? spot.images
                 : (spot.imageUrl ? [spot.imageUrl] : []);
@@ -930,8 +1146,22 @@ export default function RajshahiDivisionWaterMap({
               return (
                 <div
                   key={spot.id}
+                  id={spot.id}
+                  onMouseEnter={() => {
+                    if (mapViewMode === 'rajshahi_district') {
+                      const reg = RAJSHAHI_DISTRICT_REGIONS.find((r) => r.spotId === spot.id);
+                      if (reg) setHoveredRegionId(reg.id);
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    if (mapViewMode === 'rajshahi_district') {
+                      setHoveredRegionId(null);
+                    }
+                  }}
                   className={`p-3 sm:p-3.5 rounded-2xl bg-white border transition-all duration-200 flex flex-col sm:flex-row gap-3.5 items-start sm:items-center justify-between group shadow-sm hover:shadow-md ${
-                    isVisited
+                    isHighlighted
+                      ? 'border-amber-400 ring-2 ring-amber-400 bg-amber-50/40 shadow-md scale-[1.01]'
+                      : isVisited
                       ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/20'
                       : 'border-slate-200/90 hover:border-emerald-400/80'
                   }`}
