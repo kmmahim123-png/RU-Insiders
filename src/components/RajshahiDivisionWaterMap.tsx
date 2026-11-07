@@ -23,6 +23,7 @@ import { RAJSHAHI_DIVISION_DISTRICTS, TouristSpot } from '@/lib/touristSpots';
 import { RAJSHAHI_DISTRICT_SVGS, RAJSHAHI_VIEWBOX, DistrictSvgData } from '@/lib/rajshahiDistrictsSvg';
 import { RAJSHAHI_PDF_REGIONS, RAJSHAHI_PDF_MAP_VIEWBOX, RajshahiPdfRegionData } from '@/lib/rajshahiPdfRegions';
 import { RU_CAMPUS_PLACES, RU_CAMPUS_VIEWBOX, RuPlaceSvgData } from '@/lib/ruCampusSvg';
+import CampusMapExplorer from './CampusMapExplorer';
 
 interface RajshahiDivisionWaterMapProps {
   visitedSpotIds: string[];
@@ -639,205 +640,37 @@ export default function RajshahiDivisionWaterMap({
       )}
 
       {/* ===================================================================== */}
-      {/* CENTRAL 2-COLUMN VIEW: MAP (LEFT) & SPOTS LIST (RIGHT)                */}
-      {/* (All 3 maps follow the exact same visual design, glow, water & cards) */}
+      {/* STAGE 3 vs STAGES 1 & 2 ROUTING:                                      */}
+      {/* If Stage 3: Render the authentic 3D/2D Masterplan RU Campus Map       */}
+      {/* If Stage 1/2: Render the Central 2-Column Map + Spots List System     */}
       {/* ===================================================================== */}
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
-        
-        {/* Left Side (6 Cols): Dynamic Vector SVG Map Frame */}
-        <div className="lg:col-span-6 flex flex-col items-center justify-center">
-          <div className="relative w-full aspect-[245/220] min-h-[380px] sm:min-h-[480px] bg-[#f2eee3] rounded-[28px] p-2 sm:p-4 border-2 border-emerald-900/15 shadow-inner flex items-center justify-center overflow-hidden group">
-            
-            {/* ================================================================ */}
-            {/* STAGE 3: RAJSHAHI UNIVERSITY CAMPUS (42 TERRITORIES VECTOR SVG)  */}
-            {/* ================================================================ */}
-            {mapViewMode === 'ru_campus' ? (
-              <div className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden rounded-2xl select-none">
-                <svg
-                  viewBox={RU_CAMPUS_VIEWBOX}
-                  className="w-full h-full object-contain select-none"
-                >
-                  <defs>
-                    <filter id="active-ru-place-glow" x="-20%" y="-20%" width="140%" height="140%">
-                      <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#facc15" floodOpacity="0.95" />
-                      <feDropShadow dx="0" dy="0" stdDeviation="14" floodColor="#10b981" floodOpacity="0.85" />
-                    </filter>
-
-                    {/* Rising water fill clips for each territory */}
-                    {RU_CAMPUS_PLACES.map((p) => {
-                      const isVisited = visitedRuPlaceIds.includes(p.id);
-                      const fillPct = isVisited ? 100 : Math.min(ruPct, 25);
-                      const waterHeight = (p.bbox.h * fillPct) / 100;
-                      const waterY = p.bbox.maxY - waterHeight;
-
-                      return (
-                        <clipPath key={`clip-ru-${p.id}`} id={`water-clip-ru-${p.id}`}>
-                          <rect
-                            x={p.bbox.minX - 5}
-                            y={waterY}
-                            width={p.bbox.w + 10}
-                            height={waterHeight + 10}
-                            className="transition-all duration-700 ease-out"
-                          />
-                        </clipPath>
-                      );
-                    })}
-                  </defs>
-
-                  {/* 42 RU Territories */}
-                  {RU_CAMPUS_PLACES.map((p) => {
-                    const isSelected = selectedRuPlaceId === p.id;
-                    const isHovered = hoveredRuPlaceId === p.id;
-                    const isVisited = visitedRuPlaceIds.includes(p.id);
-
-                    return (
-                      <g
-                        key={p.id}
-                        onClick={() => {
-                          setSelectedRuPlaceId(p.id);
-                          setHighlightedItemId(p.id);
-                          const el = document.getElementById(p.id);
-                          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                        }}
-                        onMouseEnter={() => setHoveredRuPlaceId(p.id)}
-                        onMouseLeave={() => setHoveredRuPlaceId(null)}
-                        className="cursor-pointer transition-transform duration-200"
-                      >
-                        {/* Base Land Fill */}
-                        <path
-                          d={p.d}
-                          fill={isSelected ? '#0e4a2c' : isHovered ? '#125c37' : '#10522c'}
-                          stroke="#ffffff"
-                          strokeWidth="2.2"
-                          strokeLinejoin="round"
-                          strokeLinecap="round"
-                        />
-
-                        {/* Rising Liquid Green Water Fill */}
-                        {(isVisited || ruPct > 0) && (
-                          <path
-                            d={p.d}
-                            fill="#059669"
-                            clipPath={`url(#water-clip-ru-${p.id})`}
-                            opacity={isVisited ? "0.95" : "0.4"}
-                            className="transition-all duration-700 ease-out"
-                          />
-                        )}
-
-                        {/* Distinct Borders */}
-                        <path
-                          d={p.d}
-                          fill="none"
-                          stroke={isSelected ? '#facc15' : isHovered ? '#6ee7b7' : '#ffffff'}
-                          strokeWidth={isSelected ? '4.5' : isHovered ? '3.2' : '1.8'}
-                          strokeLinejoin="round"
-                          strokeLinecap="round"
-                        />
-
-                        {/* Glowing Golden Stroke for Active Territory */}
-                        {(isSelected || isHovered) && (
-                          <path
-                            d={p.d}
-                            fill="none"
-                            stroke="#fbbf24"
-                            strokeWidth={isSelected ? '5.5' : '3.8'}
-                            strokeLinejoin="round"
-                            strokeLinecap="round"
-                            filter="url(#active-ru-place-glow)"
-                            className="animate-pulse"
-                          />
-                        )}
-
-                        {/* Ripple Line on water surface */}
-                        {isVisited && (
-                          <line
-                            x1={p.bbox.minX}
-                            x2={p.bbox.maxX}
-                            y1={p.bbox.minY + 3}
-                            y2={p.bbox.minY + 3}
-                            stroke="#a7f3d0"
-                            strokeWidth="2"
-                            strokeDasharray="4,4"
-                            clipPath={`url(#water-clip-ru-${p.id})`}
-                          />
-                        )}
-
-                        {/* Pin Dot */}
-                        <circle
-                          cx={p.center.x}
-                          cy={p.center.y}
-                          r={isSelected ? '10' : '7.5'}
-                          fill={isVisited ? '#10b981' : '#ef4444'}
-                          stroke="#ffffff"
-                          strokeWidth="2"
-                          className="shadow"
-                        />
-                        <circle cx={p.center.x} cy={p.center.y} r="2.5" fill="#ffffff" />
-
-                        {/* Bengali Territory Label */}
-                        <text
-                          x={p.center.x}
-                          y={p.center.y - 12}
-                          textAnchor="middle"
-                          fill="#ffffff"
-                          stroke="#062817"
-                          strokeWidth="3.5"
-                          paintOrder="stroke fill"
-                          fontSize="13"
-                          fontWeight="bold"
-                          fontFamily="sans-serif"
-                          className="pointer-events-none select-none tracking-tight font-bengali"
-                        >
-                          {p.shortBn}
-                        </text>
-                      </g>
-                    );
-                  })}
-                </svg>
-
-                {/* Top Active Territory Info Pill */}
-                <div className="absolute top-3 inset-x-3 z-20 flex items-center justify-between gap-2 pointer-events-none">
-                  {(() => {
-                    const activePlace = RU_CAMPUS_PLACES.find((p) => p.id === selectedRuPlaceId);
-                    return activePlace ? (
-                      <div className="bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-full text-white text-xs font-bold font-bengali border border-emerald-400/50 shadow-lg flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                        <span>টেরিটরি: {activePlace.nameBn}</span>
-                      </div>
-                    ) : null;
-                  })()}
-                </div>
-
-                {/* Bottom Step Navigation Buttons */}
-                <div className="absolute bottom-3 inset-x-3 z-20 flex items-center justify-between gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setMapViewMode('rajshahi_district')}
-                    className="bg-white/95 hover:bg-white text-slate-800 font-black text-xs px-3.5 py-1.5 rounded-xl border border-stone-300 shadow-md flex items-center gap-1 transition-all"
-                  >
-                    <span>← ২. রাজশাহী জেলা</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setMapViewMode('division')}
-                    className="bg-slate-900 hover:bg-slate-800 text-white font-black text-xs px-3.5 py-1.5 rounded-xl shadow-lg flex items-center gap-1 transition-all"
-                  >
-                    <span>১. রাজশাহী বিভাগ ➔</span>
-                  </button>
-                </div>
-              </div>
-
-            ) : mapViewMode === 'rajshahi_district' ? (
-              /* ================================================================ */
-              /* STAGE 2: RAJSHAHI DISTRICT (EXACT PDF MAP WITH 22 REGIONS)       */
-              /* ================================================================ */
-              <div className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden rounded-2xl select-none bg-emerald-950/20">
-                {/* 1. Base Image: High-res authentic user-uploaded PDF Map */}
+      {mapViewMode === 'ru_campus' ? (
+        <div className="relative z-10 w-full rounded-3xl overflow-hidden shadow-2xl">
+          <CampusMapExplorer
+            onBackToDivision={() => setMapViewMode('division')}
+            onBackToDistrict={() => {
+              onSelectDistrict('rajshahi');
+              setMapViewMode('rajshahi_district');
+            }}
+          />
+        </div>
+      ) : (
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
+          
+          {/* Left Side (6 Cols): Dynamic Vector SVG Map Frame */}
+          <div className="lg:col-span-6 flex flex-col items-center justify-center">
+            <div className="relative w-full aspect-[245/220] min-h-[380px] sm:min-h-[480px] bg-[#f2eee3] rounded-[28px] p-2 sm:p-4 border-2 border-emerald-900/15 shadow-inner flex items-center justify-center overflow-hidden group">
+              
+              {mapViewMode === 'rajshahi_district' ? (
+                /* ================================================================ */
+                /* STAGE 2: RAJSHAHI DISTRICT (EXACT PDF MAP WITH 22 REGIONS)       */
+                /* ================================================================ */
+              <div className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden rounded-2xl select-none bg-slate-900/40">
+                {/* 1. Base Image: High-res authentic user-uploaded PDF Map with desaturation so unvisited is neutral slate */}
                 <img
                   src="/campus/rajshahi-district-detailed-map.jpg"
                   alt="রাজশাহী জেলা বিস্তারিত মানচিত্র"
-                  className="w-full h-full object-contain pointer-events-none select-none"
+                  className="w-full h-full object-contain pointer-events-none select-none filter grayscale contrast-125 brightness-95 opacity-80"
                 />
 
                 {/* 2. Overlaid Interactive Glowing Vector Polygons */}
@@ -892,21 +725,28 @@ export default function RajshahiDivisionWaterMap({
                         onMouseLeave={() => setHoveredRegionId(null)}
                         className="cursor-pointer transition-transform duration-200"
                       >
-                        {/* Interactive Click Area */}
-                        <path
-                          d={reg.d}
-                          fill={isSelected ? 'rgba(250, 204, 21, 0.14)' : isHovered ? 'rgba(52, 211, 153, 0.14)' : 'transparent'}
-                          stroke="transparent"
-                          strokeWidth="2"
-                        />
+                        {/* Unvisited State: Neutral Blueprint Slate Tint (Distinct from Visited Green) */}
+                        {!isVisited && (
+                          <path
+                            d={reg.d}
+                            fill={isSelected ? 'rgba(250, 204, 21, 0.35)' : isHovered ? 'rgba(148, 163, 184, 0.45)' : 'rgba(30, 41, 59, 0.65)'}
+                            stroke={isSelected ? '#fde047' : isHovered ? '#94a3b8' : 'rgba(255, 255, 255, 0.45)'}
+                            strokeWidth={isSelected ? '4' : '1.5'}
+                            strokeLinejoin="round"
+                            strokeLinecap="round"
+                          />
+                        )}
 
-                        {/* Rising Liquid Green Water Fill when Visited */}
+                        {/* Visited State: Rich Vibrant Emerald Green Fill */}
                         {isVisited && (
                           <path
                             d={reg.d}
                             fill="#059669"
-                            clipPath={`url(#water-clip-pdf-${reg.id})`}
-                            opacity="0.55"
+                            opacity="0.88"
+                            stroke="#10b981"
+                            strokeWidth={isSelected ? '5' : '3.5'}
+                            strokeLinejoin="round"
+                            strokeLinecap="round"
                             className="transition-all duration-700 ease-out"
                           />
                         )}
@@ -1073,12 +913,16 @@ export default function RajshahiDivisionWaterMap({
                         onMouseLeave={() => setHoveredDistrict(null)}
                         className="cursor-pointer transition-transform duration-200"
                       >
-                        {/* Land Silhouette */}
+                        {/* Land Silhouette with 2 Distinct Colors: Slate for Unvisited, Forest Green for Visited! */}
                         <path
                           d={dist.d}
-                          fill={isSelected ? '#0e4a2c' : isHovered ? '#125c37' : '#10522c'}
-                          stroke="#ffffff"
-                          strokeWidth="1.2"
+                          fill={
+                            st.pct > 0
+                              ? (isSelected ? '#0e4a2c' : isHovered ? '#125c37' : '#064e3b')
+                              : (isSelected ? '#1e293b' : isHovered ? '#334155' : '#1e293b')
+                          }
+                          stroke={isSelected ? '#facc15' : st.pct > 0 ? '#34d399' : '#64748b'}
+                          strokeWidth={isSelected ? '2.5' : '1.2'}
                           strokeLinejoin="round"
                           strokeLinecap="round"
                         />
@@ -1132,14 +976,14 @@ export default function RajshahiDivisionWaterMap({
                           />
                         )}
 
-                        {/* Center Pin */}
+                        {/* Center Pin: Green for Visited, Slate for Unvisited, Amber for Selected */}
                         <circle
                           cx={dist.pin.x}
                           cy={dist.pin.y}
                           r="3.5"
-                          fill="#ef4444"
+                          fill={isSelected ? '#f59e0b' : st.pct > 0 ? '#10b981' : '#64748b'}
                           stroke="#ffffff"
-                          strokeWidth="1"
+                          strokeWidth="1.2"
                           className="shadow"
                         />
                         <circle cx={dist.pin.x} cy={dist.pin.y} r="1.1" fill="#ffffff" />
@@ -1149,8 +993,8 @@ export default function RajshahiDivisionWaterMap({
                           x={dist.pin.x}
                           y={dist.pin.y - 4.5}
                           textAnchor="middle"
-                          fill="#ffffff"
-                          stroke="#062817"
+                          fill={isSelected ? '#fde047' : st.pct > 0 ? '#ffffff' : '#cbd5e1'}
+                          stroke="#0f172a"
                           strokeWidth="2.5"
                           paintOrder="stroke fill"
                           fontSize="8.5"
@@ -1158,7 +1002,7 @@ export default function RajshahiDivisionWaterMap({
                           fontFamily="sans-serif"
                           className="pointer-events-none select-none tracking-tight font-bengali"
                         >
-                          {dist.nameBn}
+                          {dist.nameBn} {st.pct > 0 ? '✓' : ''}
                         </text>
                       </g>
                     );
@@ -1193,26 +1037,20 @@ export default function RajshahiDivisionWaterMap({
           <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-800 to-emerald-950 text-white border border-emerald-700/60 shadow-md space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-emerald-200 flex items-center gap-1.5 font-bengali">
-                {mapViewMode === 'ru_campus' ? (
-                  <Sparkles className="h-4 w-4 text-amber-400" />
-                ) : mapViewMode === 'rajshahi_district' ? (
+                {mapViewMode === 'rajshahi_district' ? (
                   <MapPin className="h-4 w-4 text-amber-400" />
                 ) : (
                   <Compass className="h-4 w-4 text-amber-400" />
                 )}
                 <span>
-                  {mapViewMode === 'ru_campus'
-                    ? 'রাজশাহী বিশ্ববিদ্যালয় ক্যাম্পাস'
-                    : mapViewMode === 'rajshahi_district'
+                  {mapViewMode === 'rajshahi_district'
                     ? 'রাজশাহী জেলা পর্যটন মানচিত্র'
                     : `বর্তমানে নির্বাচিত: ${activeDistrictData.nameBn}`}
                 </span>
               </span>
 
               <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black font-bengali">
-                {mapViewMode === 'ru_campus'
-                  ? `${RU_CAMPUS_PLACES.length}টি টেরিটরি`
-                  : mapViewMode === 'rajshahi_district'
+                {mapViewMode === 'rajshahi_district'
                   ? `${RAJSHAHI_PDF_REGIONS.length}টি অঞ্চল`
                   : `${activeDistrictSpots.length}টি দর্শনীয় স্থান`}
               </span>
@@ -1221,16 +1059,12 @@ export default function RajshahiDivisionWaterMap({
             {/* Main Title & Percentage */}
             <div className="flex items-baseline justify-between">
               <div className="text-xl sm:text-2xl font-black text-white font-bengali tracking-tight">
-                {mapViewMode === 'ru_campus'
-                  ? '৩. রাজশাহী বিশ্ববিদ্যালয় কতটুকু ঘুরলেন'
-                  : mapViewMode === 'rajshahi_district'
+                {mapViewMode === 'rajshahi_district'
                   ? '২. রাজশাহী জেলা কতটুকু ঘুরলেন'
                   : '১. রাজশাহী বিভাগ কতটুকু ঘুরলেন'}
               </div>
               <div className="text-sm font-mono font-bold text-amber-300">
-                {mapViewMode === 'ru_campus'
-                  ? `${visitedRuCount} / ${RU_CAMPUS_PLACES.length} সম্পন্ন`
-                  : mapViewMode === 'rajshahi_district'
+                {mapViewMode === 'rajshahi_district'
                   ? `${visitedPdfCount} / ${RAJSHAHI_PDF_REGIONS.length} সম্পন্ন`
                   : `${activeStats.visited} / ${activeStats.total} সম্পন্ন`}
               </div>
@@ -1243,9 +1077,7 @@ export default function RajshahiDivisionWaterMap({
                   className="h-full bg-gradient-to-r from-amber-400 via-emerald-400 to-teal-300 rounded-full transition-all duration-500"
                   style={{
                     width: `${
-                      mapViewMode === 'ru_campus'
-                        ? ruPct
-                        : mapViewMode === 'rajshahi_district'
+                      mapViewMode === 'rajshahi_district'
                         ? pdfDistrictPct
                         : activeStats.pct
                     }%`
@@ -1255,38 +1087,18 @@ export default function RajshahiDivisionWaterMap({
               <div className="flex justify-between text-[10px] text-emerald-200 font-mono">
                 <span>
                   ভ্রমণ পূর্ণতা:{' '}
-                  {mapViewMode === 'ru_campus'
-                    ? `${ruPct}%`
-                    : mapViewMode === 'rajshahi_district'
+                  {mapViewMode === 'rajshahi_district'
                     ? `${pdfDistrictPct}%`
                     : `${activeStats.pct}%`}
                 </span>
                 <span>
                   অবশিষ্ট:{' '}
-                  {mapViewMode === 'ru_campus'
-                    ? `${RU_CAMPUS_PLACES.length - visitedRuCount} টেরিটরি`
-                    : mapViewMode === 'rajshahi_district'
+                  {mapViewMode === 'rajshahi_district'
                     ? `${RAJSHAHI_PDF_REGIONS.length - visitedPdfCount} অঞ্চল`
                     : `${activeStats.total - activeStats.visited} স্থান`}
                 </span>
               </div>
             </div>
-
-            {/* Search filter for RU campus */}
-            {mapViewMode === 'ru_campus' && (
-              <div className="pt-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-emerald-300" />
-                  <input
-                    type="text"
-                    value={ruSearchQuery}
-                    onChange={(e) => setRuSearchQuery(e.target.value)}
-                    placeholder="রাবি ক্যাম্পাস ভবন, চত্বর বা হল খুঁজুন..."
-                    className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-black/30 border border-emerald-500/30 text-xs text-white placeholder-emerald-300/60 focus:outline-none focus:ring-1 focus:ring-amber-400 font-bengali"
-                  />
-                </div>
-              </div>
-            )}
 
             {/* Search filter for Stage 2 PDF regions */}
             {mapViewMode === 'rajshahi_district' && (
@@ -1306,100 +1118,10 @@ export default function RajshahiDivisionWaterMap({
           </div>
 
           {/* ================================================================= */}
-          {/* VERTICAL SPOTS & TERRITORIES LIST (Identical format for all maps) */}
+          {/* VERTICAL SPOTS LIST FOR STAGE 2 (DISTRICT) & STAGE 1 (DIVISION)   */}
           {/* ================================================================= */}
           <div className="space-y-3 max-h-[560px] overflow-y-auto pr-1 scrollbar-thin">
-            
-            {/* RU CAMPUS 42 TERRITORIES LIST */}
-            {mapViewMode === 'ru_campus' ? (
-              filteredRuPlaces.map((p) => {
-                const isVisited = visitedRuPlaceIds.includes(p.id);
-                const isHighlighted = highlightedItemId === p.id || selectedRuPlaceId === p.id;
-
-                return (
-                  <div
-                    key={p.id}
-                    id={p.id}
-                    onMouseEnter={() => setHoveredRuPlaceId(p.id)}
-                    onMouseLeave={() => setHoveredRuPlaceId(null)}
-                    className={`p-3 sm:p-3.5 rounded-2xl bg-white text-slate-900 border transition-all duration-200 flex flex-col sm:flex-row gap-3.5 items-start sm:items-center justify-between group shadow-sm hover:shadow-md ${
-                      isHighlighted
-                        ? 'border-amber-400 ring-2 ring-amber-400 bg-amber-50/40 shadow-md scale-[1.01]'
-                        : isVisited
-                        ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/20'
-                        : 'border-slate-200/90 hover:border-emerald-400/80'
-                    }`}
-                  >
-                    {/* Thumbnail */}
-                    <div
-                      onClick={() => handleOpenRuPlaceDetails(p)}
-                      className="relative w-full sm:w-28 h-28 sm:h-24 rounded-xl overflow-hidden bg-slate-900 shrink-0 cursor-pointer shadow-inner"
-                    >
-                      <img
-                        src={p.imageUrl}
-                        alt={p.nameBn}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute top-1.5 left-1.5">
-                        <span className="px-1.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-black text-[9px] font-bengali shadow">
-                          {p.rankNo}
-                        </span>
-                      </div>
-                      {isVisited && (
-                        <div className="absolute top-1.5 right-1.5 p-1 rounded-full bg-emerald-600 text-white shadow">
-                          <Check className="h-3 w-3" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <h4
-                        onClick={() => handleOpenRuPlaceDetails(p)}
-                        className="text-xs sm:text-sm font-black text-slate-900 font-bengali line-clamp-1 group-hover:text-emerald-700 cursor-pointer"
-                      >
-                        {p.nameBn}
-                      </h4>
-
-                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-bengali">
-                        <MapPin className="h-3 w-3 text-rose-500 shrink-0" />
-                        <span className="truncate">মতিহার ক্যাম্পাস, রাবি</span>
-                      </div>
-
-                      <p className="text-[11px] text-slate-600 font-bengali line-clamp-2 leading-relaxed">
-                        {p.descriptionBn}
-                      </p>
-
-                      {/* Action Row */}
-                      <div className="pt-1.5 flex flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => toggleVisitedRuPlace(p.id)}
-                          className={`py-1.5 px-3 rounded-xl font-bold text-[11px] flex items-center gap-1.5 transition-all font-bengali cursor-pointer ${
-                            isVisited
-                              ? 'bg-emerald-600 text-white shadow-sm hover:bg-emerald-700'
-                              : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
-                          }`}
-                        >
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                          <span>{isVisited ? '✓ ঘোরা সম্পন্ন' : 'আমি এই জায়গা ঘুরেছি (টিক দিন)'}</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleOpenRuPlaceDetails(p)}
-                          className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] flex items-center gap-1.5 shadow transition font-bengali cursor-pointer"
-                        >
-                          <Eye className="h-3.5 w-3.5 text-amber-300" />
-                          <span>বিস্তারিত ও ছবি দেখুন</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-
-            ) : mapViewMode === 'rajshahi_district' ? (
+            {mapViewMode === 'rajshahi_district' ? (
               /* RAJSHAHI DISTRICT EXACT 22 REGIONS FROM USER'S PDF MAP */
               filteredPdfRegions.map((reg) => {
                 const isVisited = visitedPdfRegionIds.includes(reg.id);
@@ -1477,7 +1199,7 @@ export default function RajshahiDivisionWaterMap({
                           className={`py-1.5 px-3 rounded-xl font-bold text-[11px] flex items-center gap-1.5 transition-all font-bengali cursor-pointer ${
                             isVisited
                               ? 'bg-emerald-600 text-white shadow-sm hover:bg-emerald-700'
-                              : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
+                              : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
                           }`}
                         >
                           <CheckCircle2 className="h-3.5 w-3.5" />
@@ -1576,7 +1298,7 @@ export default function RajshahiDivisionWaterMap({
                           className={`py-1.5 px-3 rounded-xl font-bold text-[11px] flex items-center gap-1.5 transition-all font-bengali cursor-pointer ${
                             isVisited
                               ? 'bg-emerald-600 text-white shadow-sm hover:bg-emerald-700'
-                              : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
+                              : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
                           }`}
                         >
                           <CheckCircle2 className="h-3.5 w-3.5" />
@@ -1602,6 +1324,7 @@ export default function RajshahiDivisionWaterMap({
         </div>
 
       </div>
+      )}
 
       {/* ===================================================================== */}
       {/* SHARE / POSTER CITATION MODAL                                         */}

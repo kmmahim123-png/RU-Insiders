@@ -102,18 +102,18 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 sm:h-20">
           
           {/* Logo & Brand Identity */}
-          <Link href="/" className="flex items-center gap-3 group">
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
             <div className="group-hover:scale-105 transition-transform duration-300 shrink-0">
-              <AnimatedLogo size={52} speed="normal" withBorder={true} />
+              <AnimatedLogo size={42} speed="normal" withBorder={true} />
             </div>
             <div className="flex flex-col">
-              <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-1.5">
+              <span className="text-sm sm:text-lg font-black tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-1.5">
                 RU Insiders
                 <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded-full font-bold hidden sm:inline-block">
                   অফিশিয়াল
                 </span>
               </span>
-              <span className="text-[11px] text-slate-500 font-bengali font-medium">
+              <span className="text-[11px] text-slate-500 font-bengali font-medium hidden sm:inline-block">
                 রাজশাহী বিশ্ববিদ্যালয় অফিসিয়াল মার্চেন্ডাইজ স্টোর
               </span>
             </div>

@@ -83,7 +83,7 @@ export default function TouristSpotsSection() {
   };
 
   return (
-    <section id="tourist-attractions" className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-6">
+    <section id="tourist-attractions" className="w-full max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-3 sm:py-6 space-y-4">
       
       {/* Section Header */}
       <div className="flex items-center justify-between pb-1 pt-2">

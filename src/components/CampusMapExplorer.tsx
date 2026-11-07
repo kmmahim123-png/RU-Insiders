@@ -250,7 +250,15 @@ export const CAMPUS_LANDMARKS: CampusLandmark[] = [
   }
 ];
 
-export default function CampusMapExplorer() {
+export interface CampusMapExplorerProps {
+  onBackToDivision?: () => void;
+  onBackToDistrict?: () => void;
+}
+
+export default function CampusMapExplorer({
+  onBackToDivision,
+  onBackToDistrict,
+}: CampusMapExplorerProps = {}) {
   const [visited, setVisited] = useState<string[]>([]);
   const [selectedLandmark, setSelectedLandmark] = useState<CampusLandmark | null>(null);
   const [mapMode, setMapMode] = useState<'3d' | '2d'>('3d');
@@ -480,8 +488,36 @@ export default function CampusMapExplorer() {
   };
 
   return (
-    <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <section className="relative w-full max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5">
       
+      {/* Multi-Stage Navigation Tabs (To switch between Division, District & RU Campus) */}
+      {(onBackToDivision || onBackToDistrict) && (
+        <div className="flex items-center gap-2 flex-wrap">
+          {onBackToDivision && (
+            <button
+              type="button"
+              onClick={onBackToDivision}
+              className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs flex items-center gap-1.5 transition shadow"
+            >
+              <span>← ১. রাজশাহী বিভাগ ম্যাপ</span>
+            </button>
+          )}
+          {onBackToDistrict && (
+            <button
+              type="button"
+              onClick={onBackToDistrict}
+              className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs flex items-center gap-1.5 transition shadow"
+            >
+              <span>← ২. রাজশাহী জেলা ম্যাপ</span>
+            </button>
+          )}
+          <span className="px-3 py-2 rounded-xl bg-emerald-600 text-white font-black text-xs shadow flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+            <span>৩. রাজশাহী বিশ্ববিদ্যালয় (সক্রিয়)</span>
+          </span>
+        </div>
+      )}
+
       {/* Header & Progress Banner */}
       <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-slate-700/60 overflow-hidden relative">
         <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 bg-repeat pointer-events-none" style={{ backgroundImage: `url('/campus/ru-master-plan-3d.jpg')` }} />
