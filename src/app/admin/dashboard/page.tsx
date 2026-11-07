@@ -519,7 +519,10 @@ export default function AdminDashboardPage() {
 
     try {
       // 1. Fetch Products
-      const prodRes = await fetch('/api/products');
+      const prodRes = await fetch(`/api/products?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
+      });
       if (prodRes.ok) {
         const prodData = await prodRes.json();
         if (prodData.success) setProducts(prodData.products);

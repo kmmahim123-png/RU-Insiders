@@ -81,8 +81,8 @@ function mapProductFromRow(row: any): Product {
   };
 }
 
-function mapProductToRow(p: Product) {
-  return {
+function mapProductToRow(p: Product, includeOptional: boolean = true) {
+  const row: Record<string, any> = {
     id: p.id,
     slug: p.slug,
     name: p.name,
@@ -96,14 +96,19 @@ function mapProductToRow(p: Product) {
     colors: p.colors || [],
     sizes: Array.isArray(p.sizes) ? p.sizes : [],
     stock: p.stock || 0,
-    sales_count: p.salesCount || 0,
     customizable: Boolean(p.isCustomizable),
-    is_story_highlight: Boolean(p.isStoryHighlight ?? p.featured),
     order_index: p.orderIndex ?? 0,
     video: p.video || '',
     badge: p.badge || '',
     updated_at: new Date().toISOString(),
   };
+
+  if (includeOptional) {
+    row.sales_count = p.salesCount || 0;
+    row.is_story_highlight = Boolean(p.isStoryHighlight ?? p.featured);
+  }
+
+  return row;
 }
 
 function mapOrderFromRow(row: any): Order {
@@ -133,13 +138,13 @@ function mapOrderFromRow(row: any): Order {
   };
 }
 
-function mapOrderToRow(o: Order) {
-  return {
+function mapOrderToRow(o: Order, includeOptional: boolean = true) {
+  const row: Record<string, any> = {
     id: o.id,
     order_number: o.orderNumber || o.id,
     customer_name: o.customerName,
     customer_phone: o.customerPhone,
-    customer_address: o.customerAddress,
+    customer_address: o.customerAddress || 'Rajshahi University Campus',
     delivery_method: o.deliveryMethod || 'ru_campus_pickup',
     payment_method: o.paymentMethod || 'cash_on_delivery',
     items: o.items || [],
@@ -153,11 +158,16 @@ function mapOrderToRow(o: Order) {
     rider_name: o.riderName || '',
     steadfast_consignment_id: o.steadfastConsignmentId || '',
     steadfast_tracking_code: o.steadfastTrackingCode || '',
-    delivered_at: o.deliveredAt || null,
-    admin_notes: o.adminNotes || null,
     created_at: o.createdAt || new Date().toISOString(),
     updated_at: o.updatedAt || new Date().toISOString(),
   };
+
+  if (includeOptional) {
+    row.delivered_at = o.deliveredAt || null;
+    row.admin_notes = o.adminNotes || null;
+  }
+
+  return row;
 }
 
 function mapPrintJobFromRow(row: any): PrintJob {
@@ -320,8 +330,16 @@ export async function addProduct(product: Product): Promise<Product[]> {
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
-        const row = mapProductToRow(product);
-        await supabase.from('products').insert([row]);
+        const row = mapProductToRow(product, true);
+        const { error } = await supabase.from('products').insert([row]);
+        if (error) {
+          console.warn('Supabase addProduct insert with optional columns failed, retrying with core columns:', error.message);
+          const coreRow = mapProductToRow(product, false);
+          const { error: coreErr } = await supabase.from('products').insert([coreRow]);
+          if (coreErr) {
+            console.error('Supabase addProduct core insert error:', coreErr.message);
+          }
+        }
         return await getProducts();
       } catch (err) {
         console.warn('Supabase addProduct sync warning:', err);
@@ -370,7 +388,19 @@ export async function updateProduct(id: string, updates: Partial<Product>): Prom
           .eq('id', id)
           .select();
 
-        if (!error && data && data.length > 0) {
+        if (error && (error.code === 'PGRST204' || error.message?.includes('column') || error.message?.includes('schema cache'))) {
+          console.warn('Supabase updateProduct retrying without optional columns:', error.message);
+          delete updatePayload.is_story_highlight;
+          delete updatePayload.sales_count;
+          const { data: retryData, error: retryError } = await supabase
+            .from('products')
+            .update(updatePayload)
+            .eq('id', id)
+            .select();
+          if (!retryError && retryData && retryData.length > 0) {
+            updatedProduct = mapProductFromRow(retryData[0]);
+          }
+        } else if (!error && data && data.length > 0) {
           updatedProduct = mapProductFromRow(data[0]);
         }
       } catch (err) {
@@ -589,9 +619,17 @@ export async function addOrder(order: Order): Promise<Order> {
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
-        const row = mapOrderToRow(order);
+        const row = mapOrderToRow(order, true);
         const { error } = await supabase.from('orders').insert([row]);
-        if (!error) return order;
+        if (error) {
+          console.warn('Supabase addOrder optional cols rejected, retrying with core cols:', error.message);
+          const coreRow = mapOrderToRow(order, false);
+          const { error: coreErr } = await supabase.from('orders').insert([coreRow]);
+          if (!coreErr) return order;
+          console.error('Supabase addOrder core error:', coreErr.message);
+        } else {
+          return order;
+        }
       } catch (err) {
         console.warn('Supabase addOrder fallback:', err);
       }
@@ -636,7 +674,18 @@ export async function updateOrderStatus(
           .select()
           .single();
 
-        if (!error && data) {
+        if (error && (error.code === 'PGRST204' || error.message?.includes('column'))) {
+          delete payload.delivered_at;
+          const { data: retryData, error: retryError } = await supabase
+            .from('orders')
+            .update(payload)
+            .eq('id', orderId)
+            .select()
+            .single();
+          if (!retryError && retryData) {
+            return mapOrderFromRow(retryData);
+          }
+        } else if (!error && data) {
           return mapOrderFromRow(data);
         }
       } catch (err) {

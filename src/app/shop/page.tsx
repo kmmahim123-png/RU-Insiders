@@ -41,7 +41,10 @@ function ShopContent() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const res = await fetch('/api/products');
+        const res = await fetch(`/api/products?t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
+        });
         if (res.ok) {
           const data = await res.json();
           if (data.success && data.products) {

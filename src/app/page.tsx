@@ -15,7 +15,10 @@ export default function HomePage() {
   useEffect(() => {
     async function loadLiveProducts() {
       try {
-        const res = await fetch('/api/products', { cache: 'no-store' });
+        const res = await fetch(`/api/products?t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
+        });
         if (res.ok) {
           const data = await res.json();
           if (data.success && Array.isArray(data.products) && data.products.length > 0) {

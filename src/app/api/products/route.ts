@@ -3,6 +3,9 @@ import { getProducts, addProduct, deleteProduct, moveProductPosition, updateProd
 import { Product } from '@/lib/types';
 import { verifyAdminAuth } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -26,11 +29,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      count: filtered.length,
-      products: filtered,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        count: filtered.length,
+        products: filtered,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+          'Surrogate-Control': 'no-store',
+        },
+      }
+    );
   } catch (error: any) {
     return NextResponse.json(
       { success: false, message: error.message || 'Error fetching products' },
