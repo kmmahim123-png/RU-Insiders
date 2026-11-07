@@ -174,13 +174,26 @@ export default function CampusTourBanner() {
 
             {/* CTA Button Group */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
-              <Link
-                href="/map?region=ru"
+              <button
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById('tourist-attractions');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  window.dispatchEvent(new CustomEvent('ru_open_campus_map'));
+                }}
                 className="px-6 py-3.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2.5 shadow-xl shadow-black/30 hover:scale-[1.02] active:scale-[0.98] transition-all group"
               >
                 <Compass className="h-4 w-4 sm:h-5 sm:w-5 group-hover:rotate-45 transition-transform text-slate-950" />
-                <span>রাজশাহী বিশ্ববিদ্যালয় (ম্যাপে দেখুন) →</span>
-              </Link>
+                <span>রাজশাহী বিশ্ববিদ্যালয় ম্যাপ (Explore RU) →</span>
+              </button>
+
+              <a
+                href="#campus-news-literature"
+                className="px-5 py-3.5 rounded-2xl bg-emerald-950/80 hover:bg-emerald-900 text-amber-300 border border-emerald-400/30 font-black text-xs sm:text-sm flex items-center gap-2 shadow-lg backdrop-blur-md transition-all hover:scale-[1.02]"
+              >
+                <Sparkles className="h-4 w-4 text-amber-400" />
+                <span>🔬 গবেষণা পেপার, গান ও ট্যালেন্ট হাব</span>
+              </a>
             </div>
 
             {/* Slide Navigation Dots & Spot Name Selector */}

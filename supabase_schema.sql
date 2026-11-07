@@ -319,6 +319,7 @@ CREATE TABLE IF NOT EXISTS public.campus_articles (
   likes_count INTEGER DEFAULT 0,
   is_featured BOOLEAN DEFAULT false,
   status TEXT DEFAULT 'published',
+  external_url TEXT DEFAULT '',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

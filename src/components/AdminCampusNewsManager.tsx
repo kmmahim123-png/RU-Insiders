@@ -34,6 +34,7 @@ export default function AdminCampusNewsManager() {
   const [authorDept, setAuthorDept] = useState('');
   const [authorRole, setAuthorRole] = useState('শিক্ষার্থী');
   const [imageUrl, setImageUrl] = useState('');
+  const [externalUrl, setExternalUrl] = useState('');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
   const [status, setStatus] = useState<'published' | 'draft'>('published');
@@ -69,6 +70,7 @@ export default function AdminCampusNewsManager() {
     setAuthorDept('');
     setAuthorRole('শিক্ষার্থী');
     setImageUrl('https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=1200&q=80');
+    setExternalUrl('');
     setContent('');
     setTags('কবিতা, প্যারিস রোড, রাবি');
     setStatus('published');
@@ -84,6 +86,7 @@ export default function AdminCampusNewsManager() {
     setAuthorDept(article.authorDept);
     setAuthorRole(article.authorRole || 'শিক্ষার্থী');
     setImageUrl(article.imageUrl);
+    setExternalUrl(article.externalUrl || '');
     setContent(article.content);
     setTags(article.tags.join(', '));
     setStatus(article.status);
@@ -141,11 +144,12 @@ export default function AdminCampusNewsManager() {
     }
 
     const catMap: Record<ArticleCategory, string> = {
+      research: 'গবেষণা ও রিসার্চ পেপার',
+      music: 'ক্যাম্পাস গান ও সুর',
       poetry: 'সাহিত্য ও কবিতা',
       talent: 'রাবি প্রতিভা ও অর্জন',
       news: 'দৈনিক ক্যাম্পাস সংবাদ',
       literature: 'গল্প ও স্মৃতিচারণ',
-      feature: 'ক্যাম্পাস ফিচার',
     };
 
     const newArticle: CampusArticle = {
@@ -153,12 +157,13 @@ export default function AdminCampusNewsManager() {
       title: title.trim(),
       subtitle: subtitle.trim(),
       category,
-      categoryBn: catMap[category],
+      categoryBn: catMap[category] || 'সাহিত্য ও কবিতা',
       authorName: authorName.trim() || 'নাম প্রকাশে অনিচ্ছুক',
       authorDept: authorDept.trim() || 'রাজশাহী বিশ্ববিদ্যালয়',
       authorRole: authorRole.trim() || 'শিক্ষার্থী',
       publishedAt: editingArticle ? editingArticle.publishedAt : new Date().toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' }),
       imageUrl: imageUrl.trim() || 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=1200&q=80',
+      externalUrl: externalUrl.trim(),
       content: content.trim(),
       excerpt: content.trim().slice(0, 160) + '...',
       tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
@@ -280,11 +285,12 @@ export default function AdminCampusNewsManager() {
                     onChange={(e) => setCategory(e.target.value as any)}
                     className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:outline-none focus:border-emerald-600"
                   >
-                    <option value="poetry">সাহিত্য ও কবিতা</option>
-                    <option value="talent">রাবি প্রতিভা ও অর্জন</option>
-                    <option value="news">দৈনিক ক্যাম্পাস সংবাদ</option>
-                    <option value="literature">গল্প ও স্মৃতিচারণ</option>
-                    <option value="feature">ক্যাম্পাস ফিচার</option>
+                    <option value="research">🔬 গবেষণা ও রিসার্চ পেপার (Research Paper)</option>
+                    <option value="music">🎵 ক্যাম্পাস গান ও সুর (Songs & Music)</option>
+                    <option value="talent">💡 রাবি প্রতিভা ও উদ্ভাবন (RU Talent)</option>
+                    <option value="poetry">✍️ সাহিত্য ও কবিতা (Poetry & Literature)</option>
+                    <option value="news">📰 দৈনিক ক্যাম্পাস সংবাদ (Daily News)</option>
+                    <option value="literature">📖 গল্প ও স্মৃতিচারণ (Campus Stories)</option>
                   </select>
                 </div>
               </div>
@@ -362,6 +368,20 @@ export default function AdminCampusNewsManager() {
                     <img src={imageUrl} alt="প্রিভিউ" className="w-full h-full object-cover" />
                   </div>
                 )}
+              </div>
+
+              {/* External Paper / Song / Media Link */}
+              <div className="space-y-1">
+                <label className="block text-slate-700 font-bold">
+                  রিসার্চ পেপার DOI / PDF লিংক অথবা ইউটিউব/অডিও গান লিঙ্ক (ঐচ্ছিক)
+                </label>
+                <input
+                  type="url"
+                  value={externalUrl}
+                  onChange={(e) => setExternalUrl(e.target.value)}
+                  placeholder="যেমন: https://doi.org/... অথবা https://youtube.com/watch?v=..."
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-emerald-600"
+                />
               </div>
 
               {/* Content Body */}

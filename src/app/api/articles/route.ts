@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
       likesCount: body.likesCount || 0,
       isFeatured: !!body.isFeatured,
       status: body.status || 'published',
+      externalUrl: body.externalUrl || body.external_url || '',
     };
 
     const supabase = getSupabaseClient();
