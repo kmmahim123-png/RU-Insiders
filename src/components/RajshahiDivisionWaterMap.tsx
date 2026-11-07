@@ -16,11 +16,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Layers,
-  ZoomIn
+  ZoomIn,
+  Search
 } from 'lucide-react';
 import { RAJSHAHI_DIVISION_DISTRICTS, TouristSpot } from '@/lib/touristSpots';
 import { RAJSHAHI_DISTRICT_SVGS, RAJSHAHI_VIEWBOX, DistrictSvgData } from '@/lib/rajshahiDistrictsSvg';
 import { RAJSHAHI_DISTRICT_REGIONS, RAJSHAHI_DISTRICT_VIEWBOX, RajshahiRegionSvgData } from '@/lib/rajshahiDetailedSvg';
+import { RU_CAMPUS_PLACES, RU_CAMPUS_VIEWBOX, RuPlaceSvgData } from '@/lib/ruCampusSvg';
 
 interface RajshahiDivisionWaterMapProps {
   visitedSpotIds: string[];
@@ -44,48 +46,44 @@ export default function RajshahiDivisionWaterMap({
   const [userName, setUserName] = useState('');
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  // 3 Hierarchical Map Modes (Requested Exact Titles):
+  // 1. 'division' -> ১. রাজশাহী বিভাগ কতটুকু ঘুরলেন
+  // 2. 'rajshahi_district' -> ২. রাজশাহী জেলা কতটুকু ঘুরলেন
+  // 3. 'ru_campus' -> ৩. রাজশাহী বিশ্ববিদ্যালয় কতটুকু ঘুরলেন
+  const [mapViewMode, setMapViewMode] = useState<'division' | 'rajshahi_district' | 'ru_campus'>('division');
+
+  // Visited state for RU campus 42 places
+  const [visitedRuPlaceIds, setVisitedRuPlaceIds] = useState<string[]>([]);
+
+  // Selection & hover states for Stage 1 (Division)
   const [hoveredDistrict, setHoveredDistrict] = useState<string | null>(null);
-  
-  // Interactive Region States for Rajshahi District Vector Map (Stage 2)
+
+  // Selection & hover states for Stage 2 (Rajshahi District)
   const [selectedRegionId, setSelectedRegionId] = useState<string | null>('rj_reg_22');
   const [hoveredRegionId, setHoveredRegionId] = useState<string | null>(null);
-  const [highlightedSpotId, setHighlightedSpotId] = useState<string | null>(null);
-  
-  // 3 Hierarchical Map Modes:
-  // 1. 'division' -> সমগ্র রাজশাহী বিভাগ (৮ জেলা)
-  // 2. 'rajshahi_district' -> রাজশাহী জেলা সম্পূর্ণ ম্যাপ (ইউজার যেটা দিয়েছে)
-  // 3. 'ru_campus' -> রাজশাহী বিশ্ববিদ্যালয় ক্যাম্পাস ম্যাপ (৪২ স্পট)
-  const [mapViewMode, setMapViewMode] = useState<'division' | 'rajshahi_district' | 'ru_campus'>('division');
-  
+
+  // Selection & hover states for Stage 3 (RU Campus)
+  const [selectedRuPlaceId, setSelectedRuPlaceId] = useState<string | null>('shabash_bd');
+  const [hoveredRuPlaceId, setHoveredRuPlaceId] = useState<string | null>(null);
+  const [ruSearchQuery, setRuSearchQuery] = useState('');
+
+  // Right-side list highlight state
+  const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const detailedMapImgRef = useRef<HTMLImageElement | null>(null);
 
-  const visitedCount = visitedSpotIds.length;
-  const divisionPct = Math.min(100, Math.round((visitedCount / totalSpotsCount) * 100));
-
-  // Pre-load the user-provided Rajshahi district image for instant render & poster
+  // Load visited RU campus places from localStorage
   useEffect(() => {
-    const img = new Image();
-    img.src = '/campus/rajshahi-district-detailed-map.jpg';
-    img.onload = () => {
-      detailedMapImgRef.current = img;
-    };
+    try {
+      const saved = localStorage.getItem('ru_visited_campus_places_v1');
+      if (saved) {
+        setVisitedRuPlaceIds(JSON.parse(saved));
+      }
+    } catch (e) {}
   }, []);
 
-  // Listen to postMessage from embedded RU Campus Map
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'UNSEEN_RU_PLACE_VISITED') {
-        if (onToggleVisited && !visitedSpotIds.includes('spot-rj-ru')) {
-          onToggleVisited('spot-rj-ru');
-        }
-      }
-    };
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [onToggleVisited, visitedSpotIds]);
-
-  // Listen for custom trigger from Hero/CampusTourBanner to open RU campus map right here
+  // Listen for trigger from Hero/CampusTourBanner to open RU campus map right here
   useEffect(() => {
     const handleOpenRU = () => {
       onSelectDistrict('rajshahi');
@@ -94,6 +92,26 @@ export default function RajshahiDivisionWaterMap({
     window.addEventListener('ru_open_campus_map', handleOpenRU);
     return () => window.removeEventListener('ru_open_campus_map', handleOpenRU);
   }, [onSelectDistrict]);
+
+  // Toggle visited for RU Campus territory
+  const toggleVisitedRuPlace = (placeId: string) => {
+    const updated = visitedRuPlaceIds.includes(placeId)
+      ? visitedRuPlaceIds.filter((id) => id !== placeId)
+      : [...visitedRuPlaceIds, placeId];
+    setVisitedRuPlaceIds(updated);
+    try {
+      localStorage.setItem('ru_visited_campus_places_v1', JSON.stringify(updated));
+    } catch (e) {}
+
+    // Auto-mark spot-rj-ru as visited if at least one RU place is explored
+    if (updated.length > 0 && !visitedSpotIds.includes('spot-rj-ru') && onToggleVisited) {
+      onToggleVisited('spot-rj-ru');
+    }
+  };
+
+  // 1. Division visited percentage & counts
+  const visitedDivisionCount = visitedSpotIds.length;
+  const divisionPct = Math.min(100, Math.round((visitedDivisionCount / totalSpotsCount) * 100));
 
   // Per-district visited calculations
   const districtStats = useMemo(() => {
@@ -108,17 +126,29 @@ export default function RajshahiDivisionWaterMap({
     return stats;
   }, [allSpots, visitedSpotIds]);
 
-  // Active district info
+  // 2. Rajshahi District stats
+  const rajshahiSpots = useMemo(() => allSpots.filter((s) => s.districtId === 'rajshahi'), [allSpots]);
   const activeDistrictData = RAJSHAHI_DIVISION_DISTRICTS.find((d) => d.id === selectedDistrict) || RAJSHAHI_DIVISION_DISTRICTS[0];
   const activeStats = districtStats[selectedDistrict] || { total: activeDistrictData.spotCount, visited: 0, pct: 0 };
-  const rajshahiStats = districtStats['rajshahi'] || { total: 9, visited: 0, pct: 0 };
+  const rajshahiStats = districtStats['rajshahi'] || { total: rajshahiSpots.length || 9, visited: 0, pct: 0 };
+
+  // 3. RU Campus stats
+  const visitedRuCount = visitedRuPlaceIds.length;
+  const ruPct = Math.min(100, Math.round((visitedRuCount / RU_CAMPUS_PLACES.length) * 100));
 
   // Spots belonging to the currently selected district
   const activeDistrictSpots = useMemo(() => {
     return allSpots.filter((s) => s.districtId === selectedDistrict);
   }, [allSpots, selectedDistrict]);
 
-  // When a district tab is clicked
+  // Filtered RU campus places
+  const filteredRuPlaces = useMemo(() => {
+    if (!ruSearchQuery.trim()) return RU_CAMPUS_PLACES;
+    const q = ruSearchQuery.toLowerCase().trim();
+    return RU_CAMPUS_PLACES.filter((p) => p.nameBn.toLowerCase().includes(q) || p.nameEn.toLowerCase().includes(q));
+  }, [ruSearchQuery]);
+
+  // When a district pill is clicked
   const handleDistrictTabClick = (distId: string) => {
     onSelectDistrict(distId);
     if (distId === 'rajshahi') {
@@ -128,17 +158,24 @@ export default function RajshahiDivisionWaterMap({
     }
   };
 
-  // Explorer rank
-  const getExplorerRank = (percentage: number) => {
-    if (percentage === 0) return { title: 'শুরুর অভিযাত্রী', sub: 'New Explorer', level: 0, badge: '🌱' };
-    if (percentage <= 15) return { title: 'পদ্মা ও মতিহার পদযাত্রী', sub: 'Padma Wanderer', level: 1, badge: '🌊' };
-    if (percentage <= 35) return { title: 'বরেন্দ্র ও মহাস্থান বিজয়ী', sub: 'Heritage Explorer', level: 2, badge: '🏛️' };
-    if (percentage <= 65) return { title: 'চলনবিল ও উত্তরবঙ্গ অভিযাত্রী', sub: 'Division Adventurer', level: 3, badge: '🛶' };
-    if (percentage < 100) return { title: 'রাজশাহী মাস্টার ট্রাভেলার', sub: 'Master Traveller', level: 4, badge: '⭐' };
-    return { title: 'রাজশাহী বিভাগীয় পর্যটন সুলতান', sub: 'Grand Sultan of Rajshahi', level: 5, badge: '👑' };
+  // Helper to open details modal for RU place
+  const handleOpenRuPlaceDetails = (place: RuPlaceSvgData) => {
+    if (onOpenSpotDetails) {
+      onOpenSpotDetails({
+        id: place.id,
+        rankNo: place.rankNo,
+        nameBn: place.nameBn,
+        nameEn: place.nameEn,
+        districtBn: 'রাজশাহী বিশ্ববিদ্যালয়',
+        districtId: 'rajshahi',
+        locationBn: 'মতিহার ক্যাম্পাস, রাজশাহী',
+        descriptionBn: place.descriptionBn,
+        imageUrl: place.imageUrl,
+        images: [place.imageUrl],
+        tags: ['রাবি ক্যাম্পাস', '৪২ টেরিটরি', place.shortBn]
+      });
+    }
   };
-
-  const rank = getExplorerRank(divisionPct);
 
   // Default user name from localStorage
   useEffect(() => {
@@ -152,10 +189,10 @@ export default function RajshahiDivisionWaterMap({
   useEffect(() => {
     if (!isShareModalOpen) return;
     drawPoster();
-  }, [isShareModalOpen, userName, divisionPct, visitedCount, selectedDistrict, mapViewMode]);
+  }, [isShareModalOpen, userName, divisionPct, rajshahiStats.pct, ruPct, visitedDivisionCount, selectedDistrict, mapViewMode]);
 
   // =========================================================================
-  // POSTER CANVAS DRAWING: INCLUDES THE REAL WATER-FILLED MAP!
+  // POSTER CANVAS DRAWING: VECTOR ACCURACY FOR ALL 3 STAGES!
   // =========================================================================
   const drawPoster = () => {
     const canvas = canvasRef.current;
@@ -196,11 +233,19 @@ export default function RajshahiDivisionWaterMap({
     ctx.fillStyle = '#fbbf24';
     ctx.font = 'bold 22px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('RU INSIDERS • UNSEEN RAJSHAHI DIVISION', W / 2, 85);
+    ctx.fillText('RU INSIDERS • UNSEEN RAJSHAHI EXPLORER', W / 2, 85);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '900 48px sans-serif';
-    ctx.fillText('রাজশাহী বিভাগ পর্যটন সনদ', W / 2, 140);
+    ctx.font = '900 46px sans-serif';
+
+    const stageTitle =
+      mapViewMode === 'ru_campus'
+        ? 'রাজশাহী বিশ্ববিদ্যালয় ভ্রমণ সনদ'
+        : mapViewMode === 'rajshahi_district'
+        ? 'রাজশাহী জেলা ঐতিহ্য ভ্রমণ সনদ'
+        : 'রাজশাহী বিভাগ পর্যটন সনদ';
+
+    ctx.fillText(stageTitle, W / 2, 140);
 
     ctx.fillStyle = '#94a3b8';
     ctx.font = '600 16px sans-serif';
@@ -216,15 +261,12 @@ export default function RajshahiDivisionWaterMap({
     ctx.font = '900 44px sans-serif';
     ctx.fillText(userName || 'রাজশাহী অভিযাত্রী', W / 2, 280);
 
-    // =======================================================================
-    // 2. THE REAL WATER-FILLED MAP DRAWN PROMINENTLY IN THE POSTER!
-    // =======================================================================
+    // Map Card Frame
     const mapCardX = 140;
     const mapCardY = 320;
     const mapCardW = 620;
     const mapCardH = 430;
 
-    // Map Card Frame
     ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
     ctx.roundRect(mapCardX, mapCardY, mapCardW, mapCardH, 24);
     ctx.fill();
@@ -233,31 +275,54 @@ export default function RajshahiDivisionWaterMap({
     ctx.stroke();
 
     if (mapViewMode === 'ru_campus') {
-      // Draw RU Campus Citation Special Graphic
-      ctx.fillStyle = '#064e3b';
-      ctx.roundRect(mapCardX + 25, mapCardY + 25, mapCardW - 50, mapCardH - 50, 20);
-      ctx.fill();
-      ctx.strokeStyle = '#34d399';
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
+      // Draw Complete 42-Place Vector Map of RU Campus
+      const viewBoxMinX = 0;
+      const viewBoxMinY = 0;
+      const viewBoxW = 1200;
+      const viewBoxH = 750;
 
-      ctx.fillStyle = '#fef08a';
-      ctx.font = 'bold 36px sans-serif';
-      ctx.fillText('🏛️ রাজশাহী বিশ্ববিদ্যালয়', W / 2, mapCardY + 120);
+      const scale = Math.min((mapCardW - 40) / viewBoxW, (mapCardH - 40) / viewBoxH);
+      const mapOffsetX = mapCardX + (mapCardW - viewBoxW * scale) / 2;
+      const mapOffsetY = mapCardY + (mapCardH - viewBoxH * scale) / 2;
 
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 24px sans-serif';
-      ctx.fillText('মতিহারের সবুজ চত্বর ও প্যারিস রোড', W / 2, mapCardY + 175);
+      ctx.save();
+      ctx.translate(mapOffsetX, mapOffsetY);
+      ctx.scale(scale, scale);
+      ctx.translate(-viewBoxMinX, -viewBoxMinY);
 
-      ctx.fillStyle = '#a7f3d0';
-      ctx.font = 'bold 18px sans-serif';
-      ctx.fillText('৪২টি টেরিটরি (একাডেমিক ভবন, হল, স্মৃতিস্তম্ভ ও মুক্তমঞ্চ)', W / 2, mapCardY + 225);
+      RU_CAMPUS_PLACES.forEach((p) => {
+        try {
+          const path = new Path2D(p.d);
+          const isVisited = visitedRuPlaceIds.includes(p.id);
 
-      ctx.fillStyle = '#fbbf24';
-      ctx.font = 'bold 20px sans-serif';
-      ctx.fillText(`রাবি ক্যাম্পাস ভ্রমণ রেকর্ড • RU Insiders Verified`, W / 2, mapCardY + 310);
+          ctx.fillStyle = '#10522c';
+          ctx.fill(path);
+
+          if (isVisited) {
+            ctx.save();
+            ctx.clip(path);
+            ctx.fillStyle = '#059669';
+            ctx.fillRect(p.bbox.minX, p.bbox.minY, p.bbox.w, p.bbox.h);
+            ctx.restore();
+          }
+
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2.5;
+          ctx.stroke(path);
+
+          ctx.fillStyle = isVisited ? '#10b981' : '#ef4444';
+          ctx.beginPath();
+          ctx.arc(p.center.x, p.center.y, 8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        } catch (e) {}
+      });
+      ctx.restore();
+
     } else if (mapViewMode === 'rajshahi_district') {
-      // Draw Vector SVG Rajshahi District Whole Map with Regions & Glowing Boundaries
+      // Draw Complete 24-Region Vector Map of Rajshahi District
       const viewBoxMinX = 84;
       const viewBoxMinY = 130;
       const viewBoxW = 1761;
@@ -277,11 +342,9 @@ export default function RajshahiDivisionWaterMap({
           const path = new Path2D(reg.d);
           const isVisited = reg.spotId ? visitedSpotIds.includes(reg.spotId) : false;
 
-          // Base Land Fill
           ctx.fillStyle = '#10522c';
           ctx.fill(path);
 
-          // Liquid Water fill if visited
           if (isVisited || rajshahiStats.pct > 0) {
             ctx.save();
             ctx.clip(path);
@@ -293,12 +356,10 @@ export default function RajshahiDivisionWaterMap({
             ctx.restore();
           }
 
-          // Border Outline
           ctx.strokeStyle = '#ffffff';
           ctx.lineWidth = 3;
           ctx.stroke(path);
 
-          // Pin
           ctx.fillStyle = isVisited ? '#10b981' : '#ef4444';
           ctx.beginPath();
           ctx.arc(reg.center.x, reg.center.y, 14, 0, Math.PI * 2);
@@ -306,26 +367,12 @@ export default function RajshahiDivisionWaterMap({
           ctx.strokeStyle = '#ffffff';
           ctx.lineWidth = 3;
           ctx.stroke();
-
-          // Dot
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.arc(reg.center.x, reg.center.y, 4, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Bengali Label
-          ctx.font = 'bold 22px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillStyle = '#ffffff';
-          ctx.strokeStyle = '#062817';
-          ctx.lineWidth = 4.5;
-          ctx.strokeText(reg.nameBn, reg.center.x, reg.center.y - 18);
-          ctx.fillText(reg.nameBn, reg.center.x, reg.center.y - 18);
         } catch (e) {}
       });
       ctx.restore();
+
     } else {
-      // Draw Complete 8-District Vector Map using Path2D
+      // Draw Complete 8-District Vector Map of Rajshahi Division
       const viewBoxMinX = -5;
       const viewBoxMinY = 185;
       const viewBoxW = 245;
@@ -344,399 +391,404 @@ export default function RajshahiDivisionWaterMap({
         try {
           const path = new Path2D(dist.d);
           const st = districtStats[dist.id] || { pct: 0 };
-          const isDistSelected = dist.id === selectedDistrict;
 
-          // Base Land Background Fill
           ctx.fillStyle = '#10522c';
           ctx.fill(path);
 
-          // Water level clipping
           if (st.pct > 0) {
             ctx.save();
             ctx.clip(path);
-            const waterH = (dist.bbox.h * st.pct) / 100;
-            const waterTop = dist.bbox.maxY - waterH;
+            const waterHeight = (dist.bbox.h * st.pct) / 100;
+            const waterY = dist.bbox.maxY - waterHeight;
             ctx.fillStyle = '#059669';
-            ctx.fillRect(dist.bbox.minX - 5, waterTop, dist.bbox.w + 10, waterH + 5);
-
-            // Water crest highlight
-            ctx.fillStyle = '#6ee7b7';
-            ctx.fillRect(dist.bbox.minX - 5, waterTop, dist.bbox.w + 10, 2);
+            ctx.fillRect(dist.bbox.minX - 5, waterY, dist.bbox.w + 10, waterHeight + 5);
             ctx.restore();
           }
 
-          // District Border
-          ctx.strokeStyle = isDistSelected ? '#fbbf24' : '#34d399';
-          ctx.lineWidth = isDistSelected ? 3 : 1.2;
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.6;
           ctx.stroke(path);
 
-          // Location Pin
           ctx.fillStyle = '#ef4444';
           ctx.beginPath();
-          ctx.arc(dist.pin.x, dist.pin.y, 3, 0, Math.PI * 2);
+          ctx.arc(dist.pin.x, dist.pin.y, 3.5, 0, Math.PI * 2);
           ctx.fill();
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.arc(dist.pin.x, dist.pin.y, 1.2, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Bengali Label
-          ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 9px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(dist.nameBn, dist.pin.x, dist.pin.y - 4.5);
-        } catch (err) {}
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        } catch (e) {}
       });
-
       ctx.restore();
     }
 
-    // Map Footnote
-    ctx.fillStyle = '#fef08a';
-    ctx.font = 'bold 16px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`রাজশাহী বিভাগ ভ্রমণ প্রগ্রেস: ${divisionPct}% সম্পন্ন (${visitedCount}/${totalSpotsCount} স্থান)`, W / 2, mapCardY + mapCardH + 30);
+    // Bottom Stats on Citation Poster
+    const curPct =
+      mapViewMode === 'ru_campus'
+        ? ruPct
+        : mapViewMode === 'rajshahi_district'
+        ? rajshahiStats.pct
+        : divisionPct;
 
-    // Progress Bar on poster
-    const barX = 140;
-    const barY = mapCardY + mapCardH + 45;
-    const barW = 620;
-    const barH = 14;
+    const curExplored =
+      mapViewMode === 'ru_campus'
+        ? `${visitedRuCount} / ${RU_CAMPUS_PLACES.length} টেরিটরি`
+        : mapViewMode === 'rajshahi_district'
+        ? `${rajshahiStats.visited} / ${rajshahiStats.total} টি স্থান`
+        : `${visitedDivisionCount} / ${totalSpotsCount} টি স্থান`;
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.roundRect(barX, barY, barW, barH, 7);
-    ctx.fill();
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillText(`ভ্রমণ রেকর্ড: ${curPct}% সম্পন্ন (${curExplored})`, W / 2, mapCardY + mapCardH + 50);
 
-    const fillW = Math.max(0, (barW * divisionPct) / 100);
-    if (fillW > 0) {
-      const fillGrad = ctx.createLinearGradient(barX, 0, barX + fillW, 0);
-      fillGrad.addColorStop(0, '#f59e0b');
-      fillGrad.addColorStop(0.5, '#10b981');
-      fillGrad.addColorStop(1, '#34d399');
-      ctx.fillStyle = fillGrad;
-      ctx.roundRect(barX, barY, fillW, barH, 7);
-      ctx.fill();
-    }
-
-    // Rank Badge
-    ctx.fillStyle = '#064e3b';
-    ctx.roundRect(W / 2 - 200, barY + 30, 400, 52, 16);
-    ctx.fill();
-    ctx.strokeStyle = '#fbbf24';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.fillStyle = '#fef08a';
-    ctx.font = 'bold 22px sans-serif';
-    ctx.fillText(`${rank.badge} পদবী: ${rank.title}`, W / 2, barY + 64);
-
-    // 8 Districts Stats Grid (2 rows x 4 cols)
-    const gridStartY = barY + 105;
-    const colW = 145;
-    const rowH = 65;
-    const startX = 140;
-
-    RAJSHAHI_DIVISION_DISTRICTS.forEach((d, i) => {
-      const col = i % 4;
-      const row = Math.floor(i / 4);
-      const x = startX + col * (colW + 13);
-      const y = gridStartY + row * (rowH + 10);
-      const st = districtStats[d.id] || { total: d.spotCount, visited: 0, pct: 0 };
-
-      ctx.fillStyle = 'rgba(6, 78, 59, 0.45)';
-      ctx.roundRect(x, y, colW, rowH, 12);
-      ctx.fill();
-      ctx.strokeStyle = st.visited > 0 ? '#10b981' : 'rgba(255, 255, 255, 0.15)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 13px sans-serif';
-      ctx.fillText(d.nameBn.replace(/^[০-৯]+\.\s*/, ''), x + colW / 2, y + 26);
-
-      ctx.fillStyle = st.visited > 0 ? '#34d399' : '#94a3b8';
-      ctx.font = '12px monospace';
-      ctx.fillText(`${st.visited}/${st.total} (${st.pct}%)`, x + colW / 2, y + 48);
-    });
-
-    // Footer Signature & Verification
-    ctx.fillStyle = '#a7f3d0';
-    ctx.font = 'bold 14px sans-serif';
-    ctx.fillText('RU INSIDERS • MOTIHAR CAMPUS & RAJSHAHI DIVISION', W / 2, H - 75);
-
-    ctx.fillStyle = '#64748b';
-    ctx.font = '12px sans-serif';
-    ctx.fillText('ruinsiders.vercel.app • Verified Heritage Travel Log', W / 2, H - 52);
-  };
-
-  const handleDownload = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const link = document.createElement('a');
-    link.download = `ru-insiders-rajshahi-${divisionPct}pct.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  };
-
-  const handleShare = async () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const shareText = `আমি রাজশাহী বিভাগের ${divisionPct}% দর্শনীয় স্থান ভ্রমণ করেছি! (${visitedCount}/${totalSpotsCount} টি স্থান সম্পন্ন)। আমার পদবী: "${rank.title}"। আপনি কয়টি ঘুরেছেন? দেখুন RU Insiders-এ: https://ruinsiders.vercel.app`;
-
-    if (navigator.share) {
-      try {
-        canvas.toBlob(async (blob) => {
-          if (!blob) return;
-          const file = new File([blob], `rajshahi-travel-${divisionPct}pct.png`, { type: 'image/png' });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              title: 'আমার রাজশাহী বিভাগ ভ্রমণ প্রগ্রেস',
-              text: shareText,
-              files: [file],
-            });
-          } else {
-            await navigator.share({
-              title: 'আমার রাজশাহী বিভাগ ভ্রমণ প্রগ্রেস',
-              text: shareText,
-              url: 'https://ruinsiders.vercel.app',
-            });
-          }
-        });
-        return;
-      } catch (e) {}
-    }
-
-    try {
-      await navigator.clipboard.writeText(shareText);
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 3000);
-    } catch (e) {}
+    ctx.fillStyle = '#fde68a';
+    ctx.font = 'bold 20px sans-serif';
+    ctx.fillText('RU Insiders • রাজশাহী বিশ্ববিদ্যালয়ের শিক্ষার্থীদের অফিসিয়াল প্ল্যাটফর্ম', W / 2, H - 75);
   };
 
   return (
-    <div className="w-full bg-[#faf8f2] rounded-[32px] p-3.5 sm:p-7 text-slate-900 shadow-xl border border-amber-900/10 space-y-5 relative overflow-hidden">
+    <div className="relative w-full rounded-3xl bg-[#0c2419] p-3 sm:p-6 shadow-2xl border-2 border-emerald-700/60 overflow-hidden space-y-4 text-slate-100">
       
-      {/* Decorative Ambient Accents */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Top Banner / Navigation Header */}
-      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-stone-200 pb-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse" />
-            <span className="text-[11px] font-black tracking-wider text-emerald-800 uppercase font-bengali">
-              রাজশাহী বিভাগ ও রাবি ক্যাম্পাস ওয়াটার-ফিল ম্যাপ ট্র্যাকার
-            </span>
-          </div>
-          <h3 className="text-lg sm:text-2xl font-black text-slate-900 font-bengali tracking-tight flex items-center gap-2.5">
-            <span>বিভাগীয় ভ্রমণ মাত্রা:</span>
-            <span className="text-emerald-700 font-mono font-black">{divisionPct}%</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-500 font-bengali font-normal">
-              ({visitedCount} / {totalSpotsCount} স্থান ঘোরা সম্পন্ন)
-            </span>
-          </h3>
-          <p className="text-xs text-slate-600 font-bengali">
-            ১ম ধাপে বিভাগীয় ম্যাপ, ২য় ধাপে সম্পূর্ণ রাজশাহী জেলা ম্যাপ এবং ৩য় ধাপে রাজশাহী বিশ্ববিদ্যালয় ক্যাম্পাস ম্যাপ এক্সপ্লোর করুন।
-          </p>
-        </div>
-
-        {/* Share Button */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setIsShareModalOpen(true)}
-            className="px-4 py-2 rounded-2xl bg-[#1f7a44] hover:bg-[#166534] text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-emerald-950/20 hover:scale-[1.02] active:scale-[0.98] transition-all shrink-0"
-          >
-            <Share2 className="h-4 w-4" />
-            <span>পোস্টার ও শেয়ার</span>
-            <Sparkles className="h-4 w-4 text-amber-300" />
-          </button>
-        </div>
-      </div>
-
-      {/* 3-STEP HIERARCHY NAVIGATION BAR: বিভাগ ➔ জেলা ➔ বিশ্ববিদ্যালয় */}
-      <div className="relative z-10 p-2 sm:p-2.5 rounded-2xl bg-stone-200/80 border border-stone-300 flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-1.5 flex-wrap text-xs font-bold font-bengali">
-          <span className="text-slate-600 text-[11px] font-black uppercase tracking-wider mr-1 hidden sm:inline">
-            ম্যাপের ৩টি স্তর:
-          </span>
-
-          {/* Step 1: Division Map */}
+      {/* ===================================================================== */}
+      {/* TOP 3 UNIFIED EXPLORATION STAGES (User's Exact Requested Headings)     */}
+      {/* ===================================================================== */}
+      <div className="relative z-10 flex flex-wrap items-center justify-between gap-2.5 bg-gradient-to-r from-emerald-950 via-emerald-900 to-teal-950 p-2 sm:p-3 rounded-2xl text-white shadow-xl border border-emerald-700/60">
+        <div className="flex flex-wrap items-center gap-2 text-xs font-bengali">
+          
+          {/* Stage 1: রাজশাহী বিভাগ কতটুকু ঘুরলেন */}
           <button
             type="button"
             onClick={() => setMapViewMode('division')}
-            className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 sm:px-4 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow ${
               mapViewMode === 'division'
-                ? 'bg-[#15803d] text-white shadow-md ring-2 ring-amber-400 font-black'
-                : 'bg-white hover:bg-stone-100 text-slate-800 border border-stone-300'
+                ? 'bg-amber-400 text-slate-950 ring-2 ring-white font-black scale-[1.02]'
+                : 'bg-emerald-950/80 hover:bg-emerald-800 text-emerald-100 border border-emerald-700/60'
             }`}
           >
-            <Compass className="h-3.5 w-3.5" />
-            <span>১. রাজশাহী বিভাগ (৮ জেলা)</span>
+            <Compass className="h-4 w-4 shrink-0" />
+            <span className="font-bold">১. রাজশাহী বিভাগ কতটুকু ঘুরলেন</span>
+            <span className={`px-2 py-0.5 rounded-md text-[11px] font-mono font-black ${
+              mapViewMode === 'division' ? 'bg-slate-950 text-amber-300' : 'bg-emerald-800 text-white'
+            }`}>
+              {divisionPct}%
+            </span>
           </button>
 
-          <ChevronRight className="h-4 w-4 text-slate-400" />
+          <ChevronRight className="h-4 w-4 text-emerald-400/80 hidden sm:inline" />
 
-          {/* Step 2: Rajshahi District Whole Map */}
+          {/* Stage 2: রাজশাহী জেলা কতটুকু ঘুরলেন */}
           <button
             type="button"
             onClick={() => {
               onSelectDistrict('rajshahi');
               setMapViewMode('rajshahi_district');
             }}
-            className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 sm:px-4 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow ${
               mapViewMode === 'rajshahi_district'
-                ? 'bg-[#15803d] text-white shadow-md ring-2 ring-amber-400 font-black'
-                : 'bg-white hover:bg-stone-100 text-slate-800 border border-stone-300'
+                ? 'bg-amber-400 text-slate-950 ring-2 ring-white font-black scale-[1.02]'
+                : 'bg-emerald-950/80 hover:bg-emerald-800 text-emerald-100 border border-emerald-700/60'
             }`}
           >
-            <MapPin className="h-3.5 w-3.5 text-amber-300" />
-            <span>২. রাজশাহী জেলা (সম্পূর্ণ ম্যাপ)</span>
+            <MapPin className="h-4 w-4 shrink-0" />
+            <span className="font-bold">২. রাজশাহী জেলা কতটুকু ঘুরলেন</span>
+            <span className={`px-2 py-0.5 rounded-md text-[11px] font-mono font-black ${
+              mapViewMode === 'rajshahi_district' ? 'bg-slate-950 text-amber-300' : 'bg-emerald-800 text-white'
+            }`}>
+              {rajshahiStats.pct}%
+            </span>
           </button>
 
-          <ChevronRight className="h-4 w-4 text-slate-400" />
+          <ChevronRight className="h-4 w-4 text-emerald-400/80 hidden sm:inline" />
 
-          {/* Step 3: RU Campus Map */}
+          {/* Stage 3: রাজশাহী বিশ্ববিদ্যালয় কতটুকু ঘুরলেন */}
           <button
             type="button"
-            onClick={() => {
-              onSelectDistrict('rajshahi');
-              setMapViewMode('ru_campus');
-            }}
-            className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
+            onClick={() => setMapViewMode('ru_campus')}
+            className={`px-3 sm:px-4 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow ${
               mapViewMode === 'ru_campus'
-                ? 'bg-[#15803d] text-white shadow-md ring-2 ring-amber-400 font-black'
-                : 'bg-white hover:bg-stone-100 text-slate-800 border border-stone-300'
+                ? 'bg-amber-400 text-slate-950 ring-2 ring-white font-black scale-[1.02]'
+                : 'bg-emerald-950/80 hover:bg-emerald-800 text-emerald-100 border border-emerald-700/60'
             }`}
           >
-            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-            <span>৩. রাজশাহী বিশ্ববিদ্যালয় (৪২ স্পট)</span>
+            <Sparkles className="h-4 w-4 text-amber-400 shrink-0" />
+            <span className="font-bold">৩. রাজশাহী বিশ্ববিদ্যালয় কতটুকু ঘুরলেন</span>
+            <span className={`px-2 py-0.5 rounded-md text-[11px] font-mono font-black ${
+              mapViewMode === 'ru_campus' ? 'bg-slate-950 text-amber-300' : 'bg-emerald-800 text-white'
+            }`}>
+              {ruPct}%
+            </span>
           </button>
         </div>
 
-        {/* Quick Back to Step 1 Button when in Step 2 or 3 */}
-        {mapViewMode !== 'division' && (
-          <button
-            type="button"
-            onClick={() => setMapViewMode('division')}
-            className="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] font-bengali flex items-center gap-1 shadow transition"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" />
-            <span>বিভাগীয় ম্যাপে ফিরুন</span>
-          </button>
-        )}
+        {/* Share Certificate / Poster Button */}
+        <button
+          type="button"
+          onClick={() => setIsShareModalOpen(true)}
+          className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-1.5 shadow transition cursor-pointer"
+        >
+          <Trophy className="h-4 w-4 text-amber-300" />
+          <span>ভ্রমণ সনদ ও শেয়ার</span>
+        </button>
       </div>
 
-      {/* 8-DISTRICTS SELECTOR TABS (Across the top for instant 1-click access) */}
-      <div className="relative z-10 space-y-1.5">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-black text-slate-800 font-bengali uppercase tracking-wide flex items-center gap-1.5">
-            <Compass className="h-4 w-4 text-emerald-700" />
-            <span>বিভাগের ৮টি জেলা থেকে নির্বাচন করুন:</span>
-          </span>
-          <span className="text-[10px] text-slate-500 font-bold font-bengali">
-            (রাজশাহী সিলেক্ট করলে রাজশাহী জেলার সম্পূর্ণ ম্যাপ প্রদর্শিত হবে)
-          </span>
+      {/* ===================================================================== */}
+      {/* 8-DISTRICTS SELECTOR PILLS (Visible in Stage 1 for instant browsing)   */}
+      {/* ===================================================================== */}
+      {mapViewMode === 'division' && (
+        <div className="relative z-10 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-black text-emerald-200 font-bengali uppercase tracking-wide flex items-center gap-1.5">
+              <Compass className="h-4 w-4 text-amber-400" />
+              <span>বিভাগের ৮টি জেলা থেকে নির্বাচন করুন:</span>
+            </span>
+            <span className="text-[10px] text-emerald-300/80 font-bold font-bengali">
+              (রাজশাহী সিলেক্ট করলে সরাসরি রাজশাহী জেলা ম্যাপে নিয়ে যাবে)
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+            {RAJSHAHI_DIVISION_DISTRICTS.map((d) => {
+              const isActive = selectedDistrict === d.id;
+              const st = districtStats[d.id] || { total: d.spotCount, visited: 0, pct: 0 };
+
+              return (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => handleDistrictTabClick(d.id)}
+                  className={`p-2 rounded-2xl text-left transition-all border flex flex-col justify-between gap-1 group cursor-pointer ${
+                    isActive
+                      ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-md ring-2 ring-white scale-[1.02]'
+                      : 'bg-emerald-950/70 hover:bg-emerald-900 text-white border-emerald-800/80'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <span className={`text-[11px] font-black font-bengali truncate ${isActive ? 'text-slate-950' : 'text-emerald-100 group-hover:text-amber-300'}`}>
+                      {d.nameBn}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] font-mono">
+                    <span className={isActive ? 'text-slate-800' : 'text-emerald-300/80'}>
+                      {st.visited}/{st.total}
+                    </span>
+                    <span className={`font-bold ${isActive ? 'text-slate-950' : st.visited > 0 ? 'text-amber-300' : 'text-emerald-400/60'}`}>
+                      {st.pct}%
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
+      )}
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
-          {RAJSHAHI_DIVISION_DISTRICTS.map((d) => {
-            const isActive = selectedDistrict === d.id;
-            const st = districtStats[d.id] || { total: d.spotCount, visited: 0, pct: 0 };
-
-            return (
-              <button
-                key={d.id}
-                type="button"
-                onClick={() => handleDistrictTabClick(d.id)}
-                className={`p-2 rounded-2xl text-left transition-all border flex flex-col justify-between gap-1 group cursor-pointer ${
-                  isActive
-                    ? 'bg-[#15803d] text-white border-emerald-500 shadow-md ring-2 ring-amber-400 scale-[1.02]'
-                    : 'bg-white hover:bg-stone-50 text-slate-800 border-stone-200/90 shadow-sm'
-                }`}
-              >
-                <div className="flex items-center justify-between gap-1">
-                  <span className={`text-[11px] font-black font-bengali truncate ${isActive ? 'text-white' : 'text-slate-900 group-hover:text-emerald-700'}`}>
-                    {d.nameBn}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-[10px] font-mono">
-                  <span className={isActive ? 'text-emerald-100' : 'text-slate-500'}>
-                    {st.visited}/{st.total}
-                  </span>
-                  <span className={`font-bold ${isActive ? 'text-amber-300' : st.visited > 0 ? 'text-emerald-600' : 'text-slate-400'}`}>
-                    {st.pct}%
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* CENTRAL 2-COLUMN VIEW: MAP (LEFT) & VERTICAL SPOTS LIST (RIGHT) */}
+      {/* ===================================================================== */}
+      {/* CENTRAL 2-COLUMN VIEW: MAP (LEFT) & SPOTS LIST (RIGHT)                */}
+      {/* (All 3 maps follow the exact same visual design, glow, water & cards) */}
+      {/* ===================================================================== */}
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
         
-        {/* Left Side (6 Cols): Dynamic Map View (3 Steps: Division, Rajshahi District Whole Map, RU Campus) */}
+        {/* Left Side (6 Cols): Dynamic Vector SVG Map Frame */}
         <div className="lg:col-span-6 flex flex-col items-center justify-center">
-          <div className="relative w-full aspect-[245/220] min-h-[380px] sm:min-h-[460px] bg-[#f2eee3] rounded-[28px] p-2 sm:p-4 border-2 border-emerald-900/15 shadow-inner flex items-center justify-center overflow-hidden group">
+          <div className="relative w-full aspect-[245/220] min-h-[380px] sm:min-h-[480px] bg-[#f2eee3] rounded-[28px] p-2 sm:p-4 border-2 border-emerald-900/15 shadow-inner flex items-center justify-center overflow-hidden group">
             
-            {/* ============================================================== */}
-            {/* STEP 3: RAJSHAHI UNIVERSITY CAMPUS 42-SPOT INTERACTIVE MAP     */}
-            {/* ============================================================== */}
+            {/* ================================================================ */}
+            {/* STAGE 3: RAJSHAHI UNIVERSITY CAMPUS (42 TERRITORIES VECTOR SVG)  */}
+            {/* ================================================================ */}
             {mapViewMode === 'ru_campus' ? (
-              <div className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden rounded-2xl bg-[#f6f4ec]">
-                <iframe
-                  src="/unseen-ru.html?region=ru&embed=true"
-                  title="Rajshahi University 42 Territories Map"
-                  className="w-full h-full min-h-[420px] border-0 select-none rounded-2xl"
-                  allow="clipboard-write; fullscreen; web-share"
-                />
+              <div className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden rounded-2xl select-none">
+                <svg
+                  viewBox={RU_CAMPUS_VIEWBOX}
+                  className="w-full h-full object-contain select-none"
+                >
+                  <defs>
+                    <filter id="active-ru-place-glow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#facc15" floodOpacity="0.95" />
+                      <feDropShadow dx="0" dy="0" stdDeviation="14" floodColor="#10b981" floodOpacity="0.85" />
+                    </filter>
 
-                {/* Bottom Navigation Buttons */}
-                <div className="absolute bottom-3 left-3 z-20 flex items-center gap-2">
+                    {/* Rising water fill clips for each territory */}
+                    {RU_CAMPUS_PLACES.map((p) => {
+                      const isVisited = visitedRuPlaceIds.includes(p.id);
+                      const fillPct = isVisited ? 100 : Math.min(ruPct, 25);
+                      const waterHeight = (p.bbox.h * fillPct) / 100;
+                      const waterY = p.bbox.maxY - waterHeight;
+
+                      return (
+                        <clipPath key={`clip-ru-${p.id}`} id={`water-clip-ru-${p.id}`}>
+                          <rect
+                            x={p.bbox.minX - 5}
+                            y={waterY}
+                            width={p.bbox.w + 10}
+                            height={waterHeight + 10}
+                            className="transition-all duration-700 ease-out"
+                          />
+                        </clipPath>
+                      );
+                    })}
+                  </defs>
+
+                  {/* 42 RU Territories */}
+                  {RU_CAMPUS_PLACES.map((p) => {
+                    const isSelected = selectedRuPlaceId === p.id;
+                    const isHovered = hoveredRuPlaceId === p.id;
+                    const isVisited = visitedRuPlaceIds.includes(p.id);
+
+                    return (
+                      <g
+                        key={p.id}
+                        onClick={() => {
+                          setSelectedRuPlaceId(p.id);
+                          setHighlightedItemId(p.id);
+                          const el = document.getElementById(p.id);
+                          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }}
+                        onMouseEnter={() => setHoveredRuPlaceId(p.id)}
+                        onMouseLeave={() => setHoveredRuPlaceId(null)}
+                        className="cursor-pointer transition-transform duration-200"
+                      >
+                        {/* Base Land Fill */}
+                        <path
+                          d={p.d}
+                          fill={isSelected ? '#0e4a2c' : isHovered ? '#125c37' : '#10522c'}
+                          stroke="#ffffff"
+                          strokeWidth="2.2"
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                        />
+
+                        {/* Rising Liquid Green Water Fill */}
+                        {(isVisited || ruPct > 0) && (
+                          <path
+                            d={p.d}
+                            fill="#059669"
+                            clipPath={`url(#water-clip-ru-${p.id})`}
+                            opacity={isVisited ? "0.95" : "0.4"}
+                            className="transition-all duration-700 ease-out"
+                          />
+                        )}
+
+                        {/* Distinct Borders */}
+                        <path
+                          d={p.d}
+                          fill="none"
+                          stroke={isSelected ? '#facc15' : isHovered ? '#6ee7b7' : '#ffffff'}
+                          strokeWidth={isSelected ? '4.5' : isHovered ? '3.2' : '1.8'}
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                        />
+
+                        {/* Glowing Golden Stroke for Active Territory */}
+                        {(isSelected || isHovered) && (
+                          <path
+                            d={p.d}
+                            fill="none"
+                            stroke="#fbbf24"
+                            strokeWidth={isSelected ? '5.5' : '3.8'}
+                            strokeLinejoin="round"
+                            strokeLinecap="round"
+                            filter="url(#active-ru-place-glow)"
+                            className="animate-pulse"
+                          />
+                        )}
+
+                        {/* Ripple Line on water surface */}
+                        {isVisited && (
+                          <line
+                            x1={p.bbox.minX}
+                            x2={p.bbox.maxX}
+                            y1={p.bbox.minY + 3}
+                            y2={p.bbox.minY + 3}
+                            stroke="#a7f3d0"
+                            strokeWidth="2"
+                            strokeDasharray="4,4"
+                            clipPath={`url(#water-clip-ru-${p.id})`}
+                          />
+                        )}
+
+                        {/* Pin Dot */}
+                        <circle
+                          cx={p.center.x}
+                          cy={p.center.y}
+                          r={isSelected ? '10' : '7.5'}
+                          fill={isVisited ? '#10b981' : '#ef4444'}
+                          stroke="#ffffff"
+                          strokeWidth="2"
+                          className="shadow"
+                        />
+                        <circle cx={p.center.x} cy={p.center.y} r="2.5" fill="#ffffff" />
+
+                        {/* Bengali Territory Label */}
+                        <text
+                          x={p.center.x}
+                          y={p.center.y - 12}
+                          textAnchor="middle"
+                          fill="#ffffff"
+                          stroke="#062817"
+                          strokeWidth="3.5"
+                          paintOrder="stroke fill"
+                          fontSize="13"
+                          fontWeight="bold"
+                          fontFamily="sans-serif"
+                          className="pointer-events-none select-none tracking-tight font-bengali"
+                        >
+                          {p.shortBn}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </svg>
+
+                {/* Top Active Territory Info Pill */}
+                <div className="absolute top-3 inset-x-3 z-20 flex items-center justify-between gap-2 pointer-events-none">
+                  {(() => {
+                    const activePlace = RU_CAMPUS_PLACES.find((p) => p.id === selectedRuPlaceId);
+                    return activePlace ? (
+                      <div className="bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-full text-white text-xs font-bold font-bengali border border-emerald-400/50 shadow-lg flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                        <span>টেরিটরি: {activePlace.nameBn}</span>
+                      </div>
+                    ) : null;
+                  })()}
+                </div>
+
+                {/* Bottom Step Navigation Buttons */}
+                <div className="absolute bottom-3 inset-x-3 z-20 flex items-center justify-between gap-2">
                   <button
                     type="button"
                     onClick={() => setMapViewMode('rajshahi_district')}
-                    className="bg-emerald-800 hover:bg-emerald-700 text-white font-black text-xs px-3.5 py-1.5 rounded-xl shadow-lg flex items-center gap-1 transition-all"
+                    className="bg-white/95 hover:bg-white text-slate-800 font-black text-xs px-3.5 py-1.5 rounded-xl border border-stone-300 shadow-md flex items-center gap-1 transition-all"
                   >
-                    <span>← ২. রাজশাহী জেলা ম্যাপ</span>
+                    <span>← ২. রাজশাহী জেলা</span>
                   </button>
+
                   <button
                     type="button"
                     onClick={() => setMapViewMode('division')}
                     className="bg-slate-900 hover:bg-slate-800 text-white font-black text-xs px-3.5 py-1.5 rounded-xl shadow-lg flex items-center gap-1 transition-all"
                   >
-                    <span>১. বিভাগীয় ম্যাপ</span>
+                    <span>১. রাজশাহী বিভাগ ➔</span>
                   </button>
                 </div>
               </div>
 
             ) : mapViewMode === 'rajshahi_district' ? (
-              /* ============================================================== */
-              /* STEP 2: INTERACTIVE VECTOR SVG RAJSHAHI DISTRICT WATER MAP     */
-              /* (Glows on click, exact same glowing lines & water as division) */
-              /* ============================================================== */
+              /* ================================================================ */
+              /* STAGE 2: RAJSHAHI DISTRICT (24 REGIONS VECTOR SVG MAP)            */
+              /* ================================================================ */
               <div className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden rounded-2xl select-none">
-                
-                {/* SVG Vector Map of Rajshahi District with all 24 Upazilas & Thana Regions */}
                 <svg
                   viewBox={RAJSHAHI_DISTRICT_VIEWBOX}
                   className="w-full h-full object-contain select-none"
                 >
                   <defs>
-                    {/* Glowing drop shadow filter for active selected region border */}
                     <filter id="active-rajshahi-region-glow" x="-20%" y="-20%" width="140%" height="140%">
                       <feDropShadow dx="0" dy="0" stdDeviation="12" floodColor="#facc15" floodOpacity="0.95" />
                       <feDropShadow dx="0" dy="0" stdDeviation="24" floodColor="#10b981" floodOpacity="0.8" />
                     </filter>
 
-                    {/* Dynamic water fill clips for each region in Rajshahi */}
                     {RAJSHAHI_DISTRICT_REGIONS.map((reg) => {
                       const isVisited = reg.spotId ? visitedSpotIds.includes(reg.spotId) : false;
-                      // Visited region gets 100% water; otherwise shows district progress
                       const fillPct = isVisited ? 100 : Math.min(rajshahiStats.pct, 20);
                       const waterHeight = (reg.bbox.h * fillPct) / 100;
                       const waterY = reg.bbox.maxY - waterHeight;
@@ -755,7 +807,7 @@ export default function RajshahiDivisionWaterMap({
                     })}
                   </defs>
 
-                  {/* 1. Base Region Territories with Glowing Borders and Water */}
+                  {/* 24 Rajshahi Regions */}
                   {RAJSHAHI_DISTRICT_REGIONS.map((reg) => {
                     const isSelected = selectedRegionId === reg.id;
                     const isHovered = hoveredRegionId === reg.id;
@@ -767,11 +819,9 @@ export default function RajshahiDivisionWaterMap({
                         onClick={() => {
                           setSelectedRegionId(reg.id);
                           if (reg.spotId) {
-                            setHighlightedSpotId(reg.spotId);
+                            setHighlightedItemId(reg.spotId);
                             const el = document.getElementById(reg.spotId);
-                            if (el) {
-                              el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                            }
+                            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                           }
                         }}
                         onMouseEnter={() => setHoveredRegionId(reg.id)}
@@ -799,7 +849,7 @@ export default function RajshahiDivisionWaterMap({
                           />
                         )}
 
-                        {/* Distinct Region Borders */}
+                        {/* Region Borders */}
                         <path
                           d={reg.d}
                           fill="none"
@@ -809,7 +859,7 @@ export default function RajshahiDivisionWaterMap({
                           strokeLinecap="round"
                         />
 
-                        {/* Glowing Golden Stroke for Active Region (PULSES & GLOWS ON CLICK / HOVER!) */}
+                        {/* Glowing Golden Stroke */}
                         {(isSelected || isHovered) && (
                           <path
                             d={reg.d}
@@ -823,7 +873,7 @@ export default function RajshahiDivisionWaterMap({
                           />
                         )}
 
-                        {/* Ripple Line on top of water */}
+                        {/* Ripple Line on water surface */}
                         {isVisited && (
                           <line
                             x1={reg.bbox.minX}
@@ -847,14 +897,9 @@ export default function RajshahiDivisionWaterMap({
                           strokeWidth="3"
                           className="shadow"
                         />
-                        <circle
-                          cx={reg.center.x}
-                          cy={reg.center.y}
-                          r="4"
-                          fill="#ffffff"
-                        />
+                        <circle cx={reg.center.x} cy={reg.center.y} r="4" fill="#ffffff" />
 
-                        {/* Bengali Region Name Text */}
+                        {/* Bengali Region Label */}
                         <text
                           x={reg.center.x}
                           y={reg.center.y - 18}
@@ -887,27 +932,27 @@ export default function RajshahiDivisionWaterMap({
                     ) : null;
                   })()}
 
-                  {/* RU Campus quick jump if RU is selected */}
+                  {/* RU Campus quick jump button if RU is selected */}
                   {selectedRegionId === 'rj_reg_22' && (
                     <button
                       type="button"
                       onClick={() => setMapViewMode('ru_campus')}
-                      className="pointer-events-auto bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 transition-all hover:scale-105"
+                      className="pointer-events-auto bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 transition-all animate-bounce"
                     >
                       <Sparkles className="h-3.5 w-3.5 text-slate-950" />
-                      <span>রাবি ক্যাম্পাস ম্যাপ খুলুন ➔</span>
+                      <span>৩. রাবি ক্যাম্পাস কতটুকু ঘুরলেন ➔</span>
                     </button>
                   )}
                 </div>
 
-                {/* Clean Bottom Actions */}
+                {/* Bottom Step Navigation Buttons */}
                 <div className="absolute bottom-3 inset-x-3 z-20 flex items-center justify-between gap-2">
                   <button
                     type="button"
                     onClick={() => setMapViewMode('division')}
                     className="bg-white/95 hover:bg-white text-slate-800 font-black text-xs px-3.5 py-1.5 rounded-xl border border-stone-300 shadow-md flex items-center gap-1 transition-all"
                   >
-                    <span>← সমগ্র বিভাগ ম্যাপ</span>
+                    <span>← ১. রাজশাহী বিভাগ</span>
                   </button>
 
                   <button
@@ -916,419 +961,655 @@ export default function RajshahiDivisionWaterMap({
                     className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-3.5 py-1.5 rounded-xl shadow-lg flex items-center gap-1.5 transition-all hover:scale-105"
                   >
                     <Sparkles className="h-3.5 w-3.5 text-slate-950" />
-                    <span>রাবি ক্যাম্পাস ম্যাপ দেখুন ➔</span>
+                    <span>৩. রাবি ক্যাম্পাস দেখুন ➔</span>
                   </button>
                 </div>
               </div>
 
             ) : (
-              /* ============================================================== */
-              /* STEP 1: CLEAN VECTOR SVG DIVISION WATER MAP (8 DISTRICTS)      */
-              /* ============================================================== */
-              <svg
-                viewBox={RAJSHAHI_VIEWBOX}
-                className="w-full h-full object-contain select-none"
-              >
-                <defs>
-                  {/* Glowing drop shadow filter for active selected district border */}
-                  <filter id="active-district-glow" x="-20%" y="-20%" width="140%" height="140%">
-                    <feDropShadow dx="0" dy="0" stdDeviation="2.5" floodColor="#facc15" floodOpacity="0.95" />
-                    <feDropShadow dx="0" dy="0" stdDeviation="5" floodColor="#10b981" floodOpacity="0.8" />
-                  </filter>
+              /* ================================================================ */
+              /* STAGE 1: RAJSHAHI DIVISION (8 DISTRICTS VECTOR SVG MAP)           */
+              /* ================================================================ */
+              <div className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden rounded-2xl select-none">
+                <svg
+                  viewBox={RAJSHAHI_VIEWBOX}
+                  className="w-full h-full object-contain select-none"
+                >
+                  <defs>
+                    <filter id="active-district-glow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="0" stdDeviation="2.5" floodColor="#facc15" floodOpacity="0.95" />
+                      <feDropShadow dx="0" dy="0" stdDeviation="5" floodColor="#10b981" floodOpacity="0.8" />
+                    </filter>
 
-                  {/* Per-district dynamic water fill clips (rising from bottom of each district) */}
+                    {RAJSHAHI_DISTRICT_SVGS.map((dist) => {
+                      const st = districtStats[dist.id] || { pct: 0 };
+                      const waterHeight = (dist.bbox.h * st.pct) / 100;
+                      const waterY = dist.bbox.maxY - waterHeight;
+
+                      return (
+                        <clipPath key={`clip-${dist.id}`} id={`water-clip-${dist.id}`}>
+                          <rect
+                            x={dist.bbox.minX - 5}
+                            y={waterY}
+                            width={dist.bbox.w + 10}
+                            height={waterHeight + 10}
+                            className="transition-all duration-700 ease-out"
+                          />
+                        </clipPath>
+                      );
+                    })}
+                  </defs>
+
+                  {/* 8 District Territories */}
                   {RAJSHAHI_DISTRICT_SVGS.map((dist) => {
-                    const st = districtStats[dist.id] || { pct: 0 };
-                    const waterHeight = (dist.bbox.h * st.pct) / 100;
-                    const waterY = dist.bbox.maxY - waterHeight;
+                    const isSelected = selectedDistrict === dist.id;
+                    const isHovered = hoveredDistrict === dist.id;
+                    const st = districtStats[dist.id] || { pct: 0, visited: 0, total: 0 };
 
                     return (
-                      <clipPath key={`clip-${dist.id}`} id={`water-clip-${dist.id}`}>
-                        <rect
-                          x={dist.bbox.minX - 5}
-                          y={waterY}
-                          width={dist.bbox.w + 10}
-                          height={waterHeight + 10}
-                          className="transition-all duration-700 ease-out"
-                        />
-                      </clipPath>
-                    );
-                  })}
-                </defs>
-
-                {/* 1. Base District Territories with Borders and Water */}
-                {RAJSHAHI_DISTRICT_SVGS.map((dist) => {
-                  const isSelected = selectedDistrict === dist.id;
-                  const isHovered = hoveredDistrict === dist.id;
-                  const st = districtStats[dist.id] || { pct: 0, visited: 0, total: 0 };
-
-                  return (
-                    <g
-                      key={dist.id}
-                      onClick={() => {
-                        onSelectDistrict(dist.id);
-                        if (dist.id === 'rajshahi') {
-                          setMapViewMode('rajshahi_district');
-                        }
-                      }}
-                      onMouseEnter={() => setHoveredDistrict(dist.id)}
-                      onMouseLeave={() => setHoveredDistrict(null)}
-                      className="cursor-pointer transition-transform duration-200"
-                    >
-                      {/* Land Silhouette */}
-                      <path
-                        d={dist.d}
-                        fill={isSelected ? '#0e4a2c' : isHovered ? '#125c37' : '#10522c'}
-                        stroke="#ffffff"
-                        strokeWidth="1.2"
-                        strokeLinejoin="round"
-                        strokeLinecap="round"
-                      />
-
-                      {/* Rising Liquid Green Water Fill */}
-                      {st.pct > 0 && (
+                      <g
+                        key={dist.id}
+                        onClick={() => {
+                          onSelectDistrict(dist.id);
+                          if (dist.id === 'rajshahi') {
+                            setMapViewMode('rajshahi_district');
+                          }
+                        }}
+                        onMouseEnter={() => setHoveredDistrict(dist.id)}
+                        onMouseLeave={() => setHoveredDistrict(null)}
+                        className="cursor-pointer transition-transform duration-200"
+                      >
+                        {/* Land Silhouette */}
                         <path
                           d={dist.d}
-                          fill="#059669"
-                          clipPath={`url(#water-clip-${dist.id})`}
-                          opacity="0.92"
-                          className="transition-all duration-700 ease-out"
+                          fill={isSelected ? '#0e4a2c' : isHovered ? '#125c37' : '#10522c'}
+                          stroke="#ffffff"
+                          strokeWidth="1.2"
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
                         />
-                      )}
 
-                      {/* Distinct District Borders */}
-                      <path
-                        d={dist.d}
-                        fill="none"
-                        stroke={isSelected ? '#facc15' : isHovered ? '#6ee7b7' : '#ffffff'}
-                        strokeWidth={isSelected ? '2.4' : '1.2'}
-                        strokeLinejoin="round"
-                        strokeLinecap="round"
-                      />
+                        {/* Rising Liquid Green Water Fill */}
+                        {st.pct > 0 && (
+                          <path
+                            d={dist.d}
+                            fill="#059669"
+                            clipPath={`url(#water-clip-${dist.id})`}
+                            opacity="0.92"
+                            className="transition-all duration-700 ease-out"
+                          />
+                        )}
 
-                      {/* Glowing Golden Stroke for Active District */}
-                      {isSelected && (
+                        {/* District Borders */}
                         <path
                           d={dist.d}
                           fill="none"
-                          stroke="#fbbf24"
-                          strokeWidth="3.2"
+                          stroke={isSelected ? '#facc15' : isHovered ? '#6ee7b7' : '#ffffff'}
+                          strokeWidth={isSelected ? '2.4' : '1.2'}
                           strokeLinejoin="round"
                           strokeLinecap="round"
-                          filter="url(#active-district-glow)"
-                          className="animate-pulse"
                         />
-                      )}
 
-                      {/* Ripple Line on top of water */}
-                      {st.pct > 0 && (
-                        <line
-                          x1={dist.bbox.minX}
-                          x2={dist.bbox.maxX}
-                          y1={dist.bbox.maxY - (dist.bbox.h * st.pct) / 100}
-                          y2={dist.bbox.maxY - (dist.bbox.h * st.pct) / 100}
-                          stroke="#a7f3d0"
-                          strokeWidth="1.2"
-                          strokeDasharray="2,2"
-                          clipPath={`url(#water-clip-${dist.id})`}
+                        {/* Glowing Golden Stroke for Active District */}
+                        {isSelected && (
+                          <path
+                            d={dist.d}
+                            fill="none"
+                            stroke="#fbbf24"
+                            strokeWidth="3.2"
+                            strokeLinejoin="round"
+                            strokeLinecap="round"
+                            filter="url(#active-district-glow)"
+                            className="animate-pulse"
+                          />
+                        )}
+
+                        {/* Ripple Line on water surface */}
+                        {st.pct > 0 && (
+                          <line
+                            x1={dist.bbox.minX}
+                            x2={dist.bbox.maxX}
+                            y1={dist.bbox.maxY - (dist.bbox.h * st.pct) / 100}
+                            y2={dist.bbox.maxY - (dist.bbox.h * st.pct) / 100}
+                            stroke="#a7f3d0"
+                            strokeWidth="1.2"
+                            strokeDasharray="2,2"
+                            clipPath={`url(#water-clip-${dist.id})`}
+                          />
+                        )}
+
+                        {/* Center Pin */}
+                        <circle
+                          cx={dist.pin.x}
+                          cy={dist.pin.y}
+                          r="3.5"
+                          fill="#ef4444"
+                          stroke="#ffffff"
+                          strokeWidth="1"
+                          className="shadow"
                         />
-                      )}
+                        <circle cx={dist.pin.x} cy={dist.pin.y} r="1.1" fill="#ffffff" />
 
-                      {/* District Pin Center Core */}
-                      <circle
-                        cx={dist.pin.x}
-                        cy={dist.pin.y}
-                        r="3.5"
-                        fill="#ef4444"
-                        stroke="#ffffff"
-                        strokeWidth="1"
-                        className="shadow"
-                      />
+                        {/* Bengali District Name */}
+                        <text
+                          x={dist.pin.x}
+                          y={dist.pin.y - 4.5}
+                          textAnchor="middle"
+                          fill="#ffffff"
+                          stroke="#062817"
+                          strokeWidth="2.5"
+                          paintOrder="stroke fill"
+                          fontSize="8.5"
+                          fontWeight="bold"
+                          fontFamily="sans-serif"
+                          className="pointer-events-none select-none tracking-tight font-bengali"
+                        >
+                          {dist.nameBn}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </svg>
 
-                      {/* Center Dot */}
-                      <circle
-                        cx={dist.pin.x}
-                        cy={dist.pin.y}
-                        r="1.1"
-                        fill="#ffffff"
-                      />
-
-                      {/* Bengali District Name Text */}
-                      <text
-                        x={dist.pin.x}
-                        y={dist.pin.y - 4.5}
-                        textAnchor="middle"
-                        fill="#ffffff"
-                        stroke="#062817"
-                        strokeWidth="2.5"
-                        paintOrder="stroke fill"
-                        fontSize="8.5"
-                        fontWeight="bold"
-                        fontFamily="sans-serif"
-                        className="pointer-events-none select-none tracking-tight font-bengali"
-                      >
-                        {dist.nameBn}
-                      </text>
-                    </g>
-                  );
-                })}
-              </svg>
+                {/* Bottom Step Forward Action */}
+                <div className="absolute bottom-3 right-3 z-20 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onSelectDistrict('rajshahi');
+                      setMapViewMode('rajshahi_district');
+                    }}
+                    className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-3.5 py-1.5 rounded-xl shadow-lg flex items-center gap-1.5 transition-all hover:scale-105"
+                  >
+                    <span>২. রাজশাহী জেলা কতটুকু ঘুরলেন ➔</span>
+                  </button>
+                </div>
+              </div>
             )}
 
           </div>
         </div>
 
-        {/* Right Side (6 Cols): Active District Header & VERTICAL SPOTS LIST */}
+        {/* ===================================================================== */}
+        {/* Right Side (6 Cols): UNIFIED SPOTLIGHT HEADER & VERTICAL LIST         */}
+        {/* ===================================================================== */}
         <div className="lg:col-span-6 space-y-3.5">
           
-          {/* Active District Spotlight Card */}
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-800 to-emerald-950 text-white border border-emerald-700/60 shadow-md space-y-2">
+          {/* Spotlight Header Card (User's Exact Headings for each stage) */}
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-800 to-emerald-950 text-white border border-emerald-700/60 shadow-md space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-emerald-200 flex items-center gap-1.5 font-bengali">
-                <MapPin className="h-4 w-4 text-amber-400" />
-                <span>বর্তমানে নির্বাচিত জেলা</span>
+                {mapViewMode === 'ru_campus' ? (
+                  <Sparkles className="h-4 w-4 text-amber-400" />
+                ) : mapViewMode === 'rajshahi_district' ? (
+                  <MapPin className="h-4 w-4 text-amber-400" />
+                ) : (
+                  <Compass className="h-4 w-4 text-amber-400" />
+                )}
+                <span>
+                  {mapViewMode === 'ru_campus'
+                    ? 'রাজশাহী বিশ্ববিদ্যালয় ক্যাম্পাস'
+                    : mapViewMode === 'rajshahi_district'
+                    ? 'রাজশাহী জেলা পর্যটন মানচিত্র'
+                    : `বর্তমানে নির্বাচিত: ${activeDistrictData.nameBn}`}
+                </span>
               </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black">
-                {activeDistrictSpots.length}টি দর্শনীয় স্থান
+
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black font-bengali">
+                {mapViewMode === 'ru_campus'
+                  ? `${RU_CAMPUS_PLACES.length}টি টেরিটরি`
+                  : mapViewMode === 'rajshahi_district'
+                  ? `${rajshahiSpots.length}টি প্রধান দর্শনীয় স্থান`
+                  : `${activeDistrictSpots.length}টি দর্শনীয় স্থান`}
               </span>
             </div>
 
+            {/* Main Title & Percentage */}
             <div className="flex items-baseline justify-between">
-              <div className="text-xl sm:text-2xl font-black text-white font-bengali">
-                {activeDistrictData.nameBn}
+              <div className="text-xl sm:text-2xl font-black text-white font-bengali tracking-tight">
+                {mapViewMode === 'ru_campus'
+                  ? '৩. রাজশাহী বিশ্ববিদ্যালয় কতটুকু ঘুরলেন'
+                  : mapViewMode === 'rajshahi_district'
+                  ? '২. রাজশাহী জেলা কতটুকু ঘুরলেন'
+                  : '১. রাজশাহী বিভাগ কতটুকু ঘুরলেন'}
               </div>
               <div className="text-sm font-mono font-bold text-amber-300">
-                {activeStats.visited} / {activeStats.total} টি স্থান ঘোরা সম্পন্ন
+                {mapViewMode === 'ru_campus'
+                  ? `${visitedRuCount} / ${RU_CAMPUS_PLACES.length} সম্পন্ন`
+                  : mapViewMode === 'rajshahi_district'
+                  ? `${rajshahiStats.visited} / ${rajshahiStats.total} সম্পন্ন`
+                  : `${activeStats.visited} / ${activeStats.total} সম্পন্ন`}
               </div>
             </div>
 
-            {/* District Progress Bar */}
+            {/* Progress Bar */}
             <div className="space-y-1">
               <div className="w-full h-2.5 rounded-full bg-black/40 overflow-hidden border border-white/10">
                 <div
                   className="h-full bg-gradient-to-r from-amber-400 via-emerald-400 to-teal-300 rounded-full transition-all duration-500"
-                  style={{ width: `${activeStats.pct}%` }}
+                  style={{
+                    width: `${
+                      mapViewMode === 'ru_campus'
+                        ? ruPct
+                        : mapViewMode === 'rajshahi_district'
+                        ? rajshahiStats.pct
+                        : activeStats.pct
+                    }%`
+                  }}
                 />
               </div>
               <div className="flex justify-between text-[10px] text-emerald-200 font-mono">
-                <span>জেলা ভ্রমণ পূর্ণতা: {activeStats.pct}%</span>
-                <span>অবশিষ্ট: {activeStats.total - activeStats.visited} টি স্থান</span>
+                <span>
+                  ভ্রমণ পূর্ণতা:{' '}
+                  {mapViewMode === 'ru_campus'
+                    ? `${ruPct}%`
+                    : mapViewMode === 'rajshahi_district'
+                    ? `${rajshahiStats.pct}%`
+                    : `${activeStats.pct}%`}
+                </span>
+                <span>
+                  অবশিষ্ট:{' '}
+                  {mapViewMode === 'ru_campus'
+                    ? `${RU_CAMPUS_PLACES.length - visitedRuCount} টেরিটরি`
+                    : mapViewMode === 'rajshahi_district'
+                    ? `${rajshahiStats.total - rajshahiStats.visited} স্থান`
+                    : `${activeStats.total - activeStats.visited} স্থান`}
+                </span>
               </div>
             </div>
 
-            {/* Special shortcut for Rajshahi University if Rajshahi is active */}
-            {selectedDistrict === 'rajshahi' && (
-              <div className="pt-2 border-t border-emerald-700/50 flex items-center justify-between">
-                <span className="text-[11px] text-emerald-200 font-bengali">
-                  রাজশাহী বিশ্ববিদ্যালয় (রাবি ক্যাম্পাস):
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setMapViewMode('ru_campus')}
-                  className="px-3 py-1 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[11px] transition-all flex items-center gap-1.5 shadow"
-                >
-                  <Sparkles className="h-3.5 w-3.5 text-slate-950" />
-                  <span>🏫 ৩য় ধাপ: রাবি ক্যাম্পাস ম্যাপ (৪২ স্পট)</span>
-                </button>
+            {/* Search filter for RU campus */}
+            {mapViewMode === 'ru_campus' && (
+              <div className="pt-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-emerald-300" />
+                  <input
+                    type="text"
+                    value={ruSearchQuery}
+                    onChange={(e) => setRuSearchQuery(e.target.value)}
+                    placeholder="রাবি ক্যাম্পাস ভবন, চত্বর বা হল খুঁজুন..."
+                    className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-black/30 border border-emerald-500/30 text-xs text-white placeholder-emerald-300/60 focus:outline-none focus:ring-1 focus:ring-amber-400 font-bengali"
+                  />
+                </div>
               </div>
             )}
           </div>
 
-          {/* VERTICAL SPOTS LIST ("nicha nicha akta akta kore and standard vabe koro") */}
+          {/* ================================================================= */}
+          {/* VERTICAL SPOTS & TERRITORIES LIST (Identical format for all maps) */}
+          {/* ================================================================= */}
           <div className="space-y-3 max-h-[560px] overflow-y-auto pr-1 scrollbar-thin">
-            {activeDistrictSpots.map((spot) => {
-              const isVisited = visitedSpotIds.includes(spot.id);
-              const isHighlighted = highlightedSpotId === spot.id;
-              const spotImages = Array.isArray(spot.images) && spot.images.length > 0
-                ? spot.images
-                : (spot.imageUrl ? [spot.imageUrl] : []);
+            
+            {/* RU CAMPUS 42 TERRITORIES LIST */}
+            {mapViewMode === 'ru_campus' ? (
+              filteredRuPlaces.map((p) => {
+                const isVisited = visitedRuPlaceIds.includes(p.id);
+                const isHighlighted = highlightedItemId === p.id || selectedRuPlaceId === p.id;
 
-              return (
-                <div
-                  key={spot.id}
-                  id={spot.id}
-                  onMouseEnter={() => {
-                    if (mapViewMode === 'rajshahi_district') {
-                      const reg = RAJSHAHI_DISTRICT_REGIONS.find((r) => r.spotId === spot.id);
-                      if (reg) setHoveredRegionId(reg.id);
-                    }
-                  }}
-                  onMouseLeave={() => {
-                    if (mapViewMode === 'rajshahi_district') {
-                      setHoveredRegionId(null);
-                    }
-                  }}
-                  className={`p-3 sm:p-3.5 rounded-2xl bg-white border transition-all duration-200 flex flex-col sm:flex-row gap-3.5 items-start sm:items-center justify-between group shadow-sm hover:shadow-md ${
-                    isHighlighted
-                      ? 'border-amber-400 ring-2 ring-amber-400 bg-amber-50/40 shadow-md scale-[1.01]'
-                      : isVisited
-                      ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/20'
-                      : 'border-slate-200/90 hover:border-emerald-400/80'
-                  }`}
-                >
-                  {/* Left: Thumbnail Image with Zoom Preview */}
+                return (
                   <div
-                    onClick={() => onOpenSpotDetails && onOpenSpotDetails(spot)}
-                    className="relative w-full sm:w-28 h-28 sm:h-24 rounded-xl overflow-hidden bg-slate-900 shrink-0 cursor-pointer shadow-inner"
+                    key={p.id}
+                    id={p.id}
+                    onMouseEnter={() => setHoveredRuPlaceId(p.id)}
+                    onMouseLeave={() => setHoveredRuPlaceId(null)}
+                    className={`p-3 sm:p-3.5 rounded-2xl bg-white text-slate-900 border transition-all duration-200 flex flex-col sm:flex-row gap-3.5 items-start sm:items-center justify-between group shadow-sm hover:shadow-md ${
+                      isHighlighted
+                        ? 'border-amber-400 ring-2 ring-amber-400 bg-amber-50/40 shadow-md scale-[1.01]'
+                        : isVisited
+                        ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/20'
+                        : 'border-slate-200/90 hover:border-emerald-400/80'
+                    }`}
                   >
-                    <img
-                      src={spotImages[0] || spot.imageUrl}
-                      alt={spot.nameBn}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute top-1.5 left-1.5">
-                      <span className="px-1.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-black text-[9px] font-bengali shadow">
-                        {spot.rankNo}
-                      </span>
-                    </div>
-                    {isVisited && (
-                      <div className="absolute top-1.5 right-1.5 p-1 rounded-full bg-emerald-600 text-white shadow">
-                        <Check className="h-3 w-3" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Center: Info */}
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <h4
-                      onClick={() => onOpenSpotDetails && onOpenSpotDetails(spot)}
-                      className="text-xs sm:text-sm font-black text-slate-900 font-bengali line-clamp-1 group-hover:text-emerald-700 cursor-pointer"
+                    {/* Thumbnail */}
+                    <div
+                      onClick={() => handleOpenRuPlaceDetails(p)}
+                      className="relative w-full sm:w-28 h-28 sm:h-24 rounded-xl overflow-hidden bg-slate-900 shrink-0 cursor-pointer shadow-inner"
                     >
-                      {spot.nameBn}
-                    </h4>
-
-                    <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-bengali">
-                      <MapPin className="h-3 w-3 text-rose-500 shrink-0" />
-                      <span className="truncate">{spot.locationBn}</span>
+                      <img
+                        src={p.imageUrl}
+                        alt={p.nameBn}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute top-1.5 left-1.5">
+                        <span className="px-1.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-black text-[9px] font-bengali shadow">
+                          {p.rankNo}
+                        </span>
+                      </div>
+                      {isVisited && (
+                        <div className="absolute top-1.5 right-1.5 p-1 rounded-full bg-emerald-600 text-white shadow">
+                          <Check className="h-3 w-3" />
+                        </div>
+                      )}
                     </div>
 
-                    <p className="text-[11px] text-slate-600 font-bengali line-clamp-2 leading-relaxed">
-                      {spot.descriptionBn}
-                    </p>
-
-                    {/* Action Row */}
-                    <div className="pt-1.5 flex flex-wrap items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => onToggleVisited && onToggleVisited(spot.id)}
-                        className={`py-1.5 px-3 rounded-xl font-bold text-[11px] flex items-center gap-1.5 transition-all font-bengali ${
-                          isVisited
-                            ? 'bg-emerald-600 text-white shadow-sm hover:bg-emerald-700'
-                            : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
-                        }`}
+                    {/* Info */}
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <h4
+                        onClick={() => handleOpenRuPlaceDetails(p)}
+                        className="text-xs sm:text-sm font-black text-slate-900 font-bengali line-clamp-1 group-hover:text-emerald-700 cursor-pointer"
                       >
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        <span>{isVisited ? 'ঘুরেছি (✔ সম্পন্ন)' : 'আমি এই জায়গা ঘুরেছি (টিক দিন)'}</span>
-                      </button>
+                        {p.nameBn}
+                      </h4>
 
-                      <button
-                        type="button"
-                        onClick={() => onOpenSpotDetails && onOpenSpotDetails(spot)}
-                        className="py-1.5 px-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] flex items-center gap-1 font-bengali shadow-sm transition"
-                      >
-                        <Eye className="h-3 w-3 text-amber-300" />
-                        <span>বিস্তারিত ও ছবি</span>
-                      </button>
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-bengali">
+                        <MapPin className="h-3 w-3 text-rose-500 shrink-0" />
+                        <span className="truncate">মতিহার ক্যাম্পাস, রাবি</span>
+                      </div>
 
-                      {spot.id === 'spot-rj-ru' && (
+                      <p className="text-[11px] text-slate-600 font-bengali line-clamp-2 leading-relaxed">
+                        {p.descriptionBn}
+                      </p>
+
+                      {/* Action Row */}
+                      <div className="pt-1.5 flex flex-wrap items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => setMapViewMode('ru_campus')}
-                          className="py-1.5 px-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-[11px] flex items-center gap-1 font-bengali shadow-sm transition"
+                          onClick={() => toggleVisitedRuPlace(p.id)}
+                          className={`py-1.5 px-3 rounded-xl font-bold text-[11px] flex items-center gap-1.5 transition-all font-bengali cursor-pointer ${
+                            isVisited
+                              ? 'bg-emerald-600 text-white shadow-sm hover:bg-emerald-700'
+                              : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          }`}
                         >
-                          <Sparkles className="h-3 w-3" />
-                          <span>ক্যাম্পাস ম্যাপ</span>
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          <span>{isVisited ? '✓ ঘোরা সম্পন্ন' : 'আমি এই জায়গা ঘুরেছি (টিক দিন)'}</span>
                         </button>
-                      )}
 
-                      <a
-                        href={spot.portalUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(spot.nameBn + ' ' + spot.locationBn)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 text-[11px] flex items-center gap-1 transition"
-                        title="গুগল ম্যাপে লোকেশন দেখুন"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        <span className="hidden sm:inline">ম্যাপ</span>
-                      </a>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenRuPlaceDetails(p)}
+                          className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] flex items-center gap-1.5 shadow transition font-bengali cursor-pointer"
+                        >
+                          <Eye className="h-3.5 w-3.5 text-amber-300" />
+                          <span>বিস্তারিত ও ছবি দেখুন</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })
 
+            ) : mapViewMode === 'rajshahi_district' ? (
+              /* RAJSHAHI DISTRICT SPOTS LIST */
+              rajshahiSpots.map((spot) => {
+                const isVisited = visitedSpotIds.includes(spot.id);
+                const isHighlighted = highlightedItemId === spot.id;
+                const spotImages = Array.isArray(spot.images) && spot.images.length > 0
+                  ? spot.images
+                  : (spot.imageUrl ? [spot.imageUrl] : []);
+
+                return (
+                  <div
+                    key={spot.id}
+                    id={spot.id}
+                    onMouseEnter={() => {
+                      const reg = RAJSHAHI_DISTRICT_REGIONS.find((r) => r.spotId === spot.id);
+                      if (reg) setHoveredRegionId(reg.id);
+                    }}
+                    onMouseLeave={() => setHoveredRegionId(null)}
+                    className={`p-3 sm:p-3.5 rounded-2xl bg-white text-slate-900 border transition-all duration-200 flex flex-col sm:flex-row gap-3.5 items-start sm:items-center justify-between group shadow-sm hover:shadow-md ${
+                      isHighlighted
+                        ? 'border-amber-400 ring-2 ring-amber-400 bg-amber-50/40 shadow-md scale-[1.01]'
+                        : isVisited
+                        ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/20'
+                        : 'border-slate-200/90 hover:border-emerald-400/80'
+                    }`}
+                  >
+                    {/* Thumbnail */}
+                    <div
+                      onClick={() => onOpenSpotDetails && onOpenSpotDetails(spot)}
+                      className="relative w-full sm:w-28 h-28 sm:h-24 rounded-xl overflow-hidden bg-slate-900 shrink-0 cursor-pointer shadow-inner"
+                    >
+                      <img
+                        src={spotImages[0] || spot.imageUrl}
+                        alt={spot.nameBn}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute top-1.5 left-1.5">
+                        <span className="px-1.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-black text-[9px] font-bengali shadow">
+                          {spot.rankNo}
+                        </span>
+                      </div>
+                      {isVisited && (
+                        <div className="absolute top-1.5 right-1.5 p-1 rounded-full bg-emerald-600 text-white shadow">
+                          <Check className="h-3 w-3" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <h4
+                        onClick={() => onOpenSpotDetails && onOpenSpotDetails(spot)}
+                        className="text-xs sm:text-sm font-black text-slate-900 font-bengali line-clamp-1 group-hover:text-emerald-700 cursor-pointer"
+                      >
+                        {spot.nameBn}
+                      </h4>
+
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-bengali">
+                        <MapPin className="h-3 w-3 text-rose-500 shrink-0" />
+                        <span className="truncate">{spot.locationBn}</span>
+                      </div>
+
+                      <p className="text-[11px] text-slate-600 font-bengali line-clamp-2 leading-relaxed">
+                        {spot.descriptionBn}
+                      </p>
+
+                      {/* Action Row */}
+                      <div className="pt-1.5 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => onToggleVisited && onToggleVisited(spot.id)}
+                          className={`py-1.5 px-3 rounded-xl font-bold text-[11px] flex items-center gap-1.5 transition-all font-bengali cursor-pointer ${
+                            isVisited
+                              ? 'bg-emerald-600 text-white shadow-sm hover:bg-emerald-700'
+                              : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          }`}
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          <span>{isVisited ? '✓ ঘোরা সম্পন্ন' : 'আমি এই জায়গা ঘুরেছি (টিক দিন)'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => onOpenSpotDetails && onOpenSpotDetails(spot)}
+                          className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] flex items-center gap-1.5 shadow transition font-bengali cursor-pointer"
+                        >
+                          <Eye className="h-3.5 w-3.5 text-amber-300" />
+                          <span>বিস্তারিত ও ছবি দেখুন</span>
+                        </button>
+
+                        {/* Special shortcut for RU Campus */}
+                        {spot.id === 'spot-rj-ru' && (
+                          <button
+                            type="button"
+                            onClick={() => setMapViewMode('ru_campus')}
+                            className="py-1.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[11px] flex items-center gap-1.5 shadow transition font-bengali cursor-pointer"
+                          >
+                            <Sparkles className="h-3.5 w-3.5 text-slate-950" />
+                            <span>৩. রাবি ক্যাম্পাস ম্যাপ ➔</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+
+            ) : (
+              /* STAGE 1: DIVISION SELECTED DISTRICT SPOTS LIST */
+              activeDistrictSpots.map((spot) => {
+                const isVisited = visitedSpotIds.includes(spot.id);
+                const spotImages = Array.isArray(spot.images) && spot.images.length > 0
+                  ? spot.images
+                  : (spot.imageUrl ? [spot.imageUrl] : []);
+
+                return (
+                  <div
+                    key={spot.id}
+                    id={spot.id}
+                    className={`p-3 sm:p-3.5 rounded-2xl bg-white text-slate-900 border transition-all duration-200 flex flex-col sm:flex-row gap-3.5 items-start sm:items-center justify-between group shadow-sm hover:shadow-md ${
+                      isVisited
+                        ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/20'
+                        : 'border-slate-200/90 hover:border-emerald-400/80'
+                    }`}
+                  >
+                    {/* Thumbnail */}
+                    <div
+                      onClick={() => onOpenSpotDetails && onOpenSpotDetails(spot)}
+                      className="relative w-full sm:w-28 h-28 sm:h-24 rounded-xl overflow-hidden bg-slate-900 shrink-0 cursor-pointer shadow-inner"
+                    >
+                      <img
+                        src={spotImages[0] || spot.imageUrl}
+                        alt={spot.nameBn}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute top-1.5 left-1.5">
+                        <span className="px-1.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-black text-[9px] font-bengali shadow">
+                          {spot.rankNo}
+                        </span>
+                      </div>
+                      {isVisited && (
+                        <div className="absolute top-1.5 right-1.5 p-1 rounded-full bg-emerald-600 text-white shadow">
+                          <Check className="h-3 w-3" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <h4
+                        onClick={() => onOpenSpotDetails && onOpenSpotDetails(spot)}
+                        className="text-xs sm:text-sm font-black text-slate-900 font-bengali line-clamp-1 group-hover:text-emerald-700 cursor-pointer"
+                      >
+                        {spot.nameBn}
+                      </h4>
+
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-bengali">
+                        <MapPin className="h-3 w-3 text-rose-500 shrink-0" />
+                        <span className="truncate">{spot.locationBn}</span>
+                      </div>
+
+                      <p className="text-[11px] text-slate-600 font-bengali line-clamp-2 leading-relaxed">
+                        {spot.descriptionBn}
+                      </p>
+
+                      {/* Action Row */}
+                      <div className="pt-1.5 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => onToggleVisited && onToggleVisited(spot.id)}
+                          className={`py-1.5 px-3 rounded-xl font-bold text-[11px] flex items-center gap-1.5 transition-all font-bengali cursor-pointer ${
+                            isVisited
+                              ? 'bg-emerald-600 text-white shadow-sm hover:bg-emerald-700'
+                              : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          }`}
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          <span>{isVisited ? '✓ ঘোরা সম্পন্ন' : 'আমি এই জায়গা ঘুরেছি (টিক দিন)'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => onOpenSpotDetails && onOpenSpotDetails(spot)}
+                          className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] flex items-center gap-1.5 shadow transition font-bengali cursor-pointer"
+                        >
+                          <Eye className="h-3.5 w-3.5 text-amber-300" />
+                          <span>বিস্তারিত ও ছবি দেখুন</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+
+          </div>
         </div>
 
       </div>
 
-      {/* SHARE / POSTER MODAL */}
+      {/* ===================================================================== */}
+      {/* SHARE / POSTER CITATION MODAL                                         */}
+      {/* ===================================================================== */}
       {isShareModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
           <div className="bg-slate-900 border border-emerald-500/40 rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto text-white">
             
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-emerald-500/20">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
               <div className="flex items-center gap-2">
                 <Trophy className="h-5 w-5 text-amber-400" />
-                <h3 className="text-base sm:text-lg font-black font-bengali text-white">
-                  রাজশাহী বিভাগ ভ্রমণ সনদ ও পোস্টার
+                <h3 className="font-bold text-base sm:text-lg text-white font-bengali">
+                  অফিসিয়াল ভ্রমণ সনদপত্র ও শেয়ার
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsShareModalOpen(false)}
-                className="p-1.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                className="p-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Poster Canvas Preview */}
-            <div className="relative w-full aspect-[900/1250] bg-slate-950 rounded-2xl overflow-hidden border border-emerald-500/30 shadow-inner flex items-center justify-center">
-              <canvas
-                ref={canvasRef}
-                className="w-full h-full object-contain"
-              />
-            </div>
-
-            {/* Edit Name Bar */}
-            <div className="space-y-1">
-              <label className="text-xs text-emerald-300 font-bold font-bengali">
-                সনদে আপনার নাম পরিবর্তন করুন:
+            {/* User Name Input */}
+            <div className="space-y-1 font-bengali">
+              <label className="text-xs text-emerald-300 font-bold">
+                সনদপত্রে আপনার নাম:
               </label>
               <input
                 type="text"
                 value={userName}
                 onChange={(e) => {
                   setUserName(e.target.value);
-                  try {
+                  if (typeof window !== 'undefined') {
                     localStorage.setItem('ru_explorer_user_name', e.target.value);
-                  } catch (err) {}
+                  }
                 }}
-                placeholder="আপনার নাম লিখুন..."
-                className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-emerald-500/40 text-white font-bengali text-xs focus:outline-none focus:border-amber-400"
+                placeholder="যেমন: তানভীর আহমেদ"
+                className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-emerald-500/30 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
               />
             </div>
 
-            {/* Actions */}
-            <div className="grid grid-cols-2 gap-3 pt-2">
+            {/* Live Canvas Poster Preview */}
+            <div className="relative w-full rounded-2xl overflow-hidden border border-emerald-500/30 bg-slate-950 flex items-center justify-center p-2">
+              <canvas
+                ref={canvasRef}
+                className="w-full max-h-[360px] object-contain rounded-xl shadow-lg"
+              />
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex flex-col sm:flex-row gap-2 pt-1 font-bengali">
               <button
                 type="button"
-                onClick={handleDownload}
-                className="py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition-all"
+                onClick={() => {
+                  const canvas = canvasRef.current;
+                  if (!canvas) return;
+                  const link = document.createElement('a');
+                  link.download = `RU-Explorer-Citation-${userName || 'Member'}.png`;
+                  link.href = canvas.toDataURL('image/png');
+                  link.click();
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 shadow cursor-pointer transition"
               >
-                <Share2 className="h-4 w-4" />
-                <span>পোস্টার ডাউনলোড</span>
+                <Trophy className="h-4 w-4" />
+                <span>সনদপত্র ডাউনলোড করুন</span>
               </button>
 
               <button
                 type="button"
-                onClick={handleShare}
-                className="py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition-all"
+                onClick={() => {
+                  if (typeof navigator !== 'undefined') {
+                    navigator.clipboard.writeText(window.location.href);
+                    setCopiedLink(true);
+                    setTimeout(() => setCopiedLink(false), 2000);
+                  }
+                }}
+                className="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 border border-slate-700 transition"
               >
-                <Sparkles className="h-4 w-4" />
-                <span>{copiedLink ? 'লিঙ্ক কপি হয়েছে!' : 'বন্ধুদের সাথে শেয়ার'}</span>
+                <Share2 className="h-4 w-4 text-emerald-400" />
+                <span>{copiedLink ? '✓ লিংক কপি হয়েছে' : 'লিংক কপি'}</span>
               </button>
             </div>
 
