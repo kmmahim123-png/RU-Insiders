@@ -97,7 +97,7 @@ export default function TouristSpotsSection() {
   };
 
   return (
-    <section id="tourist-attractions" className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <section id="tourist-attractions" className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-6">
       
       {/* Section Header: Clean title */}
       <div className="flex items-center justify-between pb-1 pt-2">
@@ -113,58 +113,22 @@ export default function TouristSpotsSection() {
       <RajshahiDivisionWaterMap
         visitedSpotIds={visitedSpotIds}
         totalSpotsCount={allSpots.length || 95}
+        selectedDistrict={selectedDistrict}
         onSelectDistrict={(distId) => setSelectedDistrict(distId)}
+        allSpots={allSpots}
       />
 
-      {/* District Selection Table (রাজশাহী বিভাগের ৮টি জেলা তালিকা টেবিল) */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-3 sm:p-5 shadow-sm space-y-2">
-        <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-            <Landmark className="h-4 w-4 text-emerald-600" />
-            <span>জেলা নির্বাচন করুন (রাজশাহী বিভাগের ৮টি জেলা)</span>
-          </div>
-          <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-            বর্তমানে সক্রিয়: {activeDistrictInfo.nameBn}
-          </span>
+      {/* Active District Spots Header */}
+      <div className="pt-2 pb-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200">
+        <div className="flex items-center gap-2">
+          <MapPin className="h-5 w-5 text-emerald-700" />
+          <h3 className="text-lg sm:text-xl font-black text-slate-900 font-bengali">
+            {activeDistrictInfo.nameBn}-এর দর্শনীয় স্থানসমূহ ({spotsToDisplay.length}টি স্থান)
+          </h3>
         </div>
-
-        {/* Structured Table-like Grid for Districts */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 pt-1">
-          {RAJSHAHI_DIVISION_DISTRICTS.map((dist, idx) => {
-            const isActive = selectedDistrict === dist.id;
-            return (
-              <button
-                key={dist.id}
-                type="button"
-                onClick={() => setSelectedDistrict(dist.id)}
-                className={`p-3 rounded-2xl text-left transition-all border flex flex-col justify-between gap-1.5 group ${
-                  isActive
-                    ? 'bg-emerald-800 text-white border-emerald-900 shadow-md ring-2 ring-emerald-600/30 font-bold scale-[1.02]'
-                    : 'bg-slate-50/80 hover:bg-slate-100 text-slate-800 border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="flex items-center justify-between w-full">
-                  <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md ${
-                    isActive ? 'bg-white/20 text-white' : 'bg-white text-slate-500 border border-slate-200'
-                  }`}>
-                    {String(idx + 1).padStart(2, '০')}
-                  </span>
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      isActive ? 'bg-amber-400 text-slate-950 font-black' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                    }`}
-                  >
-                    {dist.spotCount}টি স্পট
-                  </span>
-                </div>
-
-                <div className="text-xs sm:text-sm font-bold tracking-tight truncate">
-                  {dist.nameBn}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+        <span className="text-xs font-bold text-slate-500 font-bengali">
+          স্থানটি ভ্রমণ করে থাকলে সরাসরি "আমি এই জায়গা ঘুরেছি" বাটনে টিক দিন
+        </span>
       </div>
 
       {/* Tourist Spots Grid */}
@@ -178,7 +142,11 @@ export default function TouristSpotsSection() {
           return (
             <div
               key={spot.id}
-              className="bg-white rounded-3xl overflow-hidden border border-slate-200/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
+              className={`bg-white rounded-3xl overflow-hidden border transition-all duration-300 flex flex-col justify-between group ${
+                isVisited
+                  ? 'border-emerald-400 shadow-md ring-2 ring-emerald-500/20'
+                  : 'border-slate-200/90 shadow-sm hover:shadow-xl'
+              }`}
             >
               <div>
                 {/* Spot Photo with Rank & Visited Badge */}
@@ -256,12 +224,28 @@ export default function TouristSpotsSection() {
                 </div>
               </div>
 
+              {/* Direct 1-Click Visited Toggle Button (Right on the card, above details button!) */}
+              <div className="px-4 pb-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => toggleVisitedSpot(spot.id)}
+                  className={`w-full py-2.5 px-3 rounded-2xl font-black text-xs flex items-center justify-center gap-2 transition-all ${
+                    isVisited
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-950/20 ring-2 ring-emerald-400/50'
+                      : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-2 border-emerald-300/80 hover:border-emerald-500'
+                  }`}
+                >
+                  <CheckCircle2 className={`h-4 w-4 ${isVisited ? 'text-amber-300' : 'text-emerald-600'}`} />
+                  <span>{isVisited ? '✓ আমি এই জায়গা ঘুরেছি (ভ্রমণ সম্পন্ন)' : 'আমি এই জায়গা ঘুরেছি (টিক দিন)'}</span>
+                </button>
+              </div>
+
               {/* Action Buttons: Opens Rich Details Section */}
               <div className="p-4 pt-2 border-t border-slate-100 flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => handleOpenDetails(spot)}
-                  className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all"
+                  className="flex-1 py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all"
                 >
                   <Sparkles className="h-3.5 w-3.5 text-amber-300" />
                   <span>বিস্তারিত ও ছবি দেখুন</span>
