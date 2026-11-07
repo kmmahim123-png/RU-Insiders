@@ -33,6 +33,17 @@ export default function PrintStationPage() {
   const [submittedJob, setSubmittedJob] = useState<PrintJob | null>(null);
   const [copiedToken, setCopiedToken] = useState(false);
 
+  // Auto-fill student name from Google session
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem('ru_user_session');
+      if (saved) {
+        const u = JSON.parse(saved);
+        if (u.name) setCustomerName(u.name);
+      }
+    } catch (e) {}
+  }, []);
+
   // Price Calculation
   let baseRate = printType === 'color' ? 15 : 2.5;
   if (paperType === 'art_paper_matte') baseRate += 10;

@@ -29,7 +29,11 @@ import {
   getAllAlumni
 } from '@/lib/ruAcademicData';
 
-export default function RuFacultiesSection() {
+interface RuFacultiesSectionProps {
+  hideHeroBanner?: boolean;
+}
+
+export default function RuFacultiesSection({ hideHeroBanner = false }: RuFacultiesSectionProps) {
   const [selectedFacultyId, setSelectedFacultyId] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeDepartment, setActiveDepartment] = useState<RuDepartment | null>(null);
@@ -61,81 +65,141 @@ export default function RuFacultiesSection() {
     <section id="departments" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
       
       {/* ===================================================================== */}
-      {/* SECTION BANNER & STATS                                                */}
+      {/* SECTION CONTROLS (OR HERO BANNER IF NOT HIDDEN)                       */}
       {/* ===================================================================== */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-6 sm:p-8 text-white border border-emerald-500/30 shadow-xl">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-2 max-w-2xl font-bengali">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold">
-              <GraduationCap className="h-4 w-4 text-amber-400" />
-              <span>১২টি অনুষদ • ৫৯টি বিভাগ ও ইনস্টিটিউট • আসন ও ক্যারিয়ার গাইড</span>
-            </div>
-
-            <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
-              রাজশাহী বিশ্ববিদ্যালয়ের সকল বিভাগ ও ক্যারিয়ার সম্ভাবনা
-            </h2>
-
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              কোন বিভাগে কত আসন? পড়ার পর বাংলাদেশে ও বিদেশে কী কী হওয়া যায়? কোন সেক্টরে চাকরির সুযোগ? প্রতিটি বিভাগের আসন সংখ্যা, ক্যারিয়ার ক্ষেত্র ও প্রতিষ্ঠিত অ্যালামনাইদের বিস্তারিত তথ্য জানুন।
-            </p>
-          </div>
-
-          {/* Quick Search */}
-          <div className="shrink-0 w-full md:w-80 font-bengali">
-            <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-400" />
+      {hideHeroBanner ? (
+        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-4 sm:p-5 space-y-3 font-bengali">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="বিভাগ, ক্যারিয়ার বা বিষয় খুঁজুন (CSE, Law, ব্যাংক...)"
-                className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-black/40 border border-emerald-500/40 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 font-bengali"
+                placeholder="বিভাগ বা ক্যারিয়ার খুঁজুন (CSE, Law, Finance...)"
+                className="w-full pl-10 pr-4 py-2 sm:py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bengali"
               />
             </div>
+            <span className="text-xs text-slate-500 font-bold hidden sm:inline">
+              মোট {filteredDepartments.length}টি বিভাগ প্রদর্শিত হচ্ছে
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto pt-1 pb-1 scrollbar-none font-bengali">
+            <button
+              type="button"
+              onClick={() => setSelectedFacultyId('all')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shadow-xs ${
+                selectedFacultyId === 'all'
+                  ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-400/30'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              }`}
+            >
+              সব অনুষদ ({RU_DEPARTMENTS.length})
+            </button>
+
+            {RU_FACULTIES.map((fac) => {
+              const count = RU_DEPARTMENTS.filter((d) => d.facultyId === fac.id).length;
+              const isActive = selectedFacultyId === fac.id;
+              return (
+                <button
+                  key={fac.id}
+                  type="button"
+                  onClick={() => setSelectedFacultyId(fac.id)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                    isActive
+                      ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-400/30'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                  }`}
+                >
+                  <span>{fac.nameBn}</span>
+                  {count > 0 && (
+                    <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono ${
+                      isActive ? 'bg-white/20 text-white' : 'bg-white text-slate-600'
+                    }`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
+      ) : (
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-6 sm:p-8 text-white border border-emerald-500/30 shadow-xl">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="space-y-2 max-w-2xl font-bengali">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold">
+                <GraduationCap className="h-4 w-4 text-amber-400" />
+                <span>১২টি অনুষদ • ৫৯টি বিভাগ ও ইনস্টিটিউট • আসন ও ক্যারিয়ার গাইড</span>
+              </div>
 
-        {/* Faculties Horizontal Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pt-6 pb-1 scrollbar-none font-bengali">
-          <button
-            type="button"
-            onClick={() => setSelectedFacultyId('all')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shadow-sm ${
-              selectedFacultyId === 'all'
-                ? 'bg-amber-400 text-slate-950 font-black ring-2 ring-white scale-105'
-                : 'bg-white/10 hover:bg-white/20 text-slate-200'
-            }`}
-          >
-            সব অনুষদ ({RU_DEPARTMENTS.length})
-          </button>
+              <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
+                রাজশাহী বিশ্ববিদ্যালয়ের সকল বিভাগ ও ক্যারিয়ার সম্ভাবনা
+              </h2>
 
-          {RU_FACULTIES.map((fac) => {
-            const count = RU_DEPARTMENTS.filter((d) => d.facultyId === fac.id).length;
-            const isActive = selectedFacultyId === fac.id;
-            return (
-              <button
-                key={fac.id}
-                type="button"
-                onClick={() => setSelectedFacultyId(fac.id)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer shadow-sm ${
-                  isActive
-                    ? 'bg-amber-400 text-slate-950 font-black ring-2 ring-white scale-105'
-                    : 'bg-white/10 hover:bg-white/20 text-slate-200 border border-white/10'
-                }`}
-              >
-                <span>{fac.nameBn}</span>
-                {count > 0 && (
-                  <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono ${
-                    isActive ? 'bg-slate-950 text-amber-300' : 'bg-black/30 text-emerald-300'
-                  }`}>
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                কোন বিভাগে কত আসন? পড়ার পর বাংলাদেশে ও বিদেশে কী কী হওয়া যায়? কোন সেক্টরে চাকরির সুযোগ? প্রতিটি বিভাগের আসন সংখ্যা, ক্যারিয়ার ক্ষেত্র ও প্রতিষ্ঠিত অ্যালামনাইদের বিস্তারিত তথ্য জানুন।
+              </p>
+            </div>
+
+            {/* Quick Search */}
+            <div className="shrink-0 w-full md:w-80 font-bengali">
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="বিভাগ, ক্যারিয়ার বা বিষয় খুঁজুন (CSE, Law, ব্যাংক...)"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-black/40 border border-emerald-500/40 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 font-bengali"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Faculties Horizontal Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pt-6 pb-1 scrollbar-none font-bengali">
+            <button
+              type="button"
+              onClick={() => setSelectedFacultyId('all')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shadow-sm ${
+                selectedFacultyId === 'all'
+                  ? 'bg-amber-400 text-slate-950 font-black ring-2 ring-white scale-105'
+                  : 'bg-white/10 hover:bg-white/20 text-slate-200'
+              }`}
+            >
+              সব অনুষদ ({RU_DEPARTMENTS.length})
+            </button>
+
+            {RU_FACULTIES.map((fac) => {
+              const count = RU_DEPARTMENTS.filter((d) => d.facultyId === fac.id).length;
+              const isActive = selectedFacultyId === fac.id;
+              return (
+                <button
+                  key={fac.id}
+                  type="button"
+                  onClick={() => setSelectedFacultyId(fac.id)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                    isActive
+                      ? 'bg-amber-400 text-slate-950 font-black ring-2 ring-white scale-105'
+                      : 'bg-white/10 hover:bg-white/20 text-slate-200 border border-white/10'
+                  }`}
+                >
+                  <span>{fac.nameBn}</span>
+                  {count > 0 && (
+                    <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono ${
+                      isActive ? 'bg-slate-950 text-amber-300' : 'bg-black/30 text-emerald-300'
+                    }`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ===================================================================== */}
       {/* DEPARTMENTS CARD GRID                                                 */}

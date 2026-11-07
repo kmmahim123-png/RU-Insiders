@@ -48,7 +48,7 @@ export default function InsideRuPage() {
 
       {/* Main Full News & Literary Portal */}
       <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 pt-4">
-        <InsideRajshahiSection />
+        <InsideRajshahiSection hideHeroBanner={true} />
       </main>
     </div>
   );

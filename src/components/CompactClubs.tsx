@@ -36,20 +36,28 @@ export default function CompactClubs() {
   const [isLoggedInUser, setIsLoggedInUser] = useState(false);
 
   useEffect(() => {
-    try {
-      const savedUser = localStorage.getItem('ru_user_session');
-      if (savedUser) {
-        const u = JSON.parse(savedUser);
-        if (u.name || u.email) {
-          setIsLoggedInUser(true);
-          setFormData((prev) => ({
-            ...prev,
-            studentName: prev.studentName || u.name || '',
-            email: prev.email || u.email || '',
-          }));
+    const checkUser = () => {
+      try {
+        const savedUser = localStorage.getItem('ru_user_session');
+        if (savedUser) {
+          const u = JSON.parse(savedUser);
+          if (u.name || u.email) {
+            setIsLoggedInUser(true);
+            setFormData((prev) => ({
+              ...prev,
+              studentName: prev.studentName || u.name || '',
+              email: prev.email || u.email || '',
+            }));
+            return;
+          }
         }
-      }
-    } catch (e) {}
+        setIsLoggedInUser(false);
+      } catch (e) {}
+    };
+
+    checkUser();
+    window.addEventListener('ru_auth_changed', checkUser);
+    return () => window.removeEventListener('ru_auth_changed', checkUser);
   }, []);
 
   const clubCategories = [

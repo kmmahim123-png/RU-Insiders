@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, ShoppingBag, User, ShieldCheck, Compass } from 'lucide-react';
+import { Home, ShoppingBag, User, ShieldCheck, Compass, BookOpen } from 'lucide-react';
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
@@ -36,9 +36,9 @@ export default function MobileBottomNav() {
   const navItems = [
     { label: 'হোম', href: '/', icon: Home },
     { label: 'শপ', href: '/shop', icon: ShoppingBag },
+    { label: 'নিউজ', href: '/inside-ru', icon: BookOpen },
     { label: 'ম্যাপ', href: '/map', icon: Compass },
     { label: 'কার্ট', href: '/cart', icon: ShoppingBag, badge: cartCount },
-    { label: 'অ্যাডমিন', href: '/admin', icon: ShieldCheck },
   ];
 
   // Hide mobile bottom nav on admin routes (checked after all hooks)

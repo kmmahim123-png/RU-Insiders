@@ -27,12 +27,18 @@ export default function CartPage() {
   const [loading, setLoading] = useState(false);
   const [confirmedOrder, setConfirmedOrder] = useState<any | null>(null);
 
-  // Sync cart from localStorage
+  // Sync cart and user session from localStorage
   useEffect(() => {
     try {
       const saved = localStorage.getItem('ru_cart');
       if (saved) {
         setCartItems(JSON.parse(saved));
+      }
+
+      const savedUser = localStorage.getItem('ru_user_session');
+      if (savedUser) {
+        const u = JSON.parse(savedUser);
+        if (u.name) setCustomerName(u.name);
       }
     } catch (e) {
       console.error(e);

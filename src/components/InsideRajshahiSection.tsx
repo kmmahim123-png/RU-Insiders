@@ -23,7 +23,11 @@ import {
 } from 'lucide-react';
 import { CampusArticle, INITIAL_CAMPUS_ARTICLES, getLocalArticles } from '@/lib/campusNews';
 
-export default function InsideRajshahiSection() {
+interface InsideRajshahiSectionProps {
+  hideHeroBanner?: boolean;
+}
+
+export default function InsideRajshahiSection({ hideHeroBanner = false }: InsideRajshahiSectionProps) {
   const [articles, setArticles] = useState<CampusArticle[]>(INITIAL_CAMPUS_ARTICLES);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedArticle, setSelectedArticle] = useState<CampusArticle | null>(null);
@@ -154,69 +158,114 @@ export default function InsideRajshahiSection() {
     <section id="inside-ru" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
       
       {/* ===================================================================== */}
-      {/* SECTION HEADER CARD                                                   */}
+      {/* SECTION CONTROLS (OR HERO CARD IF NOT HIDDEN)                         */}
       {/* ===================================================================== */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-950 via-teal-950 to-slate-950 p-6 sm:p-8 text-white border border-emerald-700/50 shadow-2xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-10 left-10 w-72 h-72 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-2.5 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold font-bengali">
-              <Sparkles className="h-3.5 w-3.5 text-amber-400 animate-spin" />
-              <span>ইনসাইড রাজশাহী ইউনিভার্সিটি • সাহিত্য, সংস্কৃতি ও গবেষণা</span>
-            </div>
-
-            <h2 className="text-2xl sm:text-4xl font-black font-bengali tracking-tight text-white leading-tight">
-              ডেইলি ক্যাম্পাস নিউজ, গল্প, সাহিত্য ও কবিতা
-            </h2>
-
-            <p className="text-xs sm:text-sm text-emerald-100/90 font-bengali leading-relaxed">
-              প্যারিস রোডের আড্ডা, শিক্ষার্থীদের স্বরচিত গল্প ও কবিতা, রাবি গবেষকদের আন্তর্জাতিক উদ্ভাবন এবং ক্যাম্পাস ট্যালেন্টদের গৌরবগাথা — শিরোনামে ক্লিক করে সম্পূর্ণ লেখাটি সরাসরি পড়ুন।
-            </p>
-          </div>
-
-          {/* Search bar inside header */}
-          <div className="shrink-0 w-full md:w-72">
-            <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-400" />
+      {hideHeroBanner ? (
+        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-4 sm:p-5 space-y-3 font-bengali">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="গল্প, কবিতা বা লেখকের নাম খুঁজুন..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-black/40 border border-emerald-500/40 text-xs text-white placeholder-emerald-300/60 focus:outline-none focus:ring-2 focus:ring-amber-400 font-bengali"
+                className="w-full pl-10 pr-4 py-2 sm:py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bengali"
               />
             </div>
+            <span className="text-xs text-slate-500 font-bold hidden sm:inline">
+              মোট {filteredArticles.length}টি লেখা প্রদর্শিত হচ্ছে
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto pt-1 pb-1 scrollbar-none">
+            {categories.map((cat) => {
+              const isActive = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold font-bengali whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                    isActive
+                      ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-400/30'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                  }`}
+                >
+                  <span>{cat.label}</span>
+                  <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono ${
+                    isActive ? 'bg-white/20 text-white' : 'bg-white text-slate-600'
+                  }`}>
+                    {cat.count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
+      ) : (
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-950 via-teal-950 to-slate-950 p-6 sm:p-8 text-white border border-emerald-700/50 shadow-2xl">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-10 left-10 w-72 h-72 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
 
-        {/* Category Pills Slider */}
-        <div className="relative z-10 flex items-center gap-2 overflow-x-auto pt-6 pb-1 scrollbar-none">
-          {categories.map((cat) => {
-            const isActive = selectedCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold font-bengali whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
-                  isActive
-                    ? 'bg-amber-400 text-slate-950 font-black shadow-amber-900/40 ring-2 ring-white scale-105'
-                    : 'bg-white/10 hover:bg-white/20 text-emerald-100 border border-white/10'
-                }`}
-              >
-                <span>{cat.label}</span>
-                <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono ${
-                  isActive ? 'bg-slate-950 text-amber-300' : 'bg-black/30 text-emerald-200'
-                }`}>
-                  {cat.count}
-                </span>
-              </button>
-            );
-          })}
+          <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="space-y-2.5 max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold font-bengali">
+                <Sparkles className="h-3.5 w-3.5 text-amber-400 animate-spin" />
+                <span>ইনসাইড রাজশাহী ইউনিভার্সিটি • সাহিত্য, সংস্কৃতি ও গবেষণা</span>
+              </div>
+
+              <h2 className="text-2xl sm:text-4xl font-black font-bengali tracking-tight text-white leading-tight">
+                ডেইলি ক্যাম্পাস নিউজ, গল্প, সাহিত্য ও কবিতা
+              </h2>
+
+              <p className="text-xs sm:text-sm text-emerald-100/90 font-bengali leading-relaxed">
+                প্যারিস রোডের আড্ডা, শিক্ষার্থীদের স্বরচিত গল্প ও কবিতা, রাবি গবেষকদের আন্তর্জাতিক উদ্ভাবন এবং ক্যাম্পাস ট্যালেন্টদের গৌরবগাথা — শিরোনামে ক্লিক করে সম্পূর্ণ লেখাটি সরাসরি পড়ুন।
+              </p>
+            </div>
+
+            {/* Search bar inside header */}
+            <div className="shrink-0 w-full md:w-72">
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="গল্প, কবিতা বা লেখকের নাম খুঁজুন..."
+                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-black/40 border border-emerald-500/40 text-xs text-white placeholder-emerald-300/60 focus:outline-none focus:ring-2 focus:ring-amber-400 font-bengali"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Category Pills Slider */}
+          <div className="relative z-10 flex items-center gap-2 overflow-x-auto pt-6 pb-1 scrollbar-none">
+            {categories.map((cat) => {
+              const isActive = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold font-bengali whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                    isActive
+                      ? 'bg-amber-400 text-slate-950 font-black shadow-amber-900/40 ring-2 ring-white scale-105'
+                      : 'bg-white/10 hover:bg-white/20 text-emerald-100 border border-white/10'
+                  }`}
+                >
+                  <span>{cat.label}</span>
+                  <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono ${
+                    isActive ? 'bg-slate-950 text-amber-300' : 'bg-black/30 text-emerald-200'
+                  }`}>
+                    {cat.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ===================================================================== */}
       {/* ARTICLE & STORY CARDS GRID                                            */}

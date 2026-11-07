@@ -23,7 +23,11 @@ import {
 } from 'lucide-react';
 import { RU_CLUBS, RuClub, saveClubApplication } from '@/lib/ruClubsData';
 
-export default function RuClubsSection() {
+interface RuClubsSectionProps {
+  hideHeroBanner?: boolean;
+}
+
+export default function RuClubsSection({ hideHeroBanner = false }: RuClubsSectionProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeClubDetails, setActiveClubDetails] = useState<RuClub | null>(null);
@@ -179,61 +183,111 @@ export default function RuClubsSection() {
     <section id="clubs" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
       
       {/* ===================================================================== */}
-      {/* SECTION BANNER & CLUB SUMMARY                                         */}
+      {/* SECTION CONTROLS (OR HERO BANNER IF NOT HIDDEN)                       */}
       {/* ===================================================================== */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-950 via-slate-900 to-emerald-950 p-6 sm:p-8 text-white border border-indigo-500/30 shadow-2xl">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-2 max-w-2xl font-bengali">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/40 text-indigo-300 text-xs font-bold">
-              <Sparkles className="h-4 w-4 text-amber-400" />
-              <span>সহশিক্ষা • নেতৃত্ব • জাতীয় ও আন্তর্জাতিক অর্জন</span>
-            </div>
-
-            <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
-              রাজশাহী বিশ্ববিদ্যালয়ের সকল ক্লাব ও সংগঠন
-            </h2>
-
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              ক্যারিয়ার, বিতর্ক, বিজ্ঞান, ফটোগ্রাফি, রক্তদান ও সাংস্কৃতিক ক্লাবগুলোর কার্যকারিতা জানুন। ক্লাবের মাধ্যমে শিক্ষার্থীরা কোথায় কোথায় গিয়েছে? নতুন শিক্ষার্থীরা সরাসরি এখান থেকেই ক্লাবে যুক্ত হতে আবেদন করুন।
-            </p>
-          </div>
-
-          {/* Quick Search */}
-          <div className="shrink-0 w-full md:w-80 font-bengali">
-            <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-400" />
+      {hideHeroBanner ? (
+        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-4 sm:p-5 space-y-3 font-bengali">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="ক্লাব খুঁজুন (RUCS, RUDEU, বাঁধন...)"
-                className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-black/40 border border-indigo-500/40 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 font-bengali"
+                className="w-full pl-10 pr-4 py-2 sm:py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bengali"
               />
             </div>
+            <span className="text-xs text-slate-500 font-bold hidden sm:inline">
+              মোট {filteredClubs.length}টি ক্লাব ও সংগঠন
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto pt-1 pb-1 scrollbar-none font-bengali">
+            {categories.map((cat) => {
+              const isActive = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                    isActive
+                      ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-400/30'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                  }`}
+                >
+                  <span>{cat.label}</span>
+                  <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono ${
+                    isActive ? 'bg-white/20 text-white' : 'bg-white text-slate-600'
+                  }`}>
+                    {cat.count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
+      ) : (
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-950 via-slate-900 to-emerald-950 p-6 sm:p-8 text-white border border-indigo-500/30 shadow-2xl">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="space-y-2 max-w-2xl font-bengali">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/40 text-indigo-300 text-xs font-bold">
+                <Sparkles className="h-4 w-4 text-amber-400" />
+                <span>সহশিক্ষা • নেতৃত্ব • জাতীয় ও আন্তর্জাতিক অর্জন</span>
+              </div>
 
-        {/* Categories Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pt-6 pb-1 scrollbar-none font-bengali">
-          {categories.map((cat) => {
-            const isActive = selectedCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shadow-sm ${
-                  isActive
-                    ? 'bg-amber-400 text-slate-950 font-black ring-2 ring-white scale-105'
-                    : 'bg-white/10 hover:bg-white/20 text-slate-200 border border-white/10'
-                }`}
-              >
-                {cat.label}
-              </button>
-            );
-          })}
+              <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
+                রাজশাহী বিশ্ববিদ্যালয়ের সকল ক্লাব ও সংগঠন
+              </h2>
+
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                ক্যারিয়ার, বিতর্ক, বিজ্ঞান, ফটোগ্রাফি, রক্তদান ও সাংস্কৃতিক ক্লাবগুলোর কার্যকারিতা জানুন। ক্লাবের মাধ্যমে শিক্ষার্থীরা কোথায় কোথায় গিয়েছে? নতুন শিক্ষার্থীরা সরাসরি এখান থেকেই ক্লাবে যুক্ত হতে আবেদন করুন।
+              </p>
+            </div>
+
+            {/* Quick Search */}
+            <div className="shrink-0 w-full md:w-80 font-bengali">
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="ক্লাব খুঁজুন (RUCS, RUDEU, বাঁধন...)"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-black/40 border border-indigo-500/40 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 font-bengali"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Categories Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pt-6 pb-1 scrollbar-none font-bengali">
+            {categories.map((cat) => {
+              const isActive = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                    isActive
+                      ? 'bg-amber-400 text-slate-950 font-black shadow-amber-900/40 ring-2 ring-white scale-105'
+                      : 'bg-white/10 hover:bg-white/20 text-slate-200 border border-white/10'
+                  }`}
+                >
+                  <span>{cat.label}</span>
+                  <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono ${
+                    isActive ? 'bg-slate-950 text-amber-300' : 'bg-black/30 text-emerald-300'
+                  }`}>
+                    {cat.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ===================================================================== */}
       {/* CLUBS CARD GRID                                                       */}

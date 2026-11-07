@@ -44,7 +44,7 @@ export default function ClubsPage() {
 
       {/* Main Clubs Portal Component */}
       <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 pt-4">
-        <RuClubsSection />
+        <RuClubsSection hideHeroBanner={true} />
       </main>
     </div>
   );

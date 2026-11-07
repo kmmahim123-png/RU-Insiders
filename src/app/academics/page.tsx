@@ -44,7 +44,7 @@ export default function AcademicsPage() {
 
       {/* Main Faculties & Career Guide Component */}
       <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 pt-4">
-        <RuFacultiesSection />
+        <RuFacultiesSection hideHeroBanner={true} />
       </main>
     </div>
   );
