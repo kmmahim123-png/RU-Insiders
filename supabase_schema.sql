@@ -1,6 +1,6 @@
 -- ==============================================================================
--- RU INSIDERS - COMPLETE SUPABASE DATABASE & STORAGE SCHEMA
--- Run this script in the Supabase Dashboard -> SQL Editor -> Click 'Run'
+-- RU INSIDERS - COMPLETE DATABASE & STORAGE SETUP SCRIPT
+-- Execute this script in Supabase SQL Editor for project skqtcsoovtnxxbhtracp
 -- ==============================================================================
 
 -- 1. PRODUCTS TABLE
@@ -18,7 +18,9 @@ CREATE TABLE IF NOT EXISTS public.products (
   colors JSONB DEFAULT '[]'::jsonb,
   sizes JSONB DEFAULT '["M", "L", "XL", "XXL"]'::jsonb,
   stock INTEGER DEFAULT 50,
+  sales_count INTEGER DEFAULT 0,
   customizable BOOLEAN DEFAULT false,
+  is_story_highlight BOOLEAN DEFAULT false,
   order_index INTEGER DEFAULT 0,
   video TEXT DEFAULT '',
   badge TEXT DEFAULT '',
@@ -26,7 +28,6 @@ CREATE TABLE IF NOT EXISTS public.products (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Index for ordering and category lookup
 CREATE INDEX IF NOT EXISTS idx_products_order ON public.products (order_index ASC);
 CREATE INDEX IF NOT EXISTS idx_products_category ON public.products (category);
 
@@ -36,7 +37,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
   order_number TEXT DEFAULT '',
   customer_name TEXT NOT NULL,
   customer_phone TEXT NOT NULL,
-  customer_address TEXT NOT NULL,
+  customer_address TEXT NOT NULL DEFAULT 'Rajshahi University Campus',
   delivery_method TEXT DEFAULT 'ru_campus_pickup',
   payment_method TEXT DEFAULT 'cash_on_delivery',
   items JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -50,6 +51,8 @@ CREATE TABLE IF NOT EXISTS public.orders (
   rider_name TEXT DEFAULT '',
   steadfast_consignment_id TEXT DEFAULT '',
   steadfast_tracking_code TEXT DEFAULT '',
+  delivered_at TIMESTAMPTZ,
+  admin_notes TEXT DEFAULT '',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -94,9 +97,8 @@ CREATE TABLE IF NOT EXISTS public.steadfast_config (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Insert default steadfast config if not present
 INSERT INTO public.steadfast_config (id, api_key, secret_key, base_url, is_active)
-VALUES ('primary', '', '', 'https://portal.steadfast.com.bd/api/v1', false)
+VALUES ('primary', 'DEMO_STEADFAST_KEY_RU_INSIDERS_2026', 'DEMO_STEADFAST_SECRET_SECURE_HASH', 'https://portal.steadfast.com.bd/api/v1', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- 5. TOURIST SPOTS & LANDMARKS TABLE
@@ -115,20 +117,18 @@ CREATE TABLE IF NOT EXISTS public.tourist_spots (
 
 CREATE INDEX IF NOT EXISTS idx_tourist_spots_district ON public.tourist_spots (district_id);
 
--- 6. ENABLE ROW LEVEL SECURITY (RLS) & PUBLIC READ ACCESS
+-- 6. ROW LEVEL SECURITY (RLS) POLICIES FOR ALL TABLES
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.print_jobs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.steadfast_config ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tourist_spots ENABLE ROW LEVEL SECURITY;
 
--- Allow public read access to products
 DROP POLICY IF EXISTS "Public read products" ON public.products;
 CREATE POLICY "Public read products" ON public.products FOR SELECT USING (true);
 
--- Allow service role and anon to perform operations (RU Insiders uses server API routes with service/admin key)
-DROP POLICY IF EXISTS "Full access for API" ON public.products;
-CREATE POLICY "Full access for API" ON public.products FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Full access products for API" ON public.products;
+CREATE POLICY "Full access products for API" ON public.products FOR ALL USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Full access orders for API" ON public.orders;
 CREATE POLICY "Full access orders for API" ON public.orders FOR ALL USING (true) WITH CHECK (true);
@@ -142,22 +142,19 @@ CREATE POLICY "Full access steadfast for API" ON public.steadfast_config FOR ALL
 DROP POLICY IF EXISTS "Full access tourist_spots for API" ON public.tourist_spots;
 CREATE POLICY "Full access tourist_spots for API" ON public.tourist_spots FOR ALL USING (true) WITH CHECK (true);
 
--- 7. STORAGE BUCKETS SETUP
--- Insert public buckets for uploaded photos, videos, and PDFs
+-- 7. STORAGE BUCKET CREATION (ru-uploads & ru-prints)
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('ru-uploads', 'ru-uploads', true)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET public = true;
 
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('ru-prints', 'ru-prints', true)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET public = true;
 
--- Allow public read on storage
 DROP POLICY IF EXISTS "Public storage read ru-uploads" ON storage.objects;
 CREATE POLICY "Public storage read ru-uploads" ON storage.objects
 FOR SELECT USING (bucket_id IN ('ru-uploads', 'ru-prints'));
 
--- Allow public/authenticated upload to storage
 DROP POLICY IF EXISTS "Public storage insert ru-uploads" ON storage.objects;
 CREATE POLICY "Public storage insert ru-uploads" ON storage.objects
 FOR INSERT WITH CHECK (bucket_id IN ('ru-uploads', 'ru-prints'));
@@ -165,3 +162,138 @@ FOR INSERT WITH CHECK (bucket_id IN ('ru-uploads', 'ru-prints'));
 DROP POLICY IF EXISTS "Public storage update ru-uploads" ON storage.objects;
 CREATE POLICY "Public storage update ru-uploads" ON storage.objects
 FOR UPDATE USING (bucket_id IN ('ru-uploads', 'ru-prints'));
+
+DROP POLICY IF EXISTS "Public storage delete ru-uploads" ON storage.objects;
+CREATE POLICY "Public storage delete ru-uploads" ON storage.objects
+FOR DELETE USING (bucket_id IN ('ru-uploads', 'ru-prints'));
+
+-- 8. SEED INITIAL OFFICIAL PRODUCTS
+INSERT INTO public.products (id, slug, name, name_bn, category, description, price, regular_price, cost_price, images, colors, sizes, stock, sales_count, customizable, is_story_highlight, order_index, video, badge)
+VALUES
+(
+  'prod-ru-hoodie-maroon',
+  'ru-heritage-winter-hoodie-maroon',
+  'RU Heritage Heavyweight Winter Hoodie',
+  'রাবি হেরিটেজ উইন্টার হুডি (মেরুন)',
+  'hoodies',
+  'Premium 340+ GSM fleece hoodie featuring the embossed Rajshahi University emblem, kangaroo pocket, and thermal brushed interior. Built for cold Paris Road morning walks.',
+  1150,
+  1400,
+  680,
+  '["/mockups/hoodie-front.jpg", "/mockups/drop-shoulder-front.jpg", "/mockups/jersey-front.jpg", "/mockups/t-shirt-front.jpg"]'::jsonb,
+  '[{"name": "Heritage Maroon", "hex": "#881337", "imageIndex": 0}, {"name": "Midnight Black", "hex": "#09090b", "imageIndex": 1}, {"name": "Campus Navy", "hex": "#1e3a8a", "imageIndex": 2}, {"name": "Pure White", "hex": "#ffffff", "imageIndex": 3}]'::jsonb,
+  '["M", "L", "XL", "XXL"]'::jsonb,
+  45,
+  182,
+  true,
+  true,
+  0,
+  '',
+  'Best Seller'
+),
+(
+  'prod-ru-dropshoulder-paris',
+  'paris-road-oversized-dropshoulder',
+  'Paris Road Signature Drop Shoulder Tee',
+  'প্যারিস রোড ওভারসাইজড ড্রপ শোল্ডার',
+  'drop-shoulder',
+  '220 GSM 100% combed compact cotton with relaxed drop-shoulder cut. Featuring minimalist RU Paris Road typographic screen print on back and subtle chest crest.',
+  580,
+  750,
+  310,
+  '["/mockups/drop-shoulder-front.jpg", "/mockups/t-shirt-front.jpg", "/mockups/hoodie-front.jpg", "/mockups/jersey-front.jpg"]'::jsonb,
+  '[{"name": "Vintage Olive", "hex": "#3f6212", "imageIndex": 0}, {"name": "Charcoal Black", "hex": "#18181b", "imageIndex": 1}, {"name": "Off White", "hex": "#f8fafc", "imageIndex": 2}, {"name": "Heritage Maroon", "hex": "#881337", "imageIndex": 3}]'::jsonb,
+  '["M", "L", "XL", "XXL"]'::jsonb,
+  60,
+  245,
+  true,
+  true,
+  1,
+  '',
+  'Trending'
+),
+(
+  'prod-ru-custom-jersey-2026',
+  'ru-inter-dept-sports-jersey-2026',
+  'RU Inter-Dept Custom Sports Jersey',
+  'রাবি আন্তঃবিভাগ কাস্টম স্পোর্টস জার্সি',
+  'jerseys',
+  'High-breathability hexagonal micro-mesh poly dry-fit fabric. Fully customized with your department name, roll number, and nickname for tournament play.',
+  650,
+  850,
+  340,
+  '["/mockups/jersey-front.jpg", "/mockups/t-shirt-front.jpg", "/mockups/hoodie-front.jpg", "/mockups/drop-shoulder-front.jpg"]'::jsonb,
+  '[{"name": "Motihar Green & Gold", "hex": "#047857", "imageIndex": 0}, {"name": "Padma Blue & White", "hex": "#0284c7", "imageIndex": 1}, {"name": "Crimson Pride", "hex": "#be123c", "imageIndex": 2}]'::jsonb,
+  '["M", "L", "XL", "XXL"]'::jsonb,
+  120,
+  410,
+  true,
+  true,
+  2,
+  '',
+  'Tournament Pick'
+),
+(
+  'prod-ru-shabash-ganji',
+  'shabash-bangladesh-classic-cotton-tee',
+  'Shabash Bangladesh Classic Cotton Tee (গেঞ্জি)',
+  'শাবাশ বাংলাদেশ ক্লাসিক কটন টি-শার্ট',
+  't-shirts',
+  '190 GSM 100% breathable organic ring-spun combed cotton. High-definition screen printed illustration of the iconic Nitun Kundu sculpture at Rajshahi University.',
+  390,
+  480,
+  195,
+  '["/mockups/t-shirt-front.jpg", "/mockups/drop-shoulder-front.jpg", "/mockups/jersey-front.jpg", "/mockups/hoodie-front.jpg"]'::jsonb,
+  '[{"name": "Campus Heather Grey", "hex": "#64748b", "imageIndex": 0}, {"name": "Pure White", "hex": "#ffffff", "imageIndex": 1}, {"name": "Midnight Black", "hex": "#09090b", "imageIndex": 2}]'::jsonb,
+  '["M", "L", "XL", "XXL"]'::jsonb,
+  85,
+  128,
+  true,
+  true,
+  3,
+  '',
+  'Iconic'
+),
+(
+  'prod-ru-varsity-jacket',
+  'ru-insiders-leatherette-varsity-jacket',
+  'RU Insiders Edition Leatherette Varsity Jacket',
+  'রাবি ইনসাইডার্স লেদারেট ভার্সিটি জ্যাকেট',
+  'hoodies',
+  'Heavyweight wool blend torso with premium vegan leather sleeves, custom chenille RU chest crest, striped ribbed cuffs, and quilted insulated lining.',
+  2200,
+  2800,
+  1350,
+  '["/mockups/hoodie-front.jpg", "/mockups/drop-shoulder-front.jpg", "/mockups/jersey-front.jpg", "/mockups/t-shirt-front.jpg"]'::jsonb,
+  '[{"name": "Navy & Bone White", "hex": "#0f172a", "imageIndex": 0}, {"name": "Forest Green & Cream", "hex": "#064e3b", "imageIndex": 1}]'::jsonb,
+  '["M", "L", "XL"]'::jsonb,
+  15,
+  38,
+  false,
+  true,
+  4,
+  '',
+  'Limited Edition'
+),
+(
+  'prod-ru-totebag',
+  'ru-campus-canvas-totebag',
+  'Rajshahi University Campus Canvas Tote Bag',
+  'রাজশাহী বিশ্ববিদ্যালয় ক্যাম্পাস ক্যানভাস টোটব্যাগ',
+  'accessories',
+  '14oz heavy eco-friendly organic cotton canvas tote. Perfect for carrying class notes, iPad, books, and everyday library essentials across campus.',
+  280,
+  350,
+  120,
+  '["/mockups/t-shirt-front.jpg", "/mockups/drop-shoulder-front.jpg"]'::jsonb,
+  '[{"name": "Natural Off-White", "hex": "#fef3c7", "imageIndex": 0}, {"name": "Midnight Black", "hex": "#0f172a", "imageIndex": 1}]'::jsonb,
+  '["Free Size"]'::jsonb,
+  90,
+  175,
+  false,
+  false,
+  5,
+  '',
+  'Everyday'
+)
+ON CONFLICT (id) DO NOTHING;
