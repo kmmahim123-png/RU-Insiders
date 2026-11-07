@@ -19,6 +19,8 @@ import {
   BookOpen
 } from 'lucide-react';
 import AnimatedLogo from '@/components/AnimatedLogo';
+import NotificationBell from '@/components/NotificationBell';
+import GoogleAuthButton from '@/components/GoogleAuthButton';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -55,7 +57,7 @@ export default function Navbar() {
     { label: 'Inside RU News', href: '/#inside-ru', bn: 'ইনসাইড আরইউ', icon: BookOpen },
     { label: 'Faculties & Careers', href: '/#departments', bn: 'বিভাগ ও ক্যারিয়ার', icon: GraduationCap },
     { label: 'RU Clubs', href: '/#clubs', bn: 'ক্লাবসমূহ', icon: Users },
-    { label: 'Campus Map', href: '/map', bn: 'ক্যাম্পাস ম্যাপ', icon: Compass },
+    { label: 'ম্যাপ', href: '/map', bn: 'রাজশাহী ম্যাপ', icon: Compass },
     { label: 'Track Order', href: '/track', bn: 'অর্ডার ট্র্যাকিং', icon: Truck },
   ];
 
@@ -139,8 +141,15 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* Right Action Icons (Cart & Mobile Burger) */}
+          {/* Right Action Icons (Notifications, Google Login, Cart & Mobile Burger) */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Campus Breaking News Notifications Dropdown */}
+            <NotificationBell />
+
+            {/* Google Sign-In & User Session */}
+            <GoogleAuthButton />
+
+            {/* Shopping Cart */}
             <Link
               href="/cart"
               className="relative p-2.5 rounded-xl bg-slate-100 hover:bg-blue-50 border border-slate-200 text-slate-700 hover:text-blue-600 transition-all duration-200 group"

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Compass,
   Users,
@@ -42,6 +42,41 @@ export default function RuClubsSection() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [applicationSuccess, setApplicationSuccess] = useState(false);
+  const [isLoggedInUser, setIsLoggedInUser] = useState(false);
+
+  // Auto-fill student information if signed in with Google
+  useEffect(() => {
+    try {
+      const savedUser = localStorage.getItem('ru_user_session');
+      if (savedUser) {
+        const u = JSON.parse(savedUser);
+        if (u.name || u.email) {
+          setIsLoggedInUser(true);
+          setFormData((prev) => ({
+            ...prev,
+            studentName: prev.studentName || u.name || '',
+            email: prev.email || u.email || '',
+          }));
+        }
+      }
+    } catch (e) {}
+
+    const handleAuth = (e: any) => {
+      const u = e.detail;
+      if (u) {
+        setIsLoggedInUser(true);
+        setFormData((prev) => ({
+          ...prev,
+          studentName: u.name || prev.studentName,
+          email: u.email || prev.email,
+        }));
+      } else {
+        setIsLoggedInUser(false);
+      }
+    };
+    window.addEventListener('ru_auth_changed', handleAuth);
+    return () => window.removeEventListener('ru_auth_changed', handleAuth);
+  }, []);
 
   const categories = [
     { id: 'all', label: 'সব ক্লাবসমূহ', count: RU_CLUBS.length },
@@ -574,6 +609,13 @@ export default function RuClubsSection() {
               ) : (
                 <form onSubmit={handleFormSubmit} className="space-y-4">
                   
+                  {isLoggedInUser && (
+                    <div className="p-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-800 font-bold flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <span>Google অ্যাকাউন্ট থেকে নাম ও ইমেইল যুক্ত করা হয়েছে।</span>
+                    </div>
+                  )}
+
                   <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200/80 text-[11px] text-amber-900 leading-relaxed">
                     💡 রাজশাহী বিশ্ববিদ্যালয়ের যেকোনো সেশন বা বিভাগের শিক্ষার্থী এই ফরমের মাধ্যমে সরাসরি ক্লাবের মেম্বারশিপের জন্য আবেদন করতে পারেন।
                   </div>

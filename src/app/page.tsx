@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
 import TopStoryHighlights from '@/components/TopStoryHighlights';
 import BreakingNewsTicker from '@/components/BreakingNewsTicker';
+import NotificationSubscribeBanner from '@/components/NotificationSubscribeBanner';
 import InsideRajshahiSection from '@/components/InsideRajshahiSection';
+import TouristSpotsSection from '@/components/TouristSpotsSection';
 import RuFacultiesSection from '@/components/RuFacultiesSection';
 import RuClubsSection from '@/components/RuClubsSection';
 import { Product } from '@/lib/types';
@@ -44,16 +46,22 @@ export default function HomePage() {
       {/* 2. Breaking News Live Ticker (ক্যাম্পাস ব্রেকিং নিউজ ও আপডেট) */}
       <BreakingNewsTicker />
 
-      {/* 3. Inside Rajshahi University (ইনসাইড রাজশাহী ইউনিভার্সিটি: ডেইলি নিউজ, গল্প, কবিতা ও সাহিত্য কর্নার) */}
+      {/* 3. News & Breaking Update Notification Subscribe Banner */}
+      <NotificationSubscribeBanner />
+
+      {/* 4. Inside Rajshahi University (ইনসাইড রাজশাহী ইউনিভার্সিটি: ডেইলি নিউজ, গল্প, কবিতা ও সাহিত্য কর্নার) */}
       <InsideRajshahiSection />
 
-      {/* 4. Rajshahi University Faculties, Departments, Seats & Career Paths (সকল বিভাগ ও ক্যারিয়ার গাইড) */}
+      {/* 5. The 3-Stage Interactive Water Map (১. বিভাগ, ২. জেলা, ৩. রাবি ক্যাম্পাস) */}
+      <TouristSpotsSection />
+
+      {/* 6. Rajshahi University Faculties, Departments, Seats & Career Paths (সকল বিভাগ ও ক্যারিয়ার গাইড) */}
       <RuFacultiesSection />
 
-      {/* 5. Rajshahi University Clubs & Online Membership Portal (সকল ক্লাব ও সদস্য হওয়ার আবেদন) */}
+      {/* 7. Rajshahi University Clubs & Online Membership Portal (সকল ক্লাব ও সদস্য হওয়ার আবেদন) */}
       <RuClubsSection />
 
-      {/* 6. Quick Link to Official Merch Store Catalog */}
+      {/* 8. Quick Link to Official Merch Store Catalog */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="p-4 sm:p-6 rounded-3xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left shadow-sm">
           <div className="space-y-1">

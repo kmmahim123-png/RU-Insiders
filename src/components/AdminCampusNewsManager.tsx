@@ -38,9 +38,24 @@ export default function AdminCampusNewsManager() {
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
   const [status, setStatus] = useState<'published' | 'draft'>('published');
+  const [notifySubscribers, setNotifySubscribers] = useState(true);
+  const [subscriberCount, setSubscriberCount] = useState<number>(0);
 
   useEffect(() => {
     loadArticles();
+    // Load subscribers count
+    async function fetchSubCount() {
+      try {
+        const res = await fetch('/api/notifications/subscribe');
+        if (res.ok) {
+          const d = await res.json();
+          if (d.success && typeof d.totalSubscribers === 'number') {
+            setSubscriberCount(d.totalSubscribers);
+          }
+        }
+      } catch (e) {}
+    }
+    fetchSubCount();
   }, []);
 
   const showMsg = (text: string, type: 'success' | 'error' = 'success') => {
@@ -185,7 +200,22 @@ export default function AdminCampusNewsManager() {
       });
     } catch (e) {}
 
-    showMsg(editingArticle ? 'লেখা সফলভাবে আপডেট হয়েছে!' : 'নতুন লেখা সফলভাবে প্রকাশিত হয়েছে!');
+    // Broadcast push notification if enabled
+    if (notifySubscribers && status === 'published') {
+      try {
+        await fetch('/api/notifications/broadcast', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: newArticle.title,
+            message: `${newArticle.categoryBn}: ${newArticle.excerpt}`,
+            url: '/#inside-ru',
+          }),
+        });
+      } catch (e) {}
+    }
+
+    showMsg(editingArticle ? 'লেখা সফলভাবে আপডেট হয়েছে!' : 'নতুন লেখা প্রকাশিত হয়েছে ও নোটিফিকেশন পাঠানো হয়েছে!');
     setIsFormOpen(false);
   };
 
@@ -231,14 +261,21 @@ export default function AdminCampusNewsManager() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenNewForm}
-          className="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all shrink-0"
-        >
-          <PlusCircle className="h-4 w-4" />
-          <span>+ নতুন সংবাদ / কবিতা লিখুন</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold font-bengali flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-blue-600 animate-pulse"></span>
+            <span>🔔 সাবস্ক্রাইবার: {subscriberCount} জন</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleOpenNewForm}
+            className="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all shrink-0"
+          >
+            <PlusCircle className="h-4 w-4" />
+            <span>+ নতুন সংবাদ / কবিতা লিখুন</span>
+          </button>
+        </div>
       </div>
 
       {/* Write / Edit Modal Form */}
@@ -426,6 +463,22 @@ export default function AdminCampusNewsManager() {
                     <option value="draft">খসড়া (Draft)</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Push Notification Broadcast Checkbox */}
+              <div className="p-3 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-between">
+                <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-blue-900">
+                  <input
+                    type="checkbox"
+                    checked={notifySubscribers}
+                    onChange={(e) => setNotifySubscribers(e.target.checked)}
+                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                  />
+                  <span>🔔 প্রকাশের সাথে সাথে সকল সাবস্ক্রাইবারকে ব্রাউজার নোটিফিকেশন পাঠান</span>
+                </label>
+                <span className="text-[10px] bg-blue-200/80 text-blue-900 px-2 py-0.5 rounded-full font-bold">
+                  {subscriberCount} জন সাবস্ক্রাইবার
+                </span>
               </div>
 
               {/* Form Actions */}
