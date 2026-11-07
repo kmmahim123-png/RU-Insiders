@@ -75,15 +75,22 @@
       transition: transform 0.22s ease, filter 0.22s ease;
     }
     .territory-poly {
-      transition: fill 0.22s ease, stroke 0.22s ease, stroke-width 0.22s ease;
+      transition: fill 0.25s ease, stroke 0.25s ease, stroke-width 0.25s ease;
       stroke-linejoin: round;
       stroke-linecap: round;
     }
+    .territory-group:hover {
+      filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.9)) drop-shadow(0 0 18px rgba(245, 158, 11, 0.75));
+    }
     .territory-group:hover .territory-poly.unvisited-poly {
       fill: var(--poly-hover);
+      stroke: #fbbf24;
+      stroke-width: 3.2px;
     }
     .territory-group:hover .territory-poly.visited-poly {
       fill: var(--poly-visited-hover);
+      stroke: #fef08a;
+      stroke-width: 3.5px;
     }
 
     /* Crisp Territory Label Halo so text is 100% legible over boundaries */
@@ -95,14 +102,26 @@
       transition: fill 0.2s ease, stroke 0.2s ease;
     }
 
-    /* Active Focused Territory Outline */
+    /* Active Focused Territory Outline with Radiant Glow */
     @keyframes activeBorderPulse {
-      0%, 100% { stroke-width: 3.5px; }
-      50% { stroke-width: 5.5px; }
+      0%, 100% {
+        stroke-width: 3.8px;
+        filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.95)) drop-shadow(0 0 20px rgba(34, 197, 94, 0.8));
+      }
+      50% {
+        stroke-width: 5.5px;
+        filter: drop-shadow(0 0 16px rgba(245, 158, 11, 1)) drop-shadow(0 0 28px rgba(34, 197, 94, 0.95));
+      }
     }
-    .territory-focused .territory-poly {
-      stroke: #f59e0b !important;
+    .territory-focused .territory-poly,
+    .territory-group:active .territory-poly {
+      stroke: #fbbf24 !important;
       animation: activeBorderPulse 1.6s infinite ease-in-out;
+    }
+    .territory-poly.visited-poly {
+      fill: #1f7a44 !important;
+      stroke: #ffffff !important;
+      stroke-width: 2.6px !important;
     }
 
     /* 3D Master Plan Isometric Mode */
@@ -2979,13 +2998,20 @@
               switchMapRegion('ru');
               return;
             }
-            if (quickTapMode) {
-              togglePlace(place.id, true);
-            } else {
-              activeDetailPlaceId = place.id;
-              renderContiguousMap();
-              showDetailCard(place.id);
-            }
+            // Always toggle visited on click so it glows, turns emerald green (#1f7a44), and counts as visited!
+            togglePlace(place.id, true);
+
+            // Sync with parent tracker window if embedded in iframe
+            try {
+              if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                  type: 'UNSEEN_RU_PLACE_VISITED',
+                  placeId: place.id,
+                  visitedCount: getActiveVisitedSet().size,
+                  totalCount: activePlaces.length
+                }, '*');
+              }
+            } catch (err) {}
           }
         });
 

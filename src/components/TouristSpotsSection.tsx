@@ -116,6 +116,7 @@ export default function TouristSpotsSection() {
         selectedDistrict={selectedDistrict}
         onSelectDistrict={(distId) => setSelectedDistrict(distId)}
         allSpots={allSpots}
+        onToggleVisited={toggleVisitedSpot}
       />
 
       {/* Active District Spots Header */}
@@ -251,16 +252,27 @@ export default function TouristSpotsSection() {
                   <span>বিস্তারিত ও ছবি দেখুন</span>
                 </button>
 
-                <a
-                  href={`https://www.google.com/maps/search/${encodeURIComponent(spot.nameBn + ' ' + spot.districtBn)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center gap-1"
-                  title="Google Maps-এ দেখুন"
-                >
-                  <MapPin className="h-3.5 w-3.5 text-rose-600" />
-                  <span className="text-[11px] hidden sm:inline">ম্যাপ</span>
-                </a>
+                {spot.id === 'spot-rj-ru' ? (
+                  <a
+                    href="/map?region=ru"
+                    className="py-2.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition flex items-center gap-1 shadow-sm"
+                    title="রাবি ৪২-টেরিটরি ইন্টারঅ্যাক্টিভ ম্যাপ দেখুন"
+                  >
+                    <Sparkles className="h-3.5 w-3.5 text-slate-950" />
+                    <span className="text-[11px]">রাবি ম্যাপ</span>
+                  </a>
+                ) : (
+                  <a
+                    href={`https://www.google.com/maps/search/${encodeURIComponent(spot.nameBn + ' ' + spot.districtBn)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center gap-1"
+                    title="Google Maps-এ দেখুন"
+                  >
+                    <MapPin className="h-3.5 w-3.5 text-rose-600" />
+                    <span className="text-[11px] hidden sm:inline">ম্যাপ</span>
+                  </a>
+                )}
               </div>
 
             </div>

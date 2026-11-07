@@ -17,12 +17,111 @@ import {
 import { RAJSHAHI_DIVISION_DISTRICTS, TouristSpot } from '@/lib/touristSpots';
 import { RAJSHAHI_DISTRICT_SVGS, RAJSHAHI_VIEWBOX, DistrictSvgData } from '@/lib/rajshahiDistrictsSvg';
 
+export interface RajshahiHotspot {
+  spotId: string;
+  nameBn: string;
+  shortName: string;
+  xPct: number;
+  yPct: number;
+  isRU?: boolean;
+}
+
+const RAJSHAHI_MAP_HOTSPOTS: RajshahiHotspot[] = [
+  {
+    spotId: 'spot-rj-ru',
+    nameBn: 'রাজশাহী বিশ্ববিদ্যালয় (রাবি ক্যাম্পাস ও প্যারিস রোড)',
+    shortName: 'রাবি ক্যাম্পাস (প্যারিস রোড)',
+    xPct: 61,
+    yPct: 53,
+    isRU: true,
+  },
+  {
+    spotId: 'spot-rj-padma',
+    nameBn: 'পদ্মার পাড় (টি-বাঁধ, মুক্তমঞ্চ ও বড়কুঠি)',
+    shortName: 'টি-বাঁধ ও পদ্মা তীর',
+    xPct: 40,
+    yPct: 63,
+  },
+  {
+    spotId: 'spot-rj-zoo',
+    nameBn: 'কেন্দ্রীয় চিড়িয়াখানা ও বোটানিক্যাল গার্ডেন',
+    shortName: 'চিড়িয়াখানা ও উদ্যান',
+    xPct: 32,
+    yPct: 48,
+  },
+  {
+    spotId: 'spot-rj-varendra',
+    nameBn: 'বরেন্দ্র গবেষণা জাদুঘর',
+    shortName: 'বরেন্দ্র জাদুঘর',
+    xPct: 45,
+    yPct: 50,
+  },
+  {
+    spotId: 'spot-rj-college',
+    nameBn: 'ঐতিহ্যবাহী রাজশাহী কলেজ ও লাল ভবন',
+    shortName: 'রাজশাহী কলেজ',
+    xPct: 43,
+    yPct: 56,
+  },
+  {
+    spotId: 'spot-rj-dargah',
+    nameBn: 'শাহ্ মখদুমের মাজার শরীফ ও দরগাপাড়া',
+    shortName: 'শাহ্ মখদুম মাজার',
+    xPct: 41,
+    yPct: 59,
+  },
+  {
+    spotId: 'spot-rj-library',
+    nameBn: 'রাজশাহী সাধারণ গ্রন্থাগার (১৮৮৪)',
+    shortName: 'পাবলিক লাইব্রেরি',
+    xPct: 47,
+    yPct: 55,
+  },
+  {
+    spotId: 'spot-rj-puthia',
+    nameBn: 'পুঠিয়া শিবমন্দির ও রাজবাড়ি চত্বর',
+    shortName: 'পুঠিয়া রাজবাড়ি',
+    xPct: 82,
+    yPct: 52,
+  },
+  {
+    spotId: 'spot-rj-bagha',
+    nameBn: 'ঐতিহাসিক বাঘা মসজিদ (১৫২৩ খ্রিষ্টাব্দ)',
+    shortName: 'বাঘা মসজিদ',
+    xPct: 85,
+    yPct: 78,
+  },
+  {
+    spotId: 'ruet',
+    nameBn: 'রুয়েট (প্রকৌশল বিশ্ববিদ্যালয়)',
+    shortName: 'রুয়েট (RUET)',
+    xPct: 56,
+    yPct: 50,
+    isRU: true,
+  },
+  {
+    spotId: 'rmc',
+    nameBn: 'রাজশাহী মেডিকেল কলেজ ও হাসপাতাল',
+    shortName: 'মেডিকেল কলেজ',
+    xPct: 37,
+    yPct: 48,
+  },
+  {
+    spotId: 'sapura',
+    nameBn: 'সপুরা বিসিক রেশম সিল্ক পল্লী',
+    shortName: 'সপুরা রেশম পল্লী',
+    xPct: 46,
+    yPct: 36,
+  },
+];
+
 interface RajshahiDivisionWaterMapProps {
   visitedSpotIds: string[];
   totalSpotsCount?: number;
   selectedDistrict: string;
   onSelectDistrict: (districtId: string) => void;
   allSpots: TouristSpot[];
+  onToggleVisited?: (spotId: string) => void;
 }
 
 export default function RajshahiDivisionWaterMap({
@@ -31,17 +130,32 @@ export default function RajshahiDivisionWaterMap({
   selectedDistrict,
   onSelectDistrict,
   allSpots,
+  onToggleVisited,
 }: RajshahiDivisionWaterMapProps) {
   const [userName, setUserName] = useState('');
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [hoveredDistrict, setHoveredDistrict] = useState<string | null>(null);
-  const [mapViewMode, setMapViewMode] = useState<'division' | 'rajshahi_detailed'>('division');
+  const [mapViewMode, setMapViewMode] = useState<'division' | 'rajshahi_detailed' | 'ru_campus'>('division');
+  const [selectedHotspotId, setSelectedHotspotId] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const detailedMapImgRef = useRef<HTMLImageElement | null>(null);
 
   const visitedCount = visitedSpotIds.length;
   const divisionPct = Math.min(100, Math.round((visitedCount / totalSpotsCount) * 100));
+
+  // Listen to postMessage from embedded RU Campus Map
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'UNSEEN_RU_PLACE_VISITED') {
+        if (onToggleVisited && !visitedSpotIds.includes('spot-rj-ru')) {
+          onToggleVisited('spot-rj-ru');
+        }
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [onToggleVisited, visitedSpotIds]);
 
   // Pre-load detailed Rajshahi image for poster and fast rendering
   useEffect(() => {
@@ -193,7 +307,31 @@ export default function RajshahiDivisionWaterMap({
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    if (mapViewMode === 'rajshahi_detailed' && detailedMapImgRef.current) {
+    if (mapViewMode === 'ru_campus') {
+      // Draw RU Campus Citation Special Graphic
+      ctx.fillStyle = '#064e3b';
+      ctx.roundRect(mapCardX + 25, mapCardY + 25, mapCardW - 50, mapCardH - 50, 20);
+      ctx.fill();
+      ctx.strokeStyle = '#34d399';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.fillStyle = '#fef08a';
+      ctx.font = 'bold 36px sans-serif';
+      ctx.fillText('🏛️ রাজশাহী বিশ্ববিদ্যালয়', W / 2, mapCardY + 120);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 24px sans-serif';
+      ctx.fillText('মতিহারের সবুজ চত্বর ও প্যারিস রোড', W / 2, mapCardY + 175);
+
+      ctx.fillStyle = '#a7f3d0';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText('৪২টি টেরিটরি (একাডেমিক ভবন, হল, স্মৃতিস্তম্ভ ও মুক্তমঞ্চ)', W / 2, mapCardY + 225);
+
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText(`রাবি ক্যাম্পাস ভ্রমণ রেকর্ড • RU Insiders Verified`, W / 2, mapCardY + 310);
+    } else if (mapViewMode === 'rajshahi_detailed' && detailedMapImgRef.current) {
       // Draw Detailed Rajshahi Separation Map with Water Fill
       const img = detailedMapImgRef.current;
       const innerW = 400;
@@ -442,8 +580,8 @@ export default function RajshahiDivisionWaterMap({
 
         {/* View Mode Toggle & Share Button */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Toggle between Division Map & Detailed Rajshahi Separation Map */}
-          <div className="flex items-center bg-stone-200/80 p-1 rounded-2xl border border-stone-300">
+          {/* Toggle between Division Map, Detailed Rajshahi Separation Map & RU Campus Map */}
+          <div className="flex flex-wrap items-center bg-stone-200/80 p-1 rounded-2xl border border-stone-300 gap-1">
             <button
               type="button"
               onClick={() => setMapViewMode('division')}
@@ -472,6 +610,22 @@ export default function RajshahiDivisionWaterMap({
               <ZoomIn className="h-3.5 w-3.5" />
               <span>রাজশাহী জেলা বিস্তারিত</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setMapViewMode('ru_campus');
+                onSelectDistrict('rajshahi');
+              }}
+              className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
+                mapViewMode === 'ru_campus'
+                  ? 'bg-emerald-800 text-white shadow-sm ring-2 ring-amber-400'
+                  : 'text-slate-700 hover:text-slate-900'
+              }`}
+            >
+              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+              <span>রাবি ক্যাম্পাস (৪২ স্পট)</span>
+            </button>
           </div>
 
           {/* Share & Poster Action */}
@@ -490,15 +644,51 @@ export default function RajshahiDivisionWaterMap({
       {/* Central Visual: Interactive Map + Unified District Selector */}
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-7 items-start">
         
-        {/* Left Side (7 Cols): Dynamic Map (Division 8-Districts or Detailed Rajshahi Separations) */}
+        {/* Left Side (7 Cols): Dynamic Map (Division 8-Districts or Detailed Rajshahi Separations or RU Campus) */}
         <div className="lg:col-span-7 flex flex-col items-center justify-center">
           <div className="relative w-full aspect-[245/220] max-w-[560px] bg-[#f2eee3] rounded-[28px] p-2 sm:p-4 border-2 border-emerald-900/15 shadow-inner flex items-center justify-center overflow-hidden group">
             
-            {mapViewMode === 'rajshahi_detailed' ? (
+            {mapViewMode === 'ru_campus' ? (
               // =============================================================
-              // DETAILED RAJSHAHI DISTRICT SEPARATION MAP (WITH WATER FILL!)
+              // RAJSHAHI UNIVERSITY CAMPUS INTERACTIVE MAP (42 TERRITORIES)
               // =============================================================
-              <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-2xl">
+              <div className="relative w-full h-full min-h-[460px] flex flex-col items-center justify-center overflow-hidden rounded-2xl bg-[#f6f4ec]">
+                <iframe
+                  src="/unseen-ru.html?region=ru&embed=true"
+                  title="Rajshahi University 42 Territories Map"
+                  className="w-full h-full border-0 select-none rounded-2xl"
+                  allow="clipboard-write; fullscreen; web-share"
+                />
+
+                {/* Top Badge */}
+                <div className="absolute top-2.5 left-3 bg-slate-900/90 text-white backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-bold border border-emerald-400/40 shadow-md flex items-center gap-1.5 z-20 pointer-events-none">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span>রাবি ক্যাম্পাস: ৪২টি অঞ্চল (ক্লিক করলেই সবুজ হবে ও ঘোরা ধরা হবে)</span>
+                </div>
+
+                {/* Bottom Quick Navigation */}
+                <div className="absolute bottom-2.5 left-3 z-20 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setMapViewMode('rajshahi_detailed')}
+                    className="bg-white/95 hover:bg-white text-slate-800 font-black text-[10px] px-3 py-1.5 rounded-full border border-stone-300 shadow-md flex items-center gap-1 transition-all"
+                  >
+                    <span>← রাজশাহী জেলা</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMapViewMode('division')}
+                    className="bg-emerald-800 hover:bg-emerald-700 text-white font-black text-[10px] px-3 py-1.5 rounded-full shadow-md flex items-center gap-1 transition-all"
+                  >
+                    <span>বিভাগীয় ম্যাপ</span>
+                  </button>
+                </div>
+              </div>
+            ) : mapViewMode === 'rajshahi_detailed' ? (
+              // =============================================================
+              // DETAILED RAJSHAHI DISTRICT SEPARATION MAP (WITH INTERACTIVE GLOW & WATER!)
+              // =============================================================
+              <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-2xl select-none">
                 {/* Background Detailed Map Image with All 22 Areas Labeled */}
                 <img
                   src="/campus/rajshahi-district-detailed-map.jpg"
@@ -516,17 +706,78 @@ export default function RajshahiDivisionWaterMap({
                   </div>
                 )}
 
+                {/* Interactive Clickable Hotspots overlaying the 22 Areas */}
+                {RAJSHAHI_MAP_HOTSPOTS.map((hotspot) => {
+                  const isVisited = visitedSpotIds.includes(hotspot.spotId);
+                  const isSelected = selectedHotspotId === hotspot.spotId;
+
+                  return (
+                    <div
+                      key={hotspot.spotId}
+                      className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10 transition-all duration-300"
+                      style={{ left: `${hotspot.xPct}%`, top: `${hotspot.yPct}%` }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedHotspotId(hotspot.spotId);
+                          if (onToggleVisited) {
+                            onToggleVisited(hotspot.spotId);
+                          }
+                        }}
+                        className={`group relative flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black transition-all shadow-md cursor-pointer ${
+                          isVisited
+                            ? 'bg-[#1f7a44] text-white border-2 border-amber-300 ring-4 ring-amber-400 shadow-[0_0_18px_rgba(245,158,11,0.95),0_0_30px_rgba(34,197,94,0.85)] scale-105'
+                            : isSelected
+                            ? 'bg-amber-400 text-slate-950 border-2 border-emerald-600 ring-4 ring-emerald-400 shadow-[0_0_14px_rgba(16,185,129,0.9)] scale-105'
+                            : 'bg-white/95 hover:bg-white text-slate-800 border border-slate-400/80 hover:border-amber-500 hover:scale-110 hover:shadow-lg'
+                        }`}
+                        title={hotspot.nameBn}
+                      >
+                        <span
+                          className={`w-2 h-2 rounded-full ${
+                            isVisited
+                              ? 'bg-amber-300 animate-pulse'
+                              : isSelected
+                              ? 'bg-emerald-600 animate-ping'
+                              : 'bg-red-500'
+                          }`}
+                        />
+                        <span className="truncate max-w-[85px] sm:max-w-[110px] font-bengali">
+                          {hotspot.shortName}
+                        </span>
+                        {isVisited && <Check className="h-3 w-3 text-amber-300 shrink-0" />}
+                      </button>
+
+                      {/* Special Quick Action for Rajshahi University */}
+                      {hotspot.isRU && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMapViewMode('ru_campus');
+                          }}
+                          className="mt-1 px-2 py-0.5 rounded-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[9px] shadow-md border border-amber-600 flex items-center gap-1 transition-all mx-auto animate-bounce"
+                        >
+                          <Sparkles className="h-2.5 w-2.5 text-slate-950" />
+                          <span>রাবি ৪২-স্পট ম্যাপ</span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+
                 {/* Badge top-left */}
-                <div className="absolute top-2.5 left-3 bg-slate-900/90 text-white backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-bold border border-emerald-400/40 shadow-md flex items-center gap-1.5">
+                <div className="absolute top-2.5 left-3 bg-slate-900/90 text-white backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-bold border border-emerald-400/40 shadow-md flex items-center gap-1.5 pointer-events-none">
                   <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                  <span>রাজশাহী জেলা বিস্তারিত সেপারেশন ভিউ</span>
+                  <span>রাজশাহী জেলা বিস্তারিত (স্পটে ক্লিক করলেই সবুজ হবে ও ঘোরা ধরা হবে)</span>
                 </div>
 
                 {/* Switch back to division map button */}
                 <button
                   type="button"
                   onClick={() => setMapViewMode('division')}
-                  className="absolute bottom-2.5 left-3 bg-white/95 hover:bg-white text-slate-800 font-black text-[10px] px-3 py-1.5 rounded-full border border-stone-300 shadow-md flex items-center gap-1 transition-all"
+                  className="absolute bottom-2.5 left-3 bg-white/95 hover:bg-white text-slate-800 font-black text-[10px] px-3 py-1.5 rounded-full border border-stone-300 shadow-md flex items-center gap-1 transition-all z-20"
                 >
                   <span>← সমগ্র বিভাগ ম্যাপে ফিরুন</span>
                 </button>
@@ -763,20 +1014,44 @@ export default function RajshahiDivisionWaterMap({
               </div>
             </div>
 
-            {/* Special shortcut for Rajshahi District Separations */}
+            {/* Special shortcut for Rajshahi District Separations & RU Campus */}
             {selectedDistrict === 'rajshahi' && (
-              <div className="pt-1 border-t border-emerald-700/50 flex items-center justify-between">
-                <span className="text-[11px] text-emerald-200 font-bengali">
-                  রাজশাহী জেলার অভ্যন্তরীণ ২২টি অঞ্চল চিহ্নিত ম্যাপ:
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setMapViewMode(mapViewMode === 'division' ? 'rajshahi_detailed' : 'division')}
-                  className="px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] transition-all flex items-center gap-1"
-                >
-                  <Layers className="h-3 w-3" />
-                  <span>{mapViewMode === 'rajshahi_detailed' ? 'বিভাগীয় ম্যাপ' : 'বিস্তারিত সেপারেশন ম্যাপ'}</span>
-                </button>
+              <div className="pt-2 border-t border-emerald-700/50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-emerald-200 font-bengali">
+                    রাজশাহী জেলা বিস্তারিত ২২ অঞ্চল:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setMapViewMode('rajshahi_detailed')}
+                    className={`px-2.5 py-1 rounded-lg font-black text-[10px] transition-all flex items-center gap-1 ${
+                      mapViewMode === 'rajshahi_detailed'
+                        ? 'bg-amber-300 text-slate-950 ring-2 ring-white'
+                        : 'bg-amber-400 hover:bg-amber-300 text-slate-950'
+                    }`}
+                  >
+                    <Layers className="h-3 w-3" />
+                    <span>বিস্তারিত সেপারেশন ম্যাপ</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-emerald-200 font-bengali">
+                    রাজশাহী বিশ্ববিদ্যালয় (রাবি ক্যাম্পাস):
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setMapViewMode('ru_campus')}
+                    className={`px-2.5 py-1 rounded-lg font-black text-[10px] transition-all flex items-center gap-1 ${
+                      mapViewMode === 'ru_campus'
+                        ? 'bg-emerald-300 text-slate-950 ring-2 ring-white'
+                        : 'bg-emerald-400 hover:bg-emerald-300 text-slate-950'
+                    }`}
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    <span>রাবি ক্যাম্পাস ম্যাপ (৪২ স্পট)</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -803,7 +1078,7 @@ export default function RajshahiDivisionWaterMap({
                     type="button"
                     onClick={() => {
                       onSelectDistrict(d.id);
-                      if (d.id !== 'rajshahi' && mapViewMode === 'rajshahi_detailed') {
+                      if (d.id !== 'rajshahi' && mapViewMode !== 'division') {
                         setMapViewMode('division');
                       }
                     }}
