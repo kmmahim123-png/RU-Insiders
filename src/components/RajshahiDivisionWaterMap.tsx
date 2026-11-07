@@ -531,18 +531,12 @@ export default function RajshahiDivisionWaterMap({
                   allow="clipboard-write; fullscreen; web-share"
                 />
 
-                {/* Top Badge */}
-                <div className="absolute top-2.5 left-3 bg-slate-900/90 text-white backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-bold border border-emerald-400/40 shadow-md flex items-center gap-1.5 z-20 pointer-events-none">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  <span>রাবি ক্যাম্পাস: ৪২টি অঞ্চল (ম্যাপে ক্লিক করে এক্সপ্লোর করুন)</span>
-                </div>
-
                 {/* Bottom Quick Navigation */}
-                <div className="absolute bottom-2.5 left-3 z-20 flex items-center gap-2">
+                <div className="absolute bottom-3 left-3 z-20 flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setMapViewMode('division')}
-                    className="bg-emerald-800 hover:bg-emerald-700 text-white font-black text-[10px] px-3.5 py-1.5 rounded-full shadow-md flex items-center gap-1 transition-all"
+                    className="bg-emerald-800 hover:bg-emerald-700 text-white font-black text-xs px-4 py-2 rounded-xl shadow-lg flex items-center gap-1.5 transition-all"
                   >
                     <span>← জেলা ম্যাপে ফিরুন</span>
                   </button>
@@ -694,19 +688,6 @@ export default function RajshahiDivisionWaterMap({
                   );
                 })}
               </svg>
-            )}
-
-            {/* Floating Selection Banner on Map */}
-            {mapViewMode === 'division' && (
-              <div className="absolute bottom-2.5 inset-x-3 bg-slate-900/90 text-white backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold border border-emerald-400/40 shadow-lg flex items-center justify-between pointer-events-none">
-                <span className="flex items-center gap-1.5 font-bengali">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  <span>ম্যাপে নির্বাচিত: {activeDistrictData.nameBn}</span>
-                </span>
-                <span className="text-[11px] font-mono text-amber-300 font-bold">
-                  ভ্রমণ: {activeStats.pct}% ({activeStats.visited}/{activeStats.total})
-                </span>
-              </div>
             )}
 
           </div>
