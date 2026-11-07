@@ -53,12 +53,12 @@ export default function Navbar() {
   }, []);
 
   const navLinks = [
-    { label: 'Shop All Merch', href: '/shop', bn: 'শপ', icon: ShoppingBag },
-    { label: 'Inside RU News', href: '/#inside-ru', bn: 'ইনসাইড আরইউ', icon: BookOpen },
-    { label: 'Faculties & Careers', href: '/#departments', bn: 'বিভাগ ও ক্যারিয়ার', icon: GraduationCap },
-    { label: 'RU Clubs', href: '/#clubs', bn: 'ক্লাবসমূহ', icon: Users },
+    { label: 'শপ', href: '/shop', bn: 'শপ', icon: ShoppingBag },
+    { label: 'নিউজ ও সাহিত্য', href: '/inside-ru', bn: 'ক্যাম্পাস নিউজ', icon: BookOpen },
+    { label: 'বিভাগ ও ক্যারিয়ার', href: '/academics', bn: 'অনুষদ ও আসন', icon: GraduationCap },
+    { label: 'ক্লাবসমূহ', href: '/clubs', bn: 'ক্লাব ও মেম্বারশিপ', icon: Users },
     { label: 'ম্যাপ', href: '/map', bn: 'রাজশাহী ম্যাপ', icon: Compass },
-    { label: 'Track Order', href: '/track', bn: 'অর্ডার ট্র্যাকিং', icon: Truck },
+    { label: 'অর্ডার ট্র্যাকিং', href: '/track', bn: 'অর্ডার ট্র্যাকিং', icon: Truck },
   ];
 
   // If on admin routes, hide consumer navbar to avoid duplicate header bars (checked after all hooks)

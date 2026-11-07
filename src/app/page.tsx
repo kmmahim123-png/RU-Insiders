@@ -6,10 +6,10 @@ import { ShoppingBag, ArrowRight } from 'lucide-react';
 import TopStoryHighlights from '@/components/TopStoryHighlights';
 import BreakingNewsTicker from '@/components/BreakingNewsTicker';
 import NotificationSubscribeBanner from '@/components/NotificationSubscribeBanner';
-import InsideRajshahiSection from '@/components/InsideRajshahiSection';
+import CompactInsideRu from '@/components/CompactInsideRu';
 import TouristSpotsSection from '@/components/TouristSpotsSection';
-import RuFacultiesSection from '@/components/RuFacultiesSection';
-import RuClubsSection from '@/components/RuClubsSection';
+import CompactFaculties from '@/components/CompactFaculties';
+import CompactClubs from '@/components/CompactClubs';
 import { Product } from '@/lib/types';
 import { INITIAL_PRODUCTS } from '@/lib/store';
 
@@ -38,7 +38,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="space-y-6 sm:space-y-8 pb-16 overflow-hidden bg-white">
+    <div className="space-y-4 sm:space-y-6 pb-16 overflow-hidden bg-white">
 
       {/* 1. Top Circular Story Highlights (প্রোডাক্টস কালেকশন গোল আইকন) */}
       <TopStoryHighlights products={products} showViewAllButton={true} title="কালেকশন" />
@@ -49,20 +49,20 @@ export default function HomePage() {
       {/* 3. News & Breaking Update Notification Subscribe Banner */}
       <NotificationSubscribeBanner />
 
-      {/* 4. Inside Rajshahi University (ইনসাইড রাজশাহী ইউনিভার্সিটি: ডেইলি নিউজ, গল্প, কবিতা ও সাহিত্য কর্নার) */}
-      <InsideRajshahiSection />
+      {/* 4. Compact Inside RU News, Stories, Poetry & Talent (আইকন ক্লিক করলেই একটি একটি করে নিউজ ও গল্প) */}
+      <CompactInsideRu />
 
       {/* 5. The 3-Stage Interactive Water Map (১. বিভাগ, ২. জেলা, ৩. রাবি ক্যাম্পাস) */}
       <TouristSpotsSection />
 
-      {/* 6. Rajshahi University Faculties, Departments, Seats & Career Paths (সকল বিভাগ ও ক্যারিয়ার গাইড) */}
-      <RuFacultiesSection />
+      {/* 6. Compact RU Faculties, Departments & Careers (আইকন ক্লিক করলেই বিভাগ ও ক্যারিয়ার) */}
+      <CompactFaculties />
 
-      {/* 7. Rajshahi University Clubs & Online Membership Portal (সকল ক্লাব ও সদস্য হওয়ার আবেদন) */}
-      <RuClubsSection />
+      {/* 7. Compact RU Clubs & Online Membership (আইকন ক্লিক করলেই ক্লাব ও মেম্বারশিপ আবেদন) */}
+      <CompactClubs />
 
       {/* 8. Quick Link to Official Merch Store Catalog */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2">
         <div className="p-4 sm:p-6 rounded-3xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left shadow-sm">
           <div className="space-y-1">
             <h3 className="text-sm sm:text-base font-black text-slate-900 font-bengali">
