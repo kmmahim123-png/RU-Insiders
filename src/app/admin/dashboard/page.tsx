@@ -27,6 +27,7 @@ import {
   UploadCloud,
   Camera, 
   ExternalLink, 
+  BookOpen,
   FolderPlus,
   Video,
   Play,
@@ -48,6 +49,7 @@ import RevenueCharts from '@/components/RevenueCharts';
 import PrintDesk from '@/components/PrintDesk';
 import SteadfastModal from '@/components/SteadfastModal';
 import AdminMapPhotoManager from '@/components/AdminMapPhotoManager';
+import AdminCampusNewsManager from '@/components/AdminCampusNewsManager';
 import { Product, Order, PrintJob, SteadfastConfig, ProductCategory, RevenueSummary } from '@/lib/types';
 import { formatBDT, formatDate } from '@/lib/utils';
 import { INITIAL_STEADFAST_CONFIG, calculateRevenueSummary } from '@/lib/store';
@@ -70,7 +72,7 @@ const PRESET_DESCRIPTIVE_SIZES = ['ছোট (Small)', 'মাঝারি (Medi
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'analytics' | 'steadfast' | 'map_photos'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'analytics' | 'steadfast' | 'map_photos' | 'campus_news'>('products');
   const [newProductStoryHighlight, setNewProductStoryHighlight] = useState(false);
   
   // Real-time Database State
@@ -1046,6 +1048,7 @@ export default function AdminDashboardPage() {
           { id: 'analytics', label: 'Revenue & Profit (আয় ও লাভ)', icon: TrendingUp, count: null },
           { id: 'steadfast', label: 'Steadfast Courier API', icon: Truck, count: null },
           { id: 'map_photos', label: '📸 ম্যাপ ফটো ম্যানেজার', icon: Camera, count: null },
+          { id: 'campus_news', label: '📰 দৈনিক সংবাদ ও সাহিত্য কর্নার', icon: BookOpen, count: null },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -2381,6 +2384,11 @@ export default function AdminDashboardPage() {
       {/* TAB 5: MAP & LANDMARK PHOTO MANAGER */}
       {activeTab === 'map_photos' && (
         <AdminMapPhotoManager />
+      )}
+
+      {/* TAB 6: DAILY CAMPUS NEWS & LITERATURE MANAGER */}
+      {activeTab === 'campus_news' && (
+        <AdminCampusNewsManager />
       )}
 
       {/* Steadfast Dispatch Modal */}

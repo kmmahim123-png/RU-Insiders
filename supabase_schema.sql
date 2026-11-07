@@ -297,3 +297,36 @@ VALUES
   'Everyday'
 )
 ON CONFLICT (id) DO NOTHING;
+
+
+-- ==============================================================================
+-- 9. CAMPUS NEWS, LITERATURE & POETRY ARTICLES TABLE
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.campus_articles (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  subtitle TEXT DEFAULT '',
+  category TEXT NOT NULL DEFAULT 'poetry',
+  category_bn TEXT DEFAULT 'সাহিত্য ও কবিতা',
+  author_name TEXT NOT NULL,
+  author_dept TEXT DEFAULT '',
+  author_role TEXT DEFAULT 'শিক্ষার্থী',
+  published_at TEXT DEFAULT '',
+  image_url TEXT DEFAULT '',
+  content TEXT NOT NULL,
+  excerpt TEXT DEFAULT '',
+  tags JSONB DEFAULT '[]'::jsonb,
+  likes_count INTEGER DEFAULT 0,
+  is_featured BOOLEAN DEFAULT false,
+  status TEXT DEFAULT 'published',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.campus_articles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public read campus_articles" ON public.campus_articles;
+CREATE POLICY "Public read campus_articles" ON public.campus_articles FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Full access campus_articles for API" ON public.campus_articles;
+CREATE POLICY "Full access campus_articles for API" ON public.campus_articles FOR ALL USING (true) WITH CHECK (true);

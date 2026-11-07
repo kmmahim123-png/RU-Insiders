@@ -2,21 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   MapPin,
   Navigation,
   ExternalLink,
-  Compass,
-  Landmark,
-  ArrowRight,
-  ShieldCheck,
   X,
   ChevronLeft,
   ChevronRight,
   CheckCircle2,
   Camera,
-  Layers,
   Sparkles
 } from 'lucide-react';
 import {
@@ -63,7 +57,7 @@ export default function TouristSpotsSection() {
     return () => window.removeEventListener('ru_tourist_spots_updated', handleUpdate);
   }, []);
 
-  // Load visited state
+  // Load visited state from localStorage
   useEffect(() => {
     try {
       const saved = localStorage.getItem('ru_visited_tourist_spots_v1');
@@ -83,14 +77,6 @@ export default function TouristSpotsSection() {
     } catch (e) {}
   };
 
-  const spotsToDisplay = React.useMemo(() => {
-    return allSpots.filter((s) => s.districtId === selectedDistrict);
-  }, [allSpots, selectedDistrict]);
-
-  const activeDistrictInfo = RAJSHAHI_DIVISION_DISTRICTS.find(
-    (d) => d.id === selectedDistrict
-  ) || RAJSHAHI_DIVISION_DISTRICTS[0];
-
   const handleOpenDetails = (spot: TouristSpot) => {
     setSelectedSpotForDetails(spot);
     setActiveGalleryIdx(0);
@@ -99,7 +85,7 @@ export default function TouristSpotsSection() {
   return (
     <section id="tourist-attractions" className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-6">
       
-      {/* Section Header: Clean title */}
+      {/* Section Header */}
       <div className="flex items-center justify-between pb-1 pt-2">
         <div className="flex items-center gap-2.5">
           <span className="w-3 h-3 rounded-full bg-emerald-600"></span>
@@ -109,7 +95,7 @@ export default function TouristSpotsSection() {
         </div>
       </div>
 
-      {/* 1. Interactive Rajshahi Division Water-Fill Progress Map & Poster Share */}
+      {/* Unified Interactive Rajshahi Division Water-Fill Progress Map & Vertical Spot Explorer */}
       <RajshahiDivisionWaterMap
         visitedSpotIds={visitedSpotIds}
         totalSpotsCount={allSpots.length || 95}
@@ -117,168 +103,8 @@ export default function TouristSpotsSection() {
         onSelectDistrict={(distId) => setSelectedDistrict(distId)}
         allSpots={allSpots}
         onToggleVisited={toggleVisitedSpot}
+        onOpenSpotDetails={handleOpenDetails}
       />
-
-      {/* Active District Spots Header */}
-      <div className="pt-2 pb-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200">
-        <div className="flex items-center gap-2">
-          <MapPin className="h-5 w-5 text-emerald-700" />
-          <h3 className="text-lg sm:text-xl font-black text-slate-900 font-bengali">
-            {activeDistrictInfo.nameBn}-এর দর্শনীয় স্থানসমূহ ({spotsToDisplay.length}টি স্থান)
-          </h3>
-        </div>
-        <span className="text-xs font-bold text-slate-500 font-bengali">
-          স্থানটি ভ্রমণ করে থাকলে সরাসরি "আমি এই জায়গা ঘুরেছি" বাটনে টিক দিন
-        </span>
-      </div>
-
-      {/* Tourist Spots Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {spotsToDisplay.map((spot) => {
-          const spotImages = Array.isArray(spot.images) && spot.images.length > 0
-            ? spot.images
-            : (spot.imageUrl ? [spot.imageUrl] : []);
-          const isVisited = visitedSpotIds.includes(spot.id);
-
-          return (
-            <div
-              key={spot.id}
-              className={`bg-white rounded-3xl overflow-hidden border transition-all duration-300 flex flex-col justify-between group ${
-                isVisited
-                  ? 'border-emerald-400 shadow-md ring-2 ring-emerald-500/20'
-                  : 'border-slate-200/90 shadow-sm hover:shadow-xl'
-              }`}
-            >
-              <div>
-                {/* Spot Photo with Rank & Visited Badge */}
-                <div
-                  className="relative h-48 w-full bg-slate-900 overflow-hidden cursor-pointer"
-                  onClick={() => handleOpenDetails(spot)}
-                >
-                  <img
-                    src={spotImages[0] || spot.imageUrl}
-                    alt={spot.nameBn}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 filter brightness-95"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/20" />
-
-                  {/* Spot Rank Badge */}
-                  <div className="absolute top-3 left-3 flex items-center gap-1.5">
-                    <span className="px-3 py-1 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] shadow-sm">
-                      ক্রমিক নং {spot.rankNo}
-                    </span>
-                    <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-emerald-300 font-bold text-[10px] border border-white/20">
-                      {spot.districtBn}
-                    </span>
-                  </div>
-
-                  {/* Multi-Photo Count Pill */}
-                  {spotImages.length > 1 && (
-                    <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-white font-bold text-[10px] flex items-center gap-1 border border-white/20">
-                      <Camera className="h-3 w-3 text-amber-300" />
-                      <span>{spotImages.length}টি ছবি</span>
-                    </div>
-                  )}
-
-                  {/* Spot Title on Image Bottom */}
-                  <div className="absolute bottom-3 left-3 right-3 text-white">
-                    <h3 className="font-black text-sm sm:text-base leading-snug drop-shadow-md">
-                      {spot.nameBn}
-                    </h3>
-                    <p className="text-[11px] text-slate-300 font-medium truncate">
-                      {spot.nameEn}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Spot Details */}
-                <div className="p-4 space-y-2.5">
-                  <div className="flex items-center justify-between text-xs text-slate-500 font-semibold">
-                    <div className="flex items-center gap-1.5 truncate">
-                      <MapPin className="h-3.5 w-3.5 text-rose-600 shrink-0" />
-                      <span className="truncate">{spot.locationBn}</span>
-                    </div>
-                    {isVisited && (
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] shrink-0 border border-emerald-300">
-                        ✓ ঘোরা হয়েছে
-                      </span>
-                    )}
-                  </div>
-
-                  <p className="text-xs text-slate-600 font-bengali leading-relaxed line-clamp-3">
-                    {spot.descriptionBn}
-                  </p>
-
-                  {/* Tags */}
-                  {spot.tags && spot.tags.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                      {spot.tags.map((t) => (
-                        <span
-                          key={t}
-                          className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-semibold"
-                        >
-                          #{t}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Direct 1-Click Visited Toggle Button (Right on the card, above details button!) */}
-              <div className="px-4 pb-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => toggleVisitedSpot(spot.id)}
-                  className={`w-full py-2.5 px-3 rounded-2xl font-black text-xs flex items-center justify-center gap-2 transition-all ${
-                    isVisited
-                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-950/20 ring-2 ring-emerald-400/50'
-                      : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-2 border-emerald-300/80 hover:border-emerald-500'
-                  }`}
-                >
-                  <CheckCircle2 className={`h-4 w-4 ${isVisited ? 'text-amber-300' : 'text-emerald-600'}`} />
-                  <span>{isVisited ? '✓ আমি এই জায়গা ঘুরেছি (ভ্রমণ সম্পন্ন)' : 'আমি এই জায়গা ঘুরেছি (টিক দিন)'}</span>
-                </button>
-              </div>
-
-              {/* Action Buttons: Opens Rich Details Section */}
-              <div className="p-4 pt-2 border-t border-slate-100 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleOpenDetails(spot)}
-                  className="flex-1 py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all"
-                >
-                  <Sparkles className="h-3.5 w-3.5 text-amber-300" />
-                  <span>বিস্তারিত ও ছবি দেখুন</span>
-                </button>
-
-                {spot.id === 'spot-rj-ru' ? (
-                  <a
-                    href="/map?region=ru"
-                    className="py-2.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition flex items-center gap-1 shadow-sm"
-                    title="রাবি ৪২-টেরিটরি ইন্টারঅ্যাক্টিভ ম্যাপ দেখুন"
-                  >
-                    <Sparkles className="h-3.5 w-3.5 text-slate-950" />
-                    <span className="text-[11px]">রাবি ম্যাপ</span>
-                  </a>
-                ) : (
-                  <a
-                    href={`https://www.google.com/maps/search/${encodeURIComponent(spot.nameBn + ' ' + spot.districtBn)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center gap-1"
-                    title="Google Maps-এ দেখুন"
-                  >
-                    <MapPin className="h-3.5 w-3.5 text-rose-600" />
-                    <span className="text-[11px] hidden sm:inline">ম্যাপ</span>
-                  </a>
-                )}
-              </div>
-
-            </div>
-          );
-        })}
-      </div>
 
       {/* ================================================================= */}
       {/* SPOT DETAILS MODAL (বিস্তারিত তথ্য, একাধিক ছবি গ্যালারি ও লোকেশন) */}
@@ -294,11 +120,11 @@ export default function TouristSpotsSection() {
                   <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[10px]">
                     ক্রমিক {selectedSpotForDetails.rankNo}
                   </span>
-                  <span className="text-xs text-emerald-200 font-semibold">
+                  <span className="text-xs text-emerald-200 font-semibold font-bengali">
                     {selectedSpotForDetails.districtBn}
                   </span>
                 </div>
-                <h3 className="font-black text-base sm:text-lg text-white pt-1">
+                <h3 className="font-black text-base sm:text-lg text-white pt-1 font-bengali">
                   {selectedSpotForDetails.nameBn}
                 </h3>
               </div>
@@ -379,7 +205,7 @@ export default function TouristSpotsSection() {
               })()}
 
               {/* Spot Information Details */}
-              <div className="space-y-3">
+              <div className="space-y-3 font-bengali">
                 <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-100">
                   <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-800">
                     <MapPin className="h-4 w-4 text-rose-600 shrink-0" />
@@ -431,7 +257,7 @@ export default function TouristSpotsSection() {
             </div>
 
             {/* Modal Footer Controls */}
-            <div className="px-5 sm:px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+            <div className="px-5 sm:px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 font-bengali">
               <div className="flex items-center gap-2">
                 <a
                   href={`https://www.google.com/maps/search/${encodeURIComponent(selectedSpotForDetails.nameBn + ' ' + selectedSpotForDetails.districtBn)}`}

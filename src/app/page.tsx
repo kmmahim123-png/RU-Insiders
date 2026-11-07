@@ -6,6 +6,7 @@ import { ShoppingBag, ArrowRight } from 'lucide-react';
 import TopStoryHighlights from '@/components/TopStoryHighlights';
 import CampusTourBanner from '@/components/CampusTourBanner';
 import TouristSpotsSection from '@/components/TouristSpotsSection';
+import CampusNewsLiteratureSection from '@/components/CampusNewsLiteratureSection';
 import { Product } from '@/lib/types';
 import { INITIAL_PRODUCTS } from '@/lib/store';
 
@@ -66,6 +67,9 @@ export default function HomePage() {
           </Link>
         </div>
       </div>
+
+      {/* 5. Daily Campus News, Literature, Poetry & RU Talent Spotlight Section */}
+      <CampusNewsLiteratureSection />
 
     </div>
   );

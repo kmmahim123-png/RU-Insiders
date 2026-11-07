@@ -1,0 +1,171 @@
+export type ArticleCategory = 'news' | 'poetry' | 'literature' | 'talent' | 'feature';
+
+export interface CampusArticle {
+  id: string;
+  title: string;
+  subtitle?: string;
+  category: ArticleCategory;
+  categoryBn: string;
+  authorName: string;
+  authorDept: string;
+  authorRole?: string;
+  authorAvatar?: string;
+  publishedAt: string;
+  imageUrl: string;
+  content: string;
+  excerpt: string;
+  tags: string[];
+  likesCount: number;
+  isFeatured?: boolean;
+  status: 'published' | 'draft';
+}
+
+export const INITIAL_CAMPUS_ARTICLES: CampusArticle[] = [
+  {
+    id: 'art-paris-road-winter-poem',
+    title: 'প্যারিস রোডের কুয়াশা ও গগনশিরীষের গান',
+    subtitle: 'মতিহারের শীতের সকালের কাব্য',
+    category: 'poetry',
+    categoryBn: 'সাহিত্য ও কবিতা',
+    authorName: 'সাদিয়া ইসলাম',
+    authorDept: 'বাংলা বিভাগ, সেশন ২০১৯-২০',
+    authorRole: 'শিক্ষার্থী ও কবি',
+    publishedAt: '৭ নভেম্বর, ২০২৬',
+    imageUrl: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=1200&q=80',
+    excerpt: 'কুয়াশার চাদরে ঢাকা মতিহারের প্যারিস রোড,\nগগনশিরীষের ডালে আজ ভোরের আলোর ফোঁটা।\nসাইকেলের ক্রিং ক্রিং শব্দে জেগে ওঠে ক্যাম্পাস,\nআমার একাকী হেঁটে যাওয়া, পুরোনো সব স্মৃতির খোঁজে...',
+    content: `কুয়াশার চাদরে ঢাকা মতিহারের প্যারিস রোড,
+গগনশিরীষের ডালে আজ ভোরের আলোর ফোঁটা।
+সাইকেলের ক্রিং ক্রিং শব্দে জেগে ওঠে ক্যাম্পাস,
+আমার একাকী হেঁটে যাওয়া, পুরোনো সব স্মৃতির খোঁজে।
+
+রবীন্দ্র ভবনের সিঁড়িতে ঝরে পড়ে শুকনো পাতা,
+লাইব্রেরির শান্ত বারান্দায় বইয়ের পাতার গন্ধ।
+শাবাশ বাংলাদেশের পাদদেশে জমাট বাঁধে আড্ডা,
+ক্যান্টিনের এক কাপ চায়ে জমে থাকা শীতের ছন্দ।
+
+তুমি বলেছিলে মতিহার ছেড়ে গেলে শহর হবে অচেনা,
+আজও প্রতিটি ভোরে প্যারিস রোড তোমাকেই খোঁজে।
+সবুজ পাতার মর্মরে মিশে আছে আমাদের দিনগুলি,
+ক্যাম্পাস বেঁচে থাকে ভালোবাসার অনন্ত সাজে।`,
+    tags: ['কবিতা', 'প্যারিস রোড', 'মতিহার', 'শীতের সকাল'],
+    likesCount: 142,
+    isFeatured: true,
+    status: 'published',
+  },
+  {
+    id: 'art-ru-robotics-national-award',
+    title: 'জাতীয় রোবটিক্স অলিম্পিয়াডে চ্যাম্পিয়ন রাজশাহী বিশ্ববিদ্যালয়ের ‘টিম মতিহার’',
+    subtitle: 'কৃত্রিম বুদ্ধিমত্তা ও ড্রোন প্রযুক্তিতে রাবির গৌরবোজ্জ্বল সাফল্য',
+    category: 'talent',
+    categoryBn: 'রাবি প্রতিভা ও অর্জন',
+    authorName: 'তানভীর আহমেদ',
+    authorDept: 'সিএসই বিভাগ, সেশন ২০২১-২২',
+    authorRole: 'টিম লিডার ও গবেষক',
+    publishedAt: '৬ নভেম্বর, ২০২৬',
+    imageUrl: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=1200&q=80',
+    excerpt: 'বাংলাদেশের শীর্ষ ২০টি বিশ্ববিদ্যালয়ের মধ্যে তীব্র প্রতিদ্বন্দ্বিতার পর রাবির কম্পিউটার সায়েন্স অ্যান্ড ইঞ্জিনিয়ারিং বিভাগের শিক্ষার্থীরা তৈরি করেছেন আধুনিক এগ্রি-সার্ভিল্যান্স ড্রোন...',
+    content: `জাতীয় বিজ্ঞান ও প্রযুক্তি সপ্তাহ উপলক্ষে আয়োজিত জাতীয় রোবটিক্স অলিম্পিয়াড ২০২৬-এ চ্যাম্পিয়ন হওয়ার গৌরব অর্জন করেছে রাজশাহী বিশ্ববিদ্যালয়ের উদ্ভাবনী দল ‘টিম মতিহার’।
+
+রাবির কম্পিউটার সায়েন্স অ্যান্ড ইঞ্জিনিয়ারিং (সিএসই) এবং ফলিত পদার্থবিজ্ঞান ও ইলেকট্রনিক ইঞ্জিনিয়ারিং বিভাগের ৪ জন মেধাবী শিক্ষার্থীর যৌথ প্রচেষ্টায় তৈরি করা হয়েছে ‘স্মার্ট এগ্রো-ড্রোন ৩.০’। এটি স্বয়ংক্রিয়ভাবে ফসলের রোগ শনাক্তকরণ ও কীটনাশক ব্যবহারের মাত্রা নির্ধারণে কৃত্রিম বুদ্ধিমত্তা (AI) ব্যবহার করে।
+
+টিম লিডার তানভীর আহমেদ বলেন, "প্যারিস রোডের পাশে বসে আমাদের এই প্রজেক্টের সূচনা হয়েছিল। আমাদের বিশ্ববিদ্যালয়ের শিক্ষকমণ্ডলীর নিরবচ্ছিন্ন মেন্টরশিপ ও ল্যাব সুবিধার কারণে আজ আমরা জাতীয় পর্যায়ে রাজশাহী বিশ্ববিদ্যালয়ের সুনাম বয়ে আনতে পেরেছি।"
+
+বিশ্ববিদ্যালয় প্রশাসন বিজয়ী দলকে বিশেষ সংবর্ধনা ও গবেষণা অনুদান দেওয়ার ঘোষণা দিয়েছে।`,
+    tags: ['রাবি প্রতিভা', 'রোবটিক্স', 'সিএসই', 'অ্যাচিভমেন্ট'],
+    likesCount: 289,
+    isFeatured: true,
+    status: 'published',
+  },
+  {
+    id: 'art-spring-literature-festival',
+    title: 'মতিহারের চত্বরে শুরু হচ্ছে তিন দিনব্যাপী বসন্ত সাহিত্য ও আবৃত্তি উৎসব ২০২৬',
+    subtitle: 'সারাদেশের তরুণ লেখকদের মিলনমেলা বসবে উন্মুক্ত মঞ্চে',
+    category: 'news',
+    categoryBn: 'দৈনিক ক্যাম্পাস সংবাদ',
+    authorName: 'মতিহার ক্যাম্পাস ডেস্ক',
+    authorDept: 'রাবি সাংবাদিক সমিতি',
+    authorRole: 'ক্যাম্পাস বার্তা',
+    publishedAt: '৫ নভেম্বর, ২০২৬',
+    imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80',
+    excerpt: 'রাজশাহী বিশ্ববিদ্যালয়ের কেন্দ্রীয় শহীদমিনার মুক্তমঞ্চ এবং সাবাস বাংলাদেশ প্রাঙ্গণে আগামী সপ্তাহ থেকে শুরু হতে যাচ্ছে বার্ষিক সাহিত্য, কবিতা পাঠ ও চিত্রাঙ্কন উৎসব...',
+    content: `রাজশাহী বিশ্ববিদ্যালয়ের ঐতিহ্যবাহী কেন্দ্রীয় শহীদমিনার মুক্তমঞ্চ এবং সাবাস বাংলাদেশ চত্বরে আগামী ১২ থেকে ১৪ নভেম্বর অনুষ্ঠিত হতে যাচ্ছে তিন দিনব্যাপী ‘বসন্ত সাহিত্য ও সাংস্কৃতিক উৎসব ২০২৬’।
+
+আয়োজক কমিটির পক্ষ থেকে জানানো হয়েছে, উৎসবে রাবির বিভিন্ন বিভাগের শিক্ষার্থীদের স্বরচিত কবিতা পাঠ, ছোটগল্প প্রতিযোগিতা, দেয়াল পত্রিকা প্রদর্শনী এবং বই মেলার আয়োজন থাকছে। এছাড়া প্রতিদিন সন্ধ্যায় পরিবেশিত হবে জনপ্রিয় রবীন্দ্র-নজরুল সঙ্গীত ও লালনগীতি।
+
+উৎসবে প্রধান অতিথি হিসেবে উপস্থিত থাকবেন দেশের প্রখ্যাত কথাসাহিত্যিক ও রাবির ইমেরিটাস অধ্যাপকবৃন্দ। প্রতিদিন সকাল ১০টা থেকে রাত ৮টা পর্যন্ত উৎসব সবার জন্য উন্মুক্ত থাকবে।`,
+    tags: ['ক্যাম্পাস সংবাদ', 'সাহিত্য উৎসব', 'শহীদমিনার', 'রাবি ইভেন্ট'],
+    likesCount: 98,
+    isFeatured: false,
+    status: 'published',
+  },
+  {
+    id: 'art-memories-of-motihar-story',
+    title: 'লাল ইটের বারান্দা ও একটি পুরোনো চিঠির গল্প',
+    subtitle: 'মতিহার ক্যাম্পাসের স্মৃতিচারণমূলক ছোটগল্প',
+    category: 'literature',
+    categoryBn: 'সাহিত্য ও গল্প',
+    authorName: 'রাকিবুল হাসান',
+    authorDept: 'ইংরেজি বিভাগ, সেশন ২০১৭-১৮',
+    authorRole: 'অ্যালামনাই ও লেখক',
+    publishedAt: '৪ নভেম্বর, ২০২৬',
+    imageUrl: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=1200&q=80',
+    excerpt: 'মমতাজউদ্দিন ভবনের পেছনের লেবু বাগানটায় তখন বিকেলের আলো মরে আসছে। বইয়ের ভাঁজ থেকে খসে পড়া নীল খামের চিঠিটা হাতে নিয়ে সুমিত তাকিয়ে ছিল প্যারিস রোডের শেষ মোড়টার দিকে...',
+    content: `মমতাজউদ্দিন ভবনের পেছনের লেবু বাগানটায় তখন বিকেলের আলো মরে আসছে। বইয়ের ভাঁজ থেকে খসে পড়া নীল খামের চিঠিটা হাতে নিয়ে সুমিত তাকিয়ে ছিল প্যারিস রোডের শেষ মোড়টার দিকে।
+
+সাত বছর পর আজ ক্যাম্পাসে ফিরে সব যেন আগের মতোই শান্ত, নির্জন। সেই পুরোনো কড়ই গাছ, রবীন্দ্র ভবনের ক্যাফেটেরিয়ার টুংটাং আওয়াজ আর শহীদুল্লাহ্ হলের পেছনের বধ্যভূমির শান্ত নীরবতা। চিঠিটাতে লেখা ছিল মাত্র দুটি লাইন—"যদি কখনো মতিহারে ফিরো, প্যারিস রোডের ২১ নম্বর কড়ই গাছের তলায় কিছুক্ষণ দাঁড়িয়ে দেখো, আমার দীর্ঘশ্বাস এখনো বাতাস হয়ে বয়ে চলে।"
+
+স্মৃতি মানুষকে ফিরিয়ে নিয়ে যায় সেই ফেলে আসা দিনগুলোতে। রাজশাহী বিশ্ববিদ্যালয় শুধু একটি ক্যাম্পাস নয়, এটি হাজারো তরুণ প্রাণের ভালোবাসার অমর উপাখ্যান।`,
+    tags: ['গল্প', 'স্মৃতিচারণ', 'রাবি অ্যালামনাই', 'প্যারিস রোড'],
+    likesCount: 167,
+    isFeatured: false,
+    status: 'published',
+  },
+];
+
+const LOCAL_STORAGE_KEY = 'ru_campus_articles_v1';
+
+export function getLocalArticles(): CampusArticle[] {
+  if (typeof window === 'undefined') return INITIAL_CAMPUS_ARTICLES;
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!raw) {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(INITIAL_CAMPUS_ARTICLES));
+      return INITIAL_CAMPUS_ARTICLES;
+    }
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_CAMPUS_ARTICLES;
+  } catch (e) {
+    return INITIAL_CAMPUS_ARTICLES;
+  }
+}
+
+export function saveLocalArticle(article: CampusArticle): CampusArticle[] {
+  if (typeof window === 'undefined') return INITIAL_CAMPUS_ARTICLES;
+  try {
+    const current = getLocalArticles();
+    const existingIndex = current.findIndex((a) => a.id === article.id);
+    let updated: CampusArticle[];
+    if (existingIndex >= 0) {
+      updated = [...current];
+      updated[existingIndex] = article;
+    } else {
+      updated = [article, ...current];
+    }
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+    return updated;
+  } catch (e) {
+    return INITIAL_CAMPUS_ARTICLES;
+  }
+}
+
+export function deleteLocalArticle(articleId: string): CampusArticle[] {
+  if (typeof window === 'undefined') return INITIAL_CAMPUS_ARTICLES;
+  try {
+    const current = getLocalArticles();
+    const updated = current.filter((a) => a.id !== articleId);
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+    return updated;
+  } catch (e) {
+    return INITIAL_CAMPUS_ARTICLES;
+  }
+}
