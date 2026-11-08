@@ -16,7 +16,7 @@ import {
 import TouristSpotsSection from '@/components/TouristSpotsSection';
 
 export default function MapPage() {
-  const [activeTab, setActiveTab] = useState<'gemini_ru' | 'three_stage'>('gemini_ru');
+  const [activeTab, setActiveTab] = useState<'three_stage' | 'gemini_ru'>('three_stage');
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const toggleFullscreen = () => {
@@ -58,19 +58,6 @@ export default function MapPage() {
           <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-2xl border border-emerald-600/40 shrink-0">
             <button
               type="button"
-              onClick={() => setActiveTab('gemini_ru')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm ${
-                activeTab === 'gemini_ru'
-                  ? 'bg-amber-400 text-slate-950 font-black shadow-md'
-                  : 'text-emerald-100 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>🎓 রাবি আনসিন ম্যাপ (জেমিনি আরগন)</span>
-            </button>
-
-            <button
-              type="button"
               onClick={() => setActiveTab('three_stage')}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm ${
                 activeTab === 'three_stage'
@@ -80,6 +67,19 @@ export default function MapPage() {
             >
               <Layers className="h-3.5 w-3.5" />
               <span>🌊 ৩-ধাপের ওয়াটার ম্যাপ</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('gemini_ru')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                activeTab === 'gemini_ru'
+                  ? 'bg-amber-400 text-slate-950 font-black shadow-md'
+                  : 'text-emerald-100 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>🎓 রাবি আনসিন ম্যাপ (জেমিনি আরগন)</span>
             </button>
           </div>
         </div>
