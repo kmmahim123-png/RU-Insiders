@@ -56,7 +56,7 @@ export default function TopStoryHighlights({
             {showViewAllButton && (
               <Link
                 href="/shop"
-                className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-blue-500/25 hover:shadow-lg transition-all flex items-center gap-1.5 group"
+                className="px-3 sm:px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-[11px] sm:text-xs shadow-md shadow-blue-500/25 hover:shadow-lg transition-all flex items-center gap-1 sm:gap-1.5 group shrink-0"
               >
                 <span>সবগুলো পণ্য একসাথে দেখুন</span>
                 <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
@@ -107,6 +107,33 @@ export default function TopStoryHighlights({
               </Link>
             );
           })}
+
+          {/* Dedicated "Shop More / সব পণ্য" Circular Card at the end */}
+          <Link
+            href="/shop"
+            className="group flex flex-col items-center gap-1.5 shrink-0 focus:outline-none"
+            title="সকল পণ্য একসাথে দেখুন (Shop All Products)"
+          >
+            <div className="p-[2.5px] rounded-full bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 group-hover:scale-105 group-active:scale-95 transition-transform duration-300 shadow-md">
+              <div className="p-[2px] bg-white rounded-full">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-slate-900 to-blue-900 text-white flex flex-col items-center justify-center gap-1 group-hover:from-blue-600 group-hover:to-indigo-600 transition-colors">
+                  <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6 text-amber-300 group-hover:scale-110 transition-transform" />
+                  <span className="text-[9px] sm:text-[10px] font-black tracking-wider uppercase font-bengali">
+                    সব পণ্য
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <span className="text-[11px] sm:text-xs font-bold text-blue-700 text-center max-w-[76px] sm:max-w-[84px] truncate flex items-center gap-0.5 font-bengali">
+              <span>সব পণ্য</span>
+              <ArrowRight className="h-3 w-3" />
+            </span>
+
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bengali">
+              {products.length}টি পণ্য
+            </span>
+          </Link>
         </div>
 
       </div>

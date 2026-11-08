@@ -641,18 +641,61 @@ export default function RajshahiDivisionWaterMap({
 
       {/* ===================================================================== */}
       {/* STAGE 3 vs STAGES 1 & 2 ROUTING:                                      */}
-      {/* If Stage 3: Render the authentic 3D/2D Masterplan RU Campus Map       */}
-      {/* If Stage 1/2: Render the Central 2-Column Map + Spots List System     */}
+      {/* If Stage 3: Render Authentic Gemini Argon Unseen RU Interactive Map   */}
+      {/* If Stage 1/2: Render Central 2-Column Map + Spots List System          */}
       {/* ===================================================================== */}
       {mapViewMode === 'ru_campus' ? (
-        <div className="relative z-10 w-full rounded-3xl overflow-hidden shadow-2xl">
-          <CampusMapExplorer
-            onBackToDivision={() => setMapViewMode('division')}
-            onBackToDistrict={() => {
-              onSelectDistrict('rajshahi');
-              setMapViewMode('rajshahi_district');
-            }}
-          />
+        <div className="relative z-10 w-full rounded-3xl overflow-hidden shadow-2xl bg-white border border-slate-200">
+          {/* Top Multi-Stage Navigation Tabs & Controls */}
+          <div className="bg-slate-900 text-white p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 font-bengali">
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setMapViewMode('division')}
+                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+              >
+                <span>← ১. রাজশাহী বিভাগ</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onSelectDistrict('rajshahi');
+                  setMapViewMode('rajshahi_district');
+                }}
+                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+              >
+                <span>← ২. রাজশাহী জেলা</span>
+              </button>
+
+              <span className="px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 text-xs font-black flex items-center gap-1 shadow-sm">
+                <Sparkles className="h-3.5 w-3.5 text-slate-950" />
+                <span>৩. রাবি ক্যাম্পাস (জেমিনি আরগন আনসিন ম্যাপ)</span>
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <a
+                href="/unseen-ru.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1 shadow-sm"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                <span>নতুন ট্যাবে বড় করে দেখুন</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Authentic Gemini Argon Unseen RU Interactive Map Frame */}
+          <div className="w-full h-[620px] sm:h-[800px] bg-[#f6f4ec] relative">
+            <iframe
+              src="/unseen-ru.html"
+              title="Unseen RU & Rajshahi Interactive Map"
+              className="w-full h-full border-0 select-none"
+              allow="clipboard-write; fullscreen; web-share"
+            />
+          </div>
         </div>
       ) : (
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
@@ -718,8 +761,6 @@ export default function RajshahiDivisionWaterMap({
                         onClick={() => {
                           setSelectedRegionId(reg.id);
                           setHighlightedItemId(reg.id);
-                          const el = document.getElementById(reg.id);
-                          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                         }}
                         onMouseEnter={() => setHoveredRegionId(reg.id)}
                         onMouseLeave={() => setHoveredRegionId(null)}
@@ -1022,6 +1063,54 @@ export default function RajshahiDivisionWaterMap({
                     <span>২. রাজশাহী জেলা কতটুকু ঘুরলেন ➔</span>
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* In-Place Selected Region Action Bar (Prevents disorienting mobile auto-scroll) */}
+            {mapViewMode === 'rajshahi_district' && selectedRegionId && (
+              <div className="w-full mt-3 p-3.5 rounded-2xl bg-white border border-slate-200 shadow-md flex items-center justify-between gap-2.5 font-bengali animate-in fade-in slide-in-from-top-1 duration-200">
+                {(() => {
+                  const activeReg = RAJSHAHI_PDF_REGIONS.find((r) => r.id === selectedRegionId);
+                  if (!activeReg) return null;
+                  const isVis = visitedPdfRegionIds.includes(activeReg.id);
+                  return (
+                    <>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`w-2.5 h-2.5 rounded-full ${isVis ? 'bg-emerald-500' : 'bg-amber-400 animate-pulse'}`} />
+                          <h4 className="text-xs sm:text-sm font-black text-slate-900 truncate">
+                            {activeReg.nameBn}
+                          </h4>
+                        </div>
+                        <p className="text-[10px] sm:text-[11px] text-slate-500 truncate">{activeReg.nameEn}</p>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => toggleVisitedPdfRegion(activeReg.id)}
+                          className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1 transition cursor-pointer ${
+                            isVis
+                              ? 'bg-emerald-600 text-white shadow-xs hover:bg-emerald-700'
+                              : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
+                          }`}
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          <span>{isVis ? '✓ ঘোরা শেষ' : 'ঘুরেছি (টিক দিন)'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleOpenPdfRegionDetails(activeReg)}
+                          className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1 shadow-xs cursor-pointer"
+                        >
+                          <Eye className="h-3.5 w-3.5 text-amber-300" />
+                          <span>ছবি</span>
+                        </button>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             )}
 
