@@ -155,7 +155,7 @@ export default function InsideRajshahiSection({ hideHeroBanner = false }: Inside
   };
 
   return (
-    <section id="inside-ru" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+    <section id="inside-ru" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 scroll-mt-28">
       
       {/* ===================================================================== */}
       {/* SECTION CONTROLS (OR HERO CARD IF NOT HIDDEN)                         */}

@@ -180,7 +180,7 @@ export default function RuClubsSection({ hideHeroBanner = false }: RuClubsSectio
   };
 
   return (
-    <section id="clubs" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+    <section id="clubs" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 scroll-mt-28">
       
       {/* ===================================================================== */}
       {/* SECTION CONTROLS (OR HERO BANNER IF NOT HIDDEN)                       */}
